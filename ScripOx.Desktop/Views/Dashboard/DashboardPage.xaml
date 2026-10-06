@@ -1,0 +1,292 @@
+<Page x:Class="ScripOx.Desktop.Views.Dashboard.DashboardPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Executive Dashboard"
+      Background="{StaticResource ExCanvasBg}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- Header & Tabs -->
+                <RowDefinition Height="Auto"/>  <!-- Hudson 8 KPI Deck -->
+                <RowDefinition Height="*"/>     <!-- CRMEdge Table & Breakdown -->
+            </Grid.RowDefinitions>
+
+            <!-- ── Top Header & Tab Filters (CRMEdge Style) ─────── -->
+            <Grid Grid.Row="0" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock x:Name="TxtDashTitle" Text="Customer Movements" FontSize="26" FontWeight="Bold"
+                               Foreground="{StaticResource ExTextPrimary}" FontFamily="{StaticResource ExPrimaryFont}"/>
+                    <TextBlock x:Name="TxtDashSubtitle" Text="Real-time company intelligence across international markets"
+                               FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Filter View All / Refresh -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{StaticResource ExDarkObsidian}" CornerRadius="16" Padding="16,7">
+                        <TextBlock x:Name="TxtViewAll" Text="Live Overview" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── Hudson 8 Metric KPI Deck (4 Cards) ────────────── -->
+            <UniformGrid Grid.Row="1" Columns="4" Rows="1" Margin="0,0,0,24">
+                
+                <!-- Card 1: Total Companies -->
+                <Border Style="{StaticResource ExMetricCard}" Margin="0,0,14,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch">
+                            <TextBlock Text="TOTAL COMPANIES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <Border Margin="10,0,0,0" Background="{StaticResource ExStatusSuccessBg}" CornerRadius="8" Padding="6,2">
+                                <TextBlock Text="+14%" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" x:Name="TxtTotalCompanies" Text="0"
+                                   FontSize="30" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,10,0,4"/>
+                        <TextBlock Grid.Row="2" Text="Verified Portfolio Records" FontSize="11" Foreground="{StaticResource ExTextMuted}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Card 2: Completed Jobs -->
+                <Border Style="{StaticResource ExMetricCard}" Margin="0,0,14,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="EXTRACTION JOBS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <Border Margin="10,0,0,0" Background="{StaticResource ExAccentLimeLight}" CornerRadius="8" Padding="6,2">
+                                <TextBlock Text="Active" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExDarkObsidian}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" x:Name="TxtCompletedJobs" Text="0"
+                                   FontSize="30" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,10,0,4"/>
+                        <TextBlock Grid.Row="2" Text="Automated Extraction Runs" FontSize="11" Foreground="{StaticResource ExTextMuted}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Card 3: Raw Records -->
+                <Border Style="{StaticResource ExMetricCard}" Margin="0,0,14,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="RAW STAGING" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <Border Margin="10,0,0,0" Background="{StaticResource ExStatusInfoBg}" CornerRadius="8" Padding="6,2">
+                                <TextBlock Text="Staged Queue" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusInfoText}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" x:Name="TxtRawRecords" Text="0"
+                                   FontSize="30" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,10,0,4"/>
+                        <TextBlock Grid.Row="2" Text="Pre-Approval Data Queue" FontSize="11" Foreground="{StaticResource ExTextMuted}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Card 4: Total Sources -->
+                <Border Style="{StaticResource ExMetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="DATA SOURCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <Border Margin="10,0,0,0" Background="{StaticResource ExStatusSuccessBg}" CornerRadius="8" Padding="6,2">
+                                <TextBlock Text="Live Sync" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" x:Name="TxtTotalSources" Text="0"
+                                   FontSize="30" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,10,0,4"/>
+                        <TextBlock Grid.Row="2" Text="Gateways &amp; Web Scrapers" FontSize="11" Foreground="{StaticResource ExTextMuted}"/>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <!-- ── Main Content Split (Table + Status Health) ────── -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="340"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: CRMEdge Customer Movements Table -->
+                <Border Grid.Column="0" Style="{StaticResource ExCard}" Margin="0,0,16,0" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Table Header Bar -->
+                        <Border Grid.Row="0" Padding="20,16" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,0,1">
+                            <Grid>
+                                <TextBlock Text="Recent Company Activities" FontSize="15" FontWeight="Bold"
+                                           Foreground="{StaticResource ExTextPrimary}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="Showing latest verified entities" FontSize="11"
+                                               Foreground="{StaticResource ExTextSecondary}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Items List (Custom styled like CRMEdge) -->
+                        <ItemsControl Grid.Row="1" x:Name="RecentCompaniesList" Margin="10,6">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="14,12" Margin="0,2" CornerRadius="8" Background="Transparent">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F8FAFC"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>   <!-- Avatar -->
+                                                    <ColumnDefinition Width="2*"/>     <!-- Company Info -->
+                                                    <ColumnDefinition Width="1.5*"/>   <!-- Progress Bar (Lime) -->
+                                                    <ColumnDefinition Width="*"/>      <!-- City / Region -->
+                                                    <ColumnDefinition Width="Auto"/>   <!-- Status Pill -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Avatar Circle -->
+                                                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                                                        Background="#F1F5F9" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Initials}" FontWeight="Bold" FontSize="12"
+                                                               Foreground="{StaticResource ExDarkObsidian}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- Company Name & Category -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"
+                                                               Foreground="{StaticResource ExTextPrimary}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Category}" FontSize="11"
+                                                               Foreground="{StaticResource ExTextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+
+                                                <!-- Progress Bar (CRMEdge Style) -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0">
+                                                    <Grid Margin="0,0,0,4">
+                                                        <TextBlock Text="Profile Quality" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                                        <TextBlock Text="{Binding ProgressText}" FontSize="10" FontWeight="Bold"
+                                                                   Foreground="{StaticResource ExDarkObsidian}" HorizontalAlignment="Right"/>
+                                                    </Grid>
+                                                    <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Style="{StaticResource ExProgressBar}"/>
+                                                </StackPanel>
+
+                                                <!-- City / Country -->
+                                                <TextBlock Grid.Column="3" Text="{Binding LocationDisplay}" VerticalAlignment="Center"
+                                                           FontSize="12" Foreground="{StaticResource ExTextSecondary}" TextTrimming="CharacterEllipsis"/>
+
+                                                <!-- Status Pill Tag -->
+                                                <Border Grid.Column="4" Background="{Binding PillBgBrush}" CornerRadius="12"
+                                                        Padding="12,5" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding StatusName}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{Binding PillTextBrush}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                </Border>
+
+                <!-- Right: Portfolio Breakdown & Compliance -->
+                <StackPanel Grid.Column="1">
+                    
+                    <!-- Status Matrix Card -->
+                    <Border Style="{StaticResource ExCard}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Portfolio by Status" FontSize="15" FontWeight="Bold"
+                                       Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
+
+                            <ItemsControl x:Name="StatusItemsControl">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Ellipse Width="10" Height="10" Fill="{Binding StatusColor}"
+                                                     VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding StatusName}"
+                                                       Foreground="{StaticResource ExTextSecondary}" FontSize="12" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Count}"
+                                                       Foreground="{StaticResource ExTextPrimary}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- System & Bridge Live Health Card -->
+                    <Border Style="{StaticResource ExCard}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtPipelineHealthTitle" Text="System &amp; Pipeline Status" FontSize="15" FontWeight="Bold"
+                                       Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,12"/>
+
+                            <!-- Extractor Desktop Bridge Status -->
+                            <Border Background="#F8FAFC" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="10" Padding="12" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="10" Height="10" Fill="#10B981" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Browser Bridge (Port 8765)" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}"/>
+                                        <TextBlock Text="FastAPI Daemon Connected &amp; Ready" FontSize="10" Foreground="{StaticResource ExStatusSuccessText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Ingestion Queue Indicator -->
+                            <Border Background="#F8FAFC" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                                    CornerRadius="10" Padding="12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="10" Height="10" Fill="#3B82F6" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Data Pipeline &amp; Deduplication" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}"/>
+                                        <TextBlock Text="Automatic deduplication enabled" FontSize="10" Foreground="{StaticResource ExStatusInfoText}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </Grid>
+
+        </Grid>
+    </ScrollViewer>
+</Page>

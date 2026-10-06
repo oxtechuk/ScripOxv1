@@ -1,0 +1,253 @@
+<Window x:Class="ScripOx.Desktop.Views.Companies.CompanyDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Lead CRM Profile" Height="680" Width="920"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ExCanvasBg}"
+        FontFamily="{StaticResource ExPrimaryFont}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Header & Fast Actions -->
+            <RowDefinition Height="Auto"/>  <!-- 1-Click Sales Dispositions -->
+            <RowDefinition Height="*"/>     <!-- Details & CRM Timeline -->
+            <RowDefinition Height="Auto"/>  <!-- Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Row 0: Lead Identity & Quick Communications ─────── -->
+        <Border Grid.Row="0" Style="{StaticResource ExCard}" Margin="0,0,0,16" Padding="20,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Name & Segment Pills -->
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock x:Name="TxtName" Text="Company Name" FontSize="22" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}"/>
+                        <Border x:Name="PillStatus" Margin="12,0,0,0" CornerRadius="12" Padding="10,4"
+                                Background="{StaticResource ExDarkObsidian}" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtCurrentStatus" Text="New Lead" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Border Background="{StaticResource ExSurfaceBg}" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                                CornerRadius="10" Padding="8,3" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtSegmentBadge" Text="Segment: General" FontSize="11" Foreground="{StaticResource ExTextSecondary}" FontWeight="Medium"/>
+                        </Border>
+                        <Border Background="{StaticResource ExSurfaceBg}" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                                CornerRadius="10" Padding="8,3" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtLocationBadge" Text="Location: N/A" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Right: 1-Click Communication Hub -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- WhatsApp Direct -->
+                    <Button x:Name="BtnWhatsApp" Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" Padding="14,0" Margin="0,0,8,0" Click="BtnWhatsApp_Click"
+                            BorderBrush="#10B981" Foreground="#047857" FontWeight="SemiBold"
+                            ToolTip="Open International WhatsApp Direct Chat">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="WhatsApp Direct" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Email -->
+                    <Button x:Name="BtnEmail" Content="Email" Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" Padding="14,0" Margin="0,0,8,0" Click="BtnEmail_Click" FontSize="12"/>
+
+                    <!-- Website -->
+                    <Button x:Name="BtnWebsite" Content="Website" Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" Padding="14,0" Click="BtnWebsite_Click" FontSize="12"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── Row 1: 1-Click Sales Qualification Matrix ───────── -->
+        <Border Grid.Row="1" Margin="0,0,0,16" Background="{StaticResource ExSurfaceBg}"
+                CornerRadius="14" Padding="16,12" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Fast Qualification:" Foreground="{StaticResource ExTextSecondary}"
+                           FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0"/>
+
+                <!-- Quick Disposition Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnQualInterested" Content="Interested / مهتم" Height="32" Padding="14,0"
+                            Margin="0,0,8,0" Style="{StaticResource ExBtnGhostPill}"
+                            BorderBrush="#10B981" Foreground="#047857" FontWeight="SemiBold" FontSize="11"
+                            Click="BtnQualInterested_Click"/>
+
+                    <Button x:Name="BtnQualFollowUp" Content="Needs Follow-up / متابعة" Height="32" Padding="14,0"
+                            Margin="0,0,8,0" Style="{StaticResource ExBtnGhostPill}"
+                            BorderBrush="#F59E0B" Foreground="#B45309" FontWeight="SemiBold" FontSize="11"
+                            Click="BtnQualFollowUp_Click"/>
+
+                    <Button x:Name="BtnQualWon" Content="Deal Won / تم التعاقد" Height="32" Padding="14,0"
+                            Margin="0,0,8,0" Style="{StaticResource ExBtnGhostPill}"
+                            BorderBrush="#059669" Background="#ECFDF5" Foreground="#065F46" FontWeight="Bold" FontSize="11"
+                            Click="BtnQualWon_Click"/>
+
+                    <Button x:Name="BtnQualNotInterested" Content="Not Interested / غير مهتم" Height="32" Padding="14,0"
+                            Style="{StaticResource ExBtnGhostPill}"
+                            BorderBrush="#94A3B8" Foreground="#475569" FontSize="11"
+                            Click="BtnQualNotInterested_Click"/>
+                </StackPanel>
+
+                <!-- Full Dropdown Backup -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ComboBox x:Name="CmbUpdateStatus" Width="140" Height="32" Margin="0,0,8,0"
+                              Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
+                              BorderBrush="{StaticResource ExBorderSubtle}" DisplayMemberPath="DisplayName"
+                              SelectedValuePath="Id" VerticalContentAlignment="Center" FontSize="11"/>
+                    <Button Content="Save" Style="{StaticResource ExBtnBlackPill}" Height="32" Padding="12,0"
+                            FontSize="11" Click="BtnSaveStatus_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── Row 2: Lead Profile & CRM Activity Timeline ─────── -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="380"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Profile Dossier & Segment Setting -->
+            <Border Grid.Column="0" Style="{StaticResource ExCard}" Margin="0,0,16,0" Padding="18">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Lead Dossier &amp; Target Segment" FontSize="14" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,14"/>
+
+                        <!-- Segment Edit Pill -->
+                        <TextBlock Text="Customer Segment (شريحة العميل)" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,4"/>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{StaticResource ExCanvasBg}" CornerRadius="8"
+                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="10,6">
+                                <TextBox x:Name="TxtCategory" Background="Transparent" BorderThickness="0"
+                                         Foreground="{StaticResource ExTextPrimary}" FontSize="12"/>
+                            </Border>
+                            <Button Grid.Column="1" Content="Update" Style="{StaticResource ExBtnGhostPill}"
+                                    Height="32" Padding="10,0" Margin="6,0,0,0" FontSize="11" Click="BtnUpdateSegment_Click"/>
+                        </Grid>
+
+                        <!-- Contact Details -->
+                        <TextBlock Text="Contact Details" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,8"/>
+
+                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="10" Padding="12" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="Phone:" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                <TextBlock x:Name="TxtPhone" Text="N/A" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,8"/>
+
+                                <TextBlock Text="Email:" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                <TextBlock x:Name="TxtEmail" Text="N/A" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,8"/>
+
+                                <TextBlock Text="Website:" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                <TextBlock x:Name="TxtWebsiteText" Text="N/A" FontSize="12"
+                                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,8"/>
+
+                                <TextBlock Text="Full Address:" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                <TextBlock x:Name="TxtAddress" Text="N/A" FontSize="11"
+                                           Foreground="{StaticResource ExTextPrimary}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Compliance Status -->
+                        <Border Background="{StaticResource ExStatusSuccessBg}" CornerRadius="10" Padding="12,10">
+                            <StackPanel>
+                                <TextBlock Text="Compliance &amp; Verification" FontSize="11" FontWeight="Bold"
+                                           Foreground="{StaticResource ExStatusSuccessText}" Margin="0,0,0,2"/>
+                                <TextBlock Text="Record compliant with German DSGVO &amp; UAE Commercial Registry standards."
+                                           FontSize="10" Foreground="{StaticResource ExStatusSuccessText}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Right: Activity Log & Notes Timeline -->
+            <Border Grid.Column="1" Style="{StaticResource ExCard}" Padding="18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Activity Log &amp; Follow-up Timeline" FontSize="14" FontWeight="Bold"
+                               Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,12"/>
+
+                    <!-- Notes List -->
+                    <ListBox Grid.Row="1" x:Name="LstNotes" Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource ExCanvasBg}" CornerRadius="10"
+                                        BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                                        Padding="14,10" Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock Text="{Binding UserName}" FontWeight="SemiBold" FontSize="11"
+                                                       Foreground="{StaticResource ExTextPrimary}"/>
+                                            <TextBlock Text=" • " Foreground="{StaticResource ExTextMuted}"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                                                       FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Row="1" Text="{Binding Content}" FontSize="12"
+                                                   Foreground="{StaticResource ExTextSecondary}" TextWrapping="Wrap"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Add Note Input -->
+                    <Border Grid.Row="2" Margin="0,12,0,0" Background="{StaticResource ExCanvasBg}"
+                            CornerRadius="12" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="12,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtNewNote" Background="Transparent" BorderThickness="0"
+                                     Foreground="{StaticResource ExTextPrimary}" FontSize="12"
+                                     AcceptsReturn="True" MaxHeight="60"
+                                     Text="Add client notes, call logs, or follow-up requirements..."
+                                     GotFocus="TxtNewNote_GotFocus"/>
+                            <Button Grid.Column="1" Content="+ Add Note" Style="{StaticResource ExBtnBlackPill}"
+                                    Height="32" Padding="14,0" Margin="8,0,0,0" FontSize="11" Click="BtnAddNote_Click"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ── Row 3: Footer ───────────────────────────────────── -->
+        <Border Grid.Row="3" Margin="0,16,0,0">
+            <Button Content="Close Dossier" Style="{StaticResource ExBtnGhostPill}"
+                    Height="36" Padding="20,0" HorizontalAlignment="Right" Click="BtnClose_Click"/>
+        </Border>
+    </Grid>
+</Window>

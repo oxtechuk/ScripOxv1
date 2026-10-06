@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ScripOx Map Explorer</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0D1B2A;
+      color: #E8EDF3;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 12px;
+      background: #0D1B2A;
+      border-bottom: 1px solid #1E3A5F;
+      flex-shrink: 0;
+    }
+
+    #toolbar label { font-size: 12px; color: #7AAFCC; }
+
+    #toolbar select, #toolbar input {
+      background: #1E2A3B;
+      color: #E8EDF3;
+      border: 1px solid #2D4A6B;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    #toolbar select:focus, #toolbar input:focus {
+      border-color: #4A9FD4;
+    }
+
+    #stats {
+      margin-left: auto;
+      font-size: 12px;
+      color: #7AAFCC;
+    }
+
+    #map { flex: 1; }
+
+    /* Custom popup */
+    .scripox-popup .leaflet-popup-content-wrapper {
+      background: #0D1B2A;
+      border: 1px solid #1E3A5F;
+      border-radius: 10px;
+      color: #E8EDF3;
+    }
+    .scripox-popup .leaflet-popup-tip {
+      background: #1E3A5F;
+    }
+    .popup-name   { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .popup-row    { font-size: 12px; color: #7AAFCC; margin: 3px 0; }
+    .popup-row span { color: #E8EDF3; }
+    .popup-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .popup-open-btn {
+      margin-top: 10px;
+      display: block;
+      text-align: center;
+      background: #1D6FA4;
+      color: white;
+      padding: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      border: none;
+      width: 100%;
+    }
+    .popup-open-btn:hover { background: #2A9FD4; }
+  </style>
+</head>
+<body>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <label>Status:</label>
+    <select id="filterStatus" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+    </select>
+
+    <label>City:</label>
+    <select id="filterCity" onchange="applyFilters()">
+      <option value="">All Cities</option>
+    </select>
+
+    <label>Search:</label>
+    <input type="text" id="filterSearch" placeholder="Company name…"
+           oninput="applyFilters()" style="width:180px"/>
+
+    <div id="stats">Loading…</div>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script>
+    // ── Map init ──────────────────────────────────────────────
+    const map = L.map('map', {
+      center: [51.505, -0.09],  // London default
+      zoom: 6,
+      zoomControl: true,
+    });
+
+    // Dark tile layer (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap contributors © CARTO',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // ── State ─────────────────────────────────────────────────
+    let allPoints   = [];
+    let markerGroup = L.markerClusterGroup({ chunkedLoading: true });
+    map.addLayer(markerGroup);
+
+    // ── Custom icon factory ────────────────────────────────────
+    function makeIcon(color) {
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">
+          <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z"
+                fill="${color || '#1D6FA4'}"/>
+          <circle cx="14" cy="14" r="5" fill="white"/>
+        </svg>`;
+      return L.divIcon({
+        html: svg,
+        iconSize: [28, 36],
+        iconAnchor: [14, 36],
+        popupAnchor: [0, -36],
+        className: '',
+      });
+    }
+
+    // ── Load data from C# (called by WebView2) ─────────────────
+    function loadPoints(jsonString) {
+      allPoints = JSON.parse(jsonString);
+
+      // Populate filter dropdowns
+      const statuses = [...new Set(allPoints.map(p => p.statusName).filter(Boolean))];
+      const cities   = [...new Set(allPoints.map(p => p.city).filter(Boolean))].sort();
+
+      const statusSel = document.getElementById('filterStatus');
+      statuses.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        statusSel.appendChild(opt);
+      });
+
+      const citySel = document.getElementById('filterCity');
+      cities.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        citySel.appendChild(opt);
+      });
+
+      applyFilters();
+    }
+
+    // ── Apply filters ─────────────────────────────────────────
+    function applyFilters() {
+      const status = document.getElementById('filterStatus').value;
+      const city   = document.getElementById('filterCity').value;
+      const search = document.getElementById('filterSearch').value.toLowerCase();
+
+      const filtered = allPoints.filter(p => {
+        if (status && p.statusName !== status) return false;
+        if (city   && p.city       !== city)   return false;
+        if (search && !p.name.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      renderMarkers(filtered);
+    }
+
+    // ── Render markers ────────────────────────────────────────
+    function renderMarkers(points) {
+      markerGroup.clearLayers();
+
+      points.forEach(p => {
+        if (!p.y || !p.x) return;
+
+        const marker = L.marker([p.y, p.x], { icon: makeIcon(p.statusColor) });
+
+        const popup = `
+          <div class="popup-name">${escHtml(p.name)}</div>
+          ${p.city    ? `<div class="popup-row">📍 <span>${escHtml(p.city)}</span></div>` : ''}
+          ${p.phone   ? `<div class="popup-row">📞 <span>${escHtml(p.phone)}</span></div>` : ''}
+          ${p.address ? `<div class="popup-row">🏢 <span>${escHtml(p.address)}</span></div>` : ''}
+          <span class="popup-status"
+                style="background:${p.statusColor || '#6C757D'}22;
+                       color:${p.statusColor || '#6C757D'};
+                       border:1px solid ${p.statusColor || '#6C757D'}">
+            ${escHtml(p.statusName || 'Unknown')}
+          </span>
+          <button class="popup-open-btn" onclick="openCompany(${p.id})">
+            Open in ScripOx →
+          </button>`;
+
+        marker.bindPopup(popup, { className: 'scripox-popup', maxWidth: 260 });
+        markerGroup.addLayer(marker);
+      });
+
+      document.getElementById('stats').textContent =
+        `${points.length.toLocaleString()} companies shown`;
+
+      // Fit bounds if results exist
+      if (points.length > 0 && points.length < 2000) {
+        const validPoints = points.filter(p => p.y && p.x);
+        if (validPoints.length > 0) {
+          map.fitBounds(
+            L.latLngBounds(validPoints.map(p => [p.y, p.x])),
+            { padding: [30, 30] }
+          );
+        }
+      }
+    }
+
+    // ── Open company in C# app ────────────────────────────────
+    function openCompany(id) {
+      // WebView2 bridge: C# listens to this message
+      window.chrome.webview.postMessage(JSON.stringify({ action: 'openCompany', id: id }));
+    }
+
+    // ── Center map on coordinates ─────────────────────────────
+    function centerMap(lat, lng, zoom) {
+      map.setView([lat, lng], zoom || 14);
+    }
+
+    // ── Utils ─────────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Notify C# that the map is ready
+    window.addEventListener('load', () => {
+      try {
+        window.chrome.webview.postMessage(JSON.stringify({ action: 'mapReady' }));
+      } catch (e) { /* Running outside WebView2 (browser debug) */ }
+    });
+  </script>
+</body>
+</html>

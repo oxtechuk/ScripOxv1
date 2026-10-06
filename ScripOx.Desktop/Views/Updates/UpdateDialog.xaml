@@ -1,0 +1,130 @@
+<Window x:Class="ScripOx.Desktop.Views.Updates.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ScripOx — Software Update"
+        Width="540" Height="460"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize">
+
+    <Border CornerRadius="16" Background="{StaticResource ExSurfaceBg}"
+            BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="25" ShadowDepth="8" Opacity="0.15" Color="#000000"/>
+        </Border.Effect>
+
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- Header -->
+                <RowDefinition Height="Auto"/>  <!-- Version badges -->
+                <RowDefinition Height="*"/>     <!-- Release notes -->
+                <RowDefinition Height="Auto"/>  <!-- Progress bar -->
+                <RowDefinition Height="Auto"/>  <!-- Actions -->
+            </Grid.RowDefinitions>
+
+            <!-- ── Top Header ──────────────────────────────────────── -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="38" Height="38" CornerRadius="12" Background="{StaticResource ExDarkObsidian}" Margin="0,0,12,0">
+                        <Grid>
+                            <Ellipse Width="10" Height="10" Fill="{StaticResource ExAccentLime}"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,6,0"/>
+                            <TextBlock Text="↑" Foreground="White" FontWeight="Bold" FontSize="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtTitle" Text="New Update Available" FontSize="18" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}"/>
+                        <TextBlock x:Name="TxtSubtitle" Text="A new version of ScripOx is ready for installation."
+                                   FontSize="12" Foreground="{StaticResource ExTextSecondary}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Content="✕" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Background="Transparent" BorderThickness="0" Foreground="{StaticResource ExTextSecondary}"
+                        FontSize="12" Cursor="Hand" Click="BtnClose_Click"/>
+            </Grid>
+
+            <!-- ── Version Comparison Badges ───────────────────────── -->
+            <Border Grid.Row="1" Background="{StaticResource ExCanvasBg}" CornerRadius="12"
+                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                    Padding="14,10" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                        <TextBlock Text="CURRENT VERSION" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource ExTextMuted}"/>
+                        <TextBlock x:Name="TxtCurrentVersion" Text="v1.0.0" FontSize="14" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextSecondary}" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="1" Text="➔" FontSize="16" Foreground="{StaticResource ExTextMuted}"
+                               VerticalAlignment="Center"/>
+
+                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                        <TextBlock Text="NEW VERSION" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource ExTextMuted}"/>
+                        <Border Background="{StaticResource ExAccentLimeLight}" CornerRadius="6"
+                                Padding="8,2" Margin="0,2,0,0" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtNewVersion" Text="v1.0.1" FontSize="14" FontWeight="Bold"
+                                       Foreground="{StaticResource ExTextPrimary}"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ── Release Notes Box ───────────────────────────────── -->
+            <Border Grid.Row="2" Background="{StaticResource ExCanvasBg}" CornerRadius="12"
+                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
+                    Padding="14" Margin="0,0,0,14">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="WHAT'S NEW / سجل التغييرات" FontSize="11" FontWeight="Bold"
+                               Foreground="{StaticResource ExTextMuted}" Margin="0,0,0,8"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <TextBlock x:Name="TxtReleaseNotes" Text="Performance enhancements and bug fixes."
+                                   FontSize="12" Foreground="{StaticResource ExTextPrimary}" TextWrapping="Wrap"
+                                   LineHeight="18"/>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- ── Download Progress ───────────────────────────────── -->
+            <StackPanel Grid.Row="3" x:Name="PanelProgress" Visibility="Collapsed" Margin="0,0,0,14">
+                <Grid Margin="0,0,0,6">
+                    <TextBlock x:Name="TxtProgressStatus" Text="Downloading update..." FontSize="11"
+                               Foreground="{StaticResource ExTextSecondary}"/>
+                    <TextBlock x:Name="TxtProgressPercent" Text="0%" FontSize="11" FontWeight="Bold"
+                               Foreground="{StaticResource ExTextPrimary}" HorizontalAlignment="Right"/>
+                </Grid>
+                <ProgressBar x:Name="ProgressBarDownload" Height="6" Minimum="0" Maximum="100" Value="0"
+                             Foreground="{StaticResource ExDarkObsidian}" Background="{StaticResource ExBorderSubtle}"
+                             BorderThickness="0"/>
+            </StackPanel>
+
+            <!-- ── Action Buttons ──────────────────────────────────── -->
+            <Grid Grid.Row="4">
+                <Button x:Name="BtnViewGitHub" Content="View on GitHub" HorizontalAlignment="Left"
+                        Style="{StaticResource ExBtnGhostPill}" Height="36" Padding="12,0" FontSize="11"
+                        Click="BtnViewGitHub_Click"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnLater" Content="Later" Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" Margin="0,0,8,0" Padding="14,0" FontSize="12"
+                            Click="BtnLater_Click"/>
+
+                    <Button x:Name="BtnUpdateNow" Content="Update Now" Style="{StaticResource ExBtnBlackPill}"
+                            Height="36" Padding="18,0" FontSize="12"
+                            Click="BtnUpdateNow_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

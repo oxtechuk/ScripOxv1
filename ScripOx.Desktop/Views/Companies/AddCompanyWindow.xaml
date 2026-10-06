@@ -1,0 +1,91 @@
+<Window x:Class="ScripOx.Desktop.Views.Companies.AddCompanyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Add Company Manually"
+        Width="500" Height="580"
+        WindowStartupLocation="CenterOwner"
+        Background="Transparent"
+        AllowsTransparency="True"
+        WindowStyle="None">
+
+    <Border CornerRadius="8" Background="#0D1B2A" BorderBrush="#1E3A5F" BorderThickness="1">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Text="➕ Add New Company" FontSize="20" FontWeight="Bold" Foreground="White" Margin="0,0,0,20"/>
+
+            <!-- Form Fields -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="Company Name *" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtName" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="Category" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtCategory" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="Phone" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtPhone" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="Email" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtEmail" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="Website" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtWebsite" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="Address" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtAddress" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="City" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                            <TextBox x:Name="TxtCity" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Country" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                            <TextBox x:Name="TxtCountry" Text="UK" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Latitude" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                            <TextBox x:Name="TxtLatitude" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Longitude" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                            <TextBox x:Name="TxtLongitude" Padding="5" Background="#162131" Foreground="White" BorderBrush="#2D4A6B" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Priority" Foreground="#A8C9E0" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="CmbPriority" Padding="5" Background="#162131" Foreground="Black" SelectedIndex="1" Margin="0,0,0,15">
+                        <ComboBoxItem Content="low"/>
+                        <ComboBoxItem Content="medium"/>
+                        <ComboBoxItem Content="high"/>
+                    </ComboBox>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Cancel" Click="BtnCancel_Click" Margin="0,0,10,0" Padding="15,7" Background="#3E4E5F" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+                <Button Content="Save" Click="BtnSave_Click" Padding="20,7" Background="#28A745" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

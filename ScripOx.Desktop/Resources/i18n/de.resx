@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+
+  <data name="nav.dashboard"   ><value>Dashboard</value></data>
+  <data name="nav.sources"     ><value>Datenquellen</value></data>
+  <data name="nav.jobs"        ><value>Extraktions-Jobs</value></data>
+  <data name="nav.raw_records" ><value>Rohdaten</value></data>
+  <data name="nav.companies"   ><value>Unternehmen</value></data>
+  <data name="nav.map"         ><value>Karten-Explorer</value></data>
+  <data name="nav.exports"     ><value>Export-Zentrum</value></data>
+  <data name="nav.settings"    ><value>Einstellungen</value></data>
+
+  <data name="auth.login"      ><value>Anmelden</value></data>
+  <data name="auth.logout"     ><value>Abmelden</value></data>
+  <data name="auth.username"   ><value>Benutzername</value></data>
+  <data name="auth.password"   ><value>Passwort</value></data>
+  <data name="auth.invalid"    ><value>Ungültige Anmeldedaten</value></data>
+
+  <data name="company.name"    ><value>Unternehmensname</value></data>
+  <data name="company.phone"   ><value>Telefon</value></data>
+  <data name="company.email"   ><value>E-Mail</value></data>
+  <data name="company.website" ><value>Webseite</value></data>
+  <data name="company.address" ><value>Adresse</value></data>
+  <data name="company.city"    ><value>Stadt</value></data>
+  <data name="company.country" ><value>Land</value></data>
+  <data name="company.category"><value>Kategorie</value></data>
+  <data name="company.status"  ><value>Status</value></data>
+  <data name="company.priority"><value>Priorität</value></data>
+  <data name="company.assigned"><value>Zugewiesen an</value></data>
+  <data name="company.notes"   ><value>Notizen</value></data>
+  <data name="company.comments"><value>Kommentare</value></data>
+
+  <data name="crm.interested"    ><value>Interessiert</value></data>
+  <data name="crm.not_interested"><value>Nicht interessiert</value></data>
+  <data name="crm.follow_up"     ><value>Wiedervorlage</value></data>
+  <data name="crm.won"           ><value>Gewonnen</value></data>
+  <data name="crm.segment"       ><value>Segment</value></data>
+  <data name="crm.whatsapp"      ><value>WhatsApp Direkt</value></data>
+  <data name="crm.add_note"      ><value>Notiz hinzufügen</value></data>
+  <data name="crm.transfer"      ><value>In CRM übertragen</value></data>
+  <data name="crm.export_meta"   ><value>Meta Ads Custom Audience</value></data>
+  <data name="crm.export_google" ><value>Google Ads Customer Match</value></data>
+  <data name="crm.export_email"  ><value>E-Mail-Marketing CSV</value></data>
+
+  <data name="action.save"     ><value>Speichern</value></data>
+  <data name="action.cancel"   ><value>Abbrechen</value></data>
+  <data name="action.delete"   ><value>Löschen</value></data>
+  <data name="action.edit"     ><value>Bearbeiten</value></data>
+  <data name="action.approve"  ><value>Freigeben</value></data>
+  <data name="action.reject"   ><value>Ablehnen</value></data>
+  <data name="action.filter"   ><value>Filtern</value></data>
+  <data name="action.export"   ><value>Exportieren</value></data>
+  <data name="action.close"    ><value>Schließen</value></data>
+</root>

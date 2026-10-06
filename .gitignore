@@ -1,0 +1,56 @@
+# Visual Studio / .NET
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.dbmdl
+*.jfm
+*.opendb
+*.DotSettings.user
+
+# SQLite databases & runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+scripox.db
+
+# Executables & installer artifacts
+python-installer.exe
+*.msi
+*.exe
+!ScripOx.Desktop/Resources/**/*.exe
+
+# Python / FastAPI
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.env
+!.env.example
+
+# Node / Web / Extension
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+ScripOx.Extension/node_modules/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

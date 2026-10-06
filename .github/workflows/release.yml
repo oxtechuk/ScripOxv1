@@ -1,0 +1,78 @@
+name: Build and Release ScripOx
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js (for Chrome Extension build)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Extension (if needed)
+        run: |
+          cd ScripOx.Extension
+          if (Test-Path package.json) {
+            npm ci --ignore-scripts
+            npm run build --if-present
+          }
+        shell: powershell
+
+      - name: Extract Tag Version
+        id: get_version
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -match '^v?(.*)$') {
+            $ver = $matches[1]
+          } else {
+            $ver = "1.0.0"
+          }
+          Write-Output "APP_VERSION=$ver" >> $env:GITHUB_ENV
+        shell: powershell
+
+      - name: Publish ScripOx Desktop
+        run: |
+          dotnet publish ScripOx.Desktop/ScripOx.Desktop.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained false `
+            -p:PublishSingleFile=false `
+            -p:Version=$env:APP_VERSION `
+            -o ./publish/ScripOx
+        shell: powershell
+
+      - name: Compress Publish Directory
+        run: |
+          Compress-Archive -Path ./publish/ScripOx/* -DestinationPath ./publish/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+        shell: powershell
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: "ScripOx Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ./publish/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

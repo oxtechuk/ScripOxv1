@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>ScripOx</AssemblyName>
+    <RootNamespace>ScripOx.Desktop</RootNamespace>
+    <ApplicationIcon>Resources\Icons\app.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Company>Ox Tech</Company>
+    <Product>ScripOx</Product>
+    <Copyright>© 2025 Ox Tech — oxtech.uk</Copyright>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Database -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.2" />
+
+    <!-- Excel Export -->
+    <PackageReference Include="ClosedXML" Version="0.102.3" />
+
+    <!-- Map (WebView2 for Leaflet.js) -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2849.39" />
+
+    <!-- MVVM Toolkit -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+
+    <!-- Password Hashing -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="4.1.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+
+    <!-- HTTP (for calling Python FastAPI) -->
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
+
+    <!-- JSON -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- Embed map HTML as content (copied to output) -->
+  <ItemGroup>
+    <Content Include="Resources\map\map.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Bundle the Chrome Extension dist folder with the app -->
+  <ItemGroup>
+    <Content Include="..\ScripOx.Extension\dist\**\*"
+             Link="Extension\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+
+</Project>

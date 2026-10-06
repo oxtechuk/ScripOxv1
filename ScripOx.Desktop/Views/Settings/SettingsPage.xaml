@@ -1,0 +1,128 @@
+<Page x:Class="ScripOx.Desktop.Views.Settings.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="System Settings"
+      Background="{StaticResource ExCanvasBg}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="28" MaxWidth="760" HorizontalAlignment="Left">
+            <StackPanel>
+                <TextBlock Text="System Settings &amp; Preferences" FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,6"/>
+                <TextBlock Text="Configure market compliance standards, regional formats, and API connections."
+                           FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,24"/>
+
+                <!-- Market & Compliance Card -->
+                <Border Style="{StaticResource ExCard}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="Market Localization" FontSize="16" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
+
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="German DSGVO / GDPR Compliance Mode" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ExTextPrimary}"/>
+                                <TextBlock Text="Enforces data erasure and privacy audit trail protocols" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" IsChecked="True" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Separator Background="{StaticResource ExBorderSubtle}" Margin="0,8,0,14"/>
+
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="UAE FTA &amp; TRN Invoicing Mode" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ExTextPrimary}"/>
+                                <TextBlock Text="Auto-validates 15-digit TRN tax identification numbers" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" IsChecked="True" VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- API Connectivity Card -->
+                <Border Style="{StaticResource ExCard}">
+                    <StackPanel>
+                        <TextBlock Text="Engine &amp; Service Endpoints" FontSize="16" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="FastAPI Bridge Service Port" FontSize="11" FontWeight="Medium"
+                                   Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                        <TextBox Text="8765" Width="140" HorizontalAlignment="Left" Style="{StaticResource ExSearchBox}"
+                                 Height="36" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="Primary Currency Schema" FontSize="11" FontWeight="Medium"
+                                   Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                        <ComboBox Width="200" HorizontalAlignment="Left" Height="36" SelectedIndex="0"
+                                  Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
+                                  BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center">
+                            <ComboBoxItem Content="AED (UAE Dirham)"/>
+                            <ComboBoxItem Content="EUR (€ Euro / DACH)"/>
+                            <ComboBoxItem Content="USD ($ US Dollar)"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- Software Updates & GitHub Card -->
+                <Border Style="{StaticResource ExCard}" Margin="0,20,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Software Updates &amp; GitHub Releases" FontSize="16" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
+
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Check for updates automatically on startup" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource ExTextPrimary}"/>
+                                <TextBlock Text="Notifies you whenever a new release is published to GitHub" FontSize="11"
+                                           Foreground="{StaticResource ExTextSecondary}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkAutoUpdate" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
+                                      Checked="ChkAutoUpdate_Changed" Unchecked="ChkAutoUpdate_Changed"/>
+                        </Grid>
+
+                        <Separator Background="{StaticResource ExBorderSubtle}" Margin="0,4,0,14"/>
+
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                <TextBlock Text="GitHub Owner / Organization" FontSize="11" FontWeight="Medium"
+                                           Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                                <TextBox x:Name="TxtGithubOwner" Text="oxtechuk" Style="{StaticResource ExSearchBox}"
+                                         Height="36" LostFocus="TxtGithubRepo_LostFocus"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                <TextBlock Text="Repository Name" FontSize="11" FontWeight="Medium"
+                                           Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                                <TextBox x:Name="TxtGithubRepo" Text="Scripox" Style="{StaticResource ExSearchBox}"
+                                         Height="36" LostFocus="TxtGithubRepo_LostFocus"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
+                            <Button x:Name="BtnCheckUpdates" Content="Check for Updates Now"
+                                    Style="{StaticResource ExBtnBlackPill}" Height="36" Padding="18,0" FontSize="12"
+                                    Click="BtnCheckUpdates_Click"/>
+                            <TextBlock x:Name="TxtUpdateStatus" Text="Current Version: v1.0.0"
+                                       FontSize="12" Foreground="{StaticResource ExTextSecondary}"
+                                       VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>
