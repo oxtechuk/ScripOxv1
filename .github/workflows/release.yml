@@ -28,7 +28,8 @@ jobs:
           node-version: '20'
 
       - name: Setup Inno Setup
-        uses: chrebel/action-inno-setup@v2
+        run: choco install innosetup -y
+        shell: powershell
 
       - name: Extract Tag Version
         id: get_version
