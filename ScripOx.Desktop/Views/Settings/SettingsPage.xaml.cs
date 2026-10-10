@@ -21,8 +21,6 @@ public partial class SettingsPage : Page
         ApplyLocalization();
 
         ChkAutoUpdate.IsChecked = AppSettings.AutoCheckUpdatesOnStartup;
-        TxtGithubOwner.Text = AppSettings.GitHubOwner;
-        TxtGithubRepo.Text = AppSettings.GitHubRepo;
         TxtApiPort.Text = AppSettings.ApiPort.ToString();
     }
 
@@ -58,8 +56,6 @@ public partial class SettingsPage : Page
         TxtUpdatesTitle.Text     = LocalizationService.Get("settings.updates_title");
         TxtAutoUpdateTitle.Text  = LocalizationService.Get("settings.auto_update_title");
         TxtAutoUpdateDesc.Text   = LocalizationService.Get("settings.auto_update_desc");
-        TxtGhOwnerLbl.Text       = LocalizationService.Get("settings.gh_owner_lbl");
-        TxtGhRepoLbl.Text        = LocalizationService.Get("settings.gh_repo_lbl");
         BtnCheckUpdates.Content  = LocalizationService.Get("settings.btn_check_updates");
 
         TxtSupportTitle.Text     = LocalizationService.Get("settings.support_title");
@@ -84,15 +80,10 @@ public partial class SettingsPage : Page
         AppSettings.AutoCheckUpdatesOnStartup = ChkAutoUpdate.IsChecked == true;
     }
 
-    private void TxtGithubRepo_LostFocus(object sender, RoutedEventArgs e)
-    {
-        AppSettings.GitHubOwner = TxtGithubOwner.Text.Trim();
-        AppSettings.GitHubRepo = TxtGithubRepo.Text.Trim();
-    }
-
     private async void BtnCheckUpdates_Click(object sender, RoutedEventArgs e)
     {
-        TxtGithubRepo_LostFocus(sender, e);
+        AppSettings.GitHubOwner = "oxtechuk";
+        AppSettings.GitHubRepo = "ScripOxv1";
         BtnCheckUpdates.IsEnabled = false;
 
         var isAr = LocalizationService.CurrentLanguage == "ar";

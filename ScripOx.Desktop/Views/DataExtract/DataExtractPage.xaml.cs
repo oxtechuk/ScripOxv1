@@ -102,7 +102,7 @@ public partial class DataExtractPage : Page
         BtnImportToCRM.Content      = isAr ? "استيراد المحدد إلى الـ CRM" : (isDe ? "Ausgewählte ins CRM importieren" : "Import Selected to CRM");
         BtnSelectAllLeads.Content   = isAr ? "تحديد الكل" : (isDe ? "Alles auswählen" : "Select All");
         BtnDeselectAllLeads.Content = isAr ? "إلغاء التحديد" : (isDe ? "Auswahl aufheben" : "Deselect All");
-        BtnDeleteSelected.Content   = isAr ? "🗑️ حذف المحدد" : (isDe ? "🗑️ Ausgewählte löschen" : "🗑️ Delete Selected");
+        BtnDeleteSelected.Content   = isAr ? " حذف المحدد" : (isDe ? " Ausgewählte löschen" : " Delete Selected");
         BtnClearAllLeads.Content    = isAr ? "تفريغ القائمة" : (isDe ? "Liste leeren" : "Clear List");
 
         ColName.Header    = isAr ? "اسم الشركة" : (isDe ? "Unternehmensname" : "Business Name");
@@ -120,7 +120,11 @@ public partial class DataExtractPage : Page
     {
         try
         {
-            await MapWebView.EnsureCoreWebView2Async(null);
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var webViewUserData = Path.Combine(localAppData, "ScripOx", "WebView2");
+            Directory.CreateDirectory(webViewUserData);
+            var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, webViewUserData);
+            await MapWebView.EnsureCoreWebView2Async(env);
             string mapPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "map", "map_extract.html");
             if (File.Exists(mapPath))
             {

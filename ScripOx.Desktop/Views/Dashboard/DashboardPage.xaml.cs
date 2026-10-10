@@ -120,12 +120,6 @@ public partial class DashboardPage : Page
             // fallback if db has schema mismatch or offline
         }
 
-        // If list is empty, supply rich demo data matching German & UAE markets
-        if (recentItems.Count == 0)
-        {
-            recentItems = GetDefaultMarketDemos();
-        }
-
         RecentCompaniesList.ItemsSource = recentItems;
     }
 
@@ -135,78 +129,5 @@ public partial class DashboardPage : Page
         var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length >= 2) return $"{parts[0][0]}{parts[1][0]}".ToUpper();
         return name.Substring(0, Math.Min(2, name.Length)).ToUpper();
-    }
-
-    private static List<RecentCompanyItem> GetDefaultMarketDemos()
-    {
-        return new List<RecentCompanyItem>
-        {
-            new()
-            {
-                Name = "Siemens Mobility GmbH",
-                Category = "Industrial & Transport Automation",
-                Initials = "SM",
-                ProgressValue = 92,
-                LocationDisplay = "Munich, Germany",
-                StatusName = "Accepted",
-                PillBgBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7")),
-                PillTextBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"))
-            },
-            new()
-            {
-                Name = "Emaar Properties PJSC",
-                Category = "Real Estate & Hospitality",
-                Initials = "EP",
-                ProgressValue = 85,
-                LocationDisplay = "Downtown Dubai, UAE",
-                StatusName = "Monitored",
-                PillBgBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7")),
-                PillTextBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"))
-            },
-            new()
-            {
-                Name = "SAP SE Deutschland",
-                Category = "Enterprise Cloud & ERP Solutions",
-                Initials = "SP",
-                ProgressValue = 78,
-                LocationDisplay = "Walldorf, Germany",
-                StatusName = "Overdue",
-                PillBgBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEE2E2")),
-                PillTextBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"))
-            },
-            new()
-            {
-                Name = "Al Futtaim Holding LLC",
-                Category = "Retail & Automotive Conglomerate",
-                Initials = "AF",
-                ProgressValue = 65,
-                LocationDisplay = "Dubai Festival City, UAE",
-                StatusName = "Pending",
-                PillBgBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7")),
-                PillTextBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"))
-            },
-            new()
-            {
-                Name = "Delivery Hero SE",
-                Category = "Logistics & Quick Commerce",
-                Initials = "DH",
-                ProgressValue = 95,
-                LocationDisplay = "Berlin, Germany",
-                StatusName = "Accepted",
-                PillBgBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7")),
-                PillTextBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"))
-            },
-            new()
-            {
-                Name = "DP World Logistics",
-                Category = "Global Ports & Supply Chain",
-                Initials = "DP",
-                ProgressValue = 88,
-                LocationDisplay = "Jebel Ali Freezone, UAE",
-                StatusName = "Monitored",
-                PillBgBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7")),
-                PillTextBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"))
-            }
-        };
     }
 }

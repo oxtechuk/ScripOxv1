@@ -82,9 +82,9 @@
                 <DockPanel>
 
                     <!-- Top Branding -->
-                    <StackPanel DockPanel.Dock="Top" x:Name="PanelLogo" Margin="16,14,16,14">
+                    <StackPanel DockPanel.Dock="Top" x:Name="PanelLogo" Margin="12,18,12,18">
                         <Image Source="pack://application:,,,/Resources/Images/main_logo.png"
-                               Height="42"
+                               Height="70"
                                HorizontalAlignment="Center"
                                RenderOptions.BitmapScalingMode="HighQuality"/>
                     </StackPanel>
@@ -92,7 +92,7 @@
                     <!-- Collapsed Mini Logo -->
                     <StackPanel DockPanel.Dock="Top" x:Name="PanelMiniLogo" Margin="0,18,0,18" HorizontalAlignment="Center" Visibility="Collapsed">
                         <Image Source="pack://application:,,,/Resources/Images/fivcon.png"
-                               Width="30" Height="30"
+                               Width="36" Height="36"
                                HorizontalAlignment="Center"
                                RenderOptions.BitmapScalingMode="HighQuality"/>
                     </StackPanel>

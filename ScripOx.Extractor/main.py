@@ -20,17 +20,30 @@ from core.config import settings
 
 # ── Logging setup ───────────────────────────────────────────
 logger.remove()
-logger.add(
-    sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
-    level="INFO",
-)
-logger.add(
-    "logs/extractor_{time:YYYY-MM-DD}.log",
-    rotation="00:00",
-    retention="30 days",
-    level="DEBUG",
-)
+if sys.stdout is not None:
+    logger.add(
+        sys.stdout,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
+        level="INFO",
+    )
+
+import os
+local_app_data = os.environ.get("LOCALAPPDATA")
+if local_app_data:
+    log_dir = os.path.join(local_app_data, "ScripOx", "logs")
+else:
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+
+try:
+    os.makedirs(log_dir, exist_ok=True)
+    logger.add(
+        os.path.join(log_dir, "extractor_{time:YYYY-MM-DD}.log"),
+        rotation="00:00",
+        retention="30 days",
+        level="DEBUG",
+    )
+except Exception:
+    pass
 
 
 # ── Lifespan ────────────────────────────────────────────────

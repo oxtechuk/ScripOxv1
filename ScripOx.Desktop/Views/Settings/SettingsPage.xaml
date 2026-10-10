@@ -101,26 +101,6 @@
 
                         <Separator Background="{StaticResource ExBorderSubtle}" Margin="0,4,0,14"/>
 
-                        <Grid Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                <TextBlock x:Name="TxtGhOwnerLbl" Text="GitHub Owner / Organization" FontSize="11" FontWeight="Medium"
-                                           Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                                <TextBox x:Name="TxtGithubOwner" Text="oxtechuk" Style="{StaticResource ExSearchBox}"
-                                         Height="36" LostFocus="TxtGithubRepo_LostFocus"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                <TextBlock x:Name="TxtGhRepoLbl" Text="Repository Name" FontSize="11" FontWeight="Medium"
-                                           Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                                <TextBox x:Name="TxtGithubRepo" Text="ScripOxv1" Style="{StaticResource ExSearchBox}"
-                                         Height="36" LostFocus="TxtGithubRepo_LostFocus"/>
-                            </StackPanel>
-                        </Grid>
-
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
                             <Button x:Name="BtnCheckUpdates" Content="Check for Updates Now"
                                     Style="{StaticResource ExBtnBlackPill}" Height="36" Padding="18,0" FontSize="12"
