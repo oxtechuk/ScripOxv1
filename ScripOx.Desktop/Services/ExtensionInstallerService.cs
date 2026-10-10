@@ -138,10 +138,22 @@ public static class ExtensionInstallerService
                 return new InstallResult(false,
                     $"Extension folder not found at:\n{extPath}\n\nPlease rebuild the extension first.");
 
-            // ── Step 1: Copy extension directory path to Windows Clipboard ──
+            // ── Step 1: Deploy extension to a clean, stable LocalAppData directory ──
+            var localExtPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScripOx", "Extension");
             try
             {
-                Clipboard.SetText(extPath);
+                Directory.CreateDirectory(localExtPath);
+                CopyDirectoryRecursive(extPath, localExtPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to copy extension to LocalAppData, falling back to original path");
+                localExtPath = extPath;
+            }
+
+            try
+            {
+                Clipboard.SetText(localExtPath);
             }
             catch (Exception ex)
             {
@@ -149,7 +161,7 @@ public static class ExtensionInstallerService
             }
 
             // ── Step 2: Write Registry policies & external extension hints ──
-            WriteRegistryHint(browser, extPath);
+            WriteRegistryHint(browser, localExtPath);
 
             var isFirefox = browser.Kind == BrowserKind.Firefox;
             var url = browser.Kind switch {
@@ -172,8 +184,8 @@ public static class ExtensionInstallerService
             if (!isFirefox && runningProcs.Length > 0)
             {
                 var promptMsg = isAr
-                    ? $"متصفح {browser.Name} قيد التشغيل حالياً.\n\nلتفعيل الإضافة تلقائياً، يفضل إعادة تشغيل المتصفح.\n\nهل ترغب في إغلاق {browser.Name} وإعادة تشغيله الآن؟\n\n(ملاحظة: سيتم فتح مجلد الإضافة ونسخ المسار تلقائياً في جميع الأحوال)"
-                    : $"{browser.Name} is currently running.\n\nTo auto-load the extension, restarting the browser is recommended.\n\nWould you like to restart {browser.Name} now?\n\n(The extension folder and path will be prepared either way)";
+                    ? $"متصفح {browser.Name} قيد التشغيل حالياً (قد تكون هناك نوافذ أو عمليات في الخلفية).\n\nليتم تحميل الإضافة وتفعيلها في المتصفح تلقائياً، يجب إغلاق المتصفح وإعادة فتحه.\n\nهل ترغب في إعادة تشغيل {browser.Name} الآن؟"
+                    : $"{browser.Name} is currently running in the background.\n\nTo auto-load and enable the extension, the browser needs to be restarted.\n\nWould you like to restart {browser.Name} now?";
 
                 var dialogResult = MessageBox.Show(promptMsg, isAr ? "تثبيت إضافة ScripOx" : "Install ScripOx Extension", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (dialogResult == MessageBoxResult.Yes)
@@ -187,47 +199,57 @@ public static class ExtensionInstallerService
                             CreateNoWindow = true,
                             UseShellExecute = false
                         };
-                        Process.Start(psiKill)?.WaitForExit(2000);
+                        var pKill = Process.Start(psiKill);
+                        pKill?.WaitForExit(3000);
                     }
                     catch { }
-                    await Task.Delay(800);
+                    await Task.Delay(1200);
                 }
             }
 
-            // ── Step 3: Launch browser & Open folder ──────
+            // ── Step 3: Launch browser & Trigger Extension Load ──────
             if (isFirefox)
             {
-                var manifestPath = Path.Combine(extPath, "manifest.json");
+                var xpiPath = Path.Combine(localExtPath, "scripox.xpi");
+                var manifestPath = Path.Combine(localExtPath, "manifest.json");
                 try { Clipboard.SetText(manifestPath); } catch { }
 
-                Process.Start(new ProcessStartInfo
+                if (File.Exists(xpiPath))
                 {
-                    FileName        = browser.ExePath,
-                    Arguments       = $"\"{url}\"",
-                    UseShellExecute = false,
-                });
+                    // Launch Firefox pointing directly to the .xpi installer file to prompt native installation!
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName        = browser.ExePath,
+                        Arguments       = $"\"{xpiPath}\"",
+                        UseShellExecute = false,
+                    });
+                }
+                else
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName        = browser.ExePath,
+                        Arguments       = $"\"{url}\"",
+                        UseShellExecute = false,
+                    });
+                }
 
                 try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
 
                 var firefoxSuccessMsg = isAr
-                    ? $"✅ تم إطلاق Mozilla Firefox وفتح صفحة مطوري الإضافات ({url})!\n\n" +
-                      $"1. تم فتح مجلد الإضافة في نافذة منفصلة وتحديد ملف (manifest.json).\n" +
-                      $"2. في صفحة Firefox المفتوحة، اضغط على زر:\n" +
-                      $"   'تحميل وظيفة إضافية مؤقتة... (Load Temporary Add-on...)'\n" +
-                      $"3. اختر ملف (manifest.json) مباشرة أو الصق المسار (Ctrl + V) واضغط فتح (Open).\n\n" +
-                      $"ستظهر إضافة ScripOx Visual Extractor فوراً وتعمل بكامل وظائفها!"
-                    : $"✅ Launched Mozilla Firefox debugging page ({url})!\n\n" +
-                      $"1. Extension folder opened with manifest.json highlighted.\n" +
-                      $"2. On the Firefox page, click 'Load Temporary Add-on...'\n" +
-                      $"3. Select manifest.json (or press Ctrl+V to paste path) and click Open.\n\n" +
-                      $"ScripOx Visual Extractor is active and ready!";
+                    ? $"✅ تم إطلاق Mozilla Firefox وتوجيه حزمة الإضافة!\n\n" +
+                      $"1. سيظهر لك إشعار في متصفح Firefox يطلب الإذن لتثبيت إضافة ScripOx، اضغط: (إضافة / Add).\n" +
+                      $"2. أو يمكنك فتح صفحة ({url}) والضغط على 'تحميل وظيفة إضافية مؤقتة' واختيار manifest.json المفتوح أمامك مباشرة."
+                    : $"✅ Launched Mozilla Firefox with ScripOx extension package!\n\n" +
+                      $"1. Firefox will show a prompt to Add ScripOx extension, click (Add).\n" +
+                      $"2. Or open ({url}) and load manifest.json directly.";
 
                 return new InstallResult(true, firefoxSuccessMsg);
             }
             else
             {
                 // Chromium: Chrome / Brave / Edge
-                var args = $"--load-extension=\"{extPath}\" --enable-extensions \"{url}\"";
+                var args = $"--load-extension=\"{localExtPath}\" --enable-extensions \"{url}\"";
                 Process.Start(new ProcessStartInfo
                 {
                     FileName        = browser.ExePath,
@@ -235,23 +257,23 @@ public static class ExtensionInstallerService
                     UseShellExecute = false,
                 });
 
-                try { Process.Start("explorer.exe", extPath); } catch { }
+                try { Process.Start("explorer.exe", localExtPath); } catch { }
 
                 var successMsg = isAr
-                    ? $"✅ تم إطلاق {browser.Name} وفتح صفحة الإضافات ({url})!\n\n" +
+                    ? $"✅ تم إطلاق {browser.Name} مع إضافة ScripOx بنجاح!\n\n" +
                       $"• تم تمرير أمر التحميل التلقائي: --load-extension\n" +
-                      $"• تم فتح مجلد الإضافة في نافذة منفصلة ونسخ مساره للحافظة.\n\n" +
-                      $"📌 خطوات إضافية هامة لمتصفح {browser.Name}:\n" +
+                      $"• تم حفظ الإضافة في مسار آمن ونسخ المسار تلقائياً.\n\n" +
+                      $"📌 خطوات إضافية لمتصفح {browser.Name}:\n" +
                       $"1. في صفحة الإضافات المفتوحة، تأكد من تفعيل زر: (وضع مطور البرامج / Developer mode) بأعلى اليمين.\n" +
-                      $"2. يمكنك سحب مجلد الإضافة المفتوح أمامك وإفلاته داخل نافذة المتصفح (Drag & Drop)، أو الضغط على زر 'تحميل حزمة غير مضغوطة (Load unpacked)' ولصق المسار (Ctrl + V).\n" +
-                      $"3. اضغط على أيقونة الإضافات (🧩) بجوار شريط العنوان في كروم، واضغط على زر التثبيت (Pin 📌) لتظهر أيقونة ScripOx بجوار شريط العنوان دائماً."
-                    : $"✅ {browser.Name} launched with extensions page ({url})!\n\n" +
+                      $"2. يمكنك سحب مجلد الإضافة المفتوح أمامك وإفلاته داخل نافذة المتصفح (Drag & Drop)، أو الضغط على زر 'تحميل حزمة غير مضغوطة' ولصق المسار (Ctrl + V).\n" +
+                      $"3. اضغط على أيقونة الإضافات (🧩) بجوار شريط العنوان في المتصفح، واضغط على زر التثبيت (Pin 📌) لتظهر أيقونة ScripOx دائماً."
+                    : $"✅ {browser.Name} launched with ScripOx Extension loaded!\n\n" +
                       $"• Loaded via --load-extension command argument\n" +
                       $"• Extension folder opened in Explorer and path copied to clipboard\n\n" +
-                      $"📌 Quick Setup Steps for {browser.Name}:\n" +
-                      $"1. Enable 'Developer mode' toggle in the top-right corner of the extensions page.\n" +
-                      $"2. Drag & drop the open extension folder directly into the browser, or click 'Load unpacked' and paste (Ctrl+V).\n" +
-                      $"3. Click the Extensions puzzle piece icon (🧩) on your browser toolbar and click Pin (📌) so ScripOx is always visible!";
+                      $"📌 Steps:\n" +
+                      $"1. Enable 'Developer mode' in top-right corner of {browser.Name}.\n" +
+                      $"2. Drag & drop the extension folder into the browser, or click 'Load unpacked'.\n" +
+                      $"3. Pin (📌) the ScripOx icon to your toolbar!";
 
                 return new InstallResult(true, successMsg);
             }
@@ -260,6 +282,21 @@ public static class ExtensionInstallerService
         {
             Log.Error(ex, "Extension install failed for {Browser}", browser.Name);
             return new InstallResult(false, $"Error: {ex.Message}");
+        }
+    }
+
+    private static void CopyDirectoryRecursive(string sourceDir, string targetDir)
+    {
+        Directory.CreateDirectory(targetDir);
+        foreach (var file in Directory.GetFiles(sourceDir))
+        {
+            var dest = Path.Combine(targetDir, Path.GetFileName(file));
+            File.Copy(file, dest, true);
+        }
+        foreach (var subDir in Directory.GetDirectories(sourceDir))
+        {
+            var destSub = Path.Combine(targetDir, Path.GetFileName(subDir));
+            CopyDirectoryRecursive(subDir, destSub);
         }
     }
 
