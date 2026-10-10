@@ -9,9 +9,9 @@
     <AssemblyName>ScripOx</AssemblyName>
     <RootNamespace>ScripOx.Desktop</RootNamespace>
     <ApplicationIcon>Resources\Icons\app.ico</ApplicationIcon>
-    <Version>1.0.9</Version>
-    <FileVersion>1.0.9.0</FileVersion>
-    <AssemblyVersion>1.0.9.0</AssemblyVersion>
+    <Version>1.1.0</Version>
+    <FileVersion>1.1.0.0</FileVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <Company>Ox Tech</Company>
     <Product>ScripOx</Product>
     <Copyright>© 2025 Ox Tech — oxtech.uk</Copyright>
@@ -55,7 +55,7 @@
 
   <!-- Embed map HTML as content (copied to output) -->
   <ItemGroup>
-    <Content Include="Resources\map\*.html">
+    <Content Include="Resources\map\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Resources\Flags\*.webp" />

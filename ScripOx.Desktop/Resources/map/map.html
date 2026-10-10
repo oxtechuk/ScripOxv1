@@ -5,11 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ScripOx Map Explorer</title>
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <!-- Leaflet MarkerCluster CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <!-- Leaflet CSS (Bundled Locally with CDN fallback) -->
+  <link rel="stylesheet" href="leaflet.css"/>
+  <link rel="stylesheet" href="MarkerCluster.css"/>
+  <link rel="stylesheet" href="MarkerCluster.Default.css"/>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.postMessage(JSON.stringify({ action: 'jsError', message: msg + ' (' + url + ':' + line + ')' }));
+      }
+    };
+  </script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -117,24 +123,26 @@
 
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- Leaflet JS (Bundled Locally) -->
+  <script src="leaflet.js"></script>
+  <script src="leaflet.markercluster.js"></script>
 
   <script>
-    // ── Free Tile Layers (No API key, No watermarks) ────────
-    const esriDarkBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Esri, &copy; OpenStreetMap',
-      maxZoom: 16,
-    });
-    const esriDarkLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 16,
-    });
-    const darkExecutive = L.layerGroup([esriDarkBase, esriDarkLabels]);
-
-    const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_4gjm_1_ab316b2518c383041d33b218', {
+    // ── Free Tile Layers (Reliable, No API Key Required) ────────
+    const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       attribution: '&copy; CARTO &copy; OpenStreetMap',
+      maxZoom: 19,
+    });
+
+    const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      attribution: '&copy; CARTO &copy; OpenStreetMap',
+      maxZoom: 19,
+    });
+
+    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
     });
 
@@ -147,12 +155,13 @@
       center: [26.0, 45.0],
       zoom: 4,
       zoomControl: true,
-      layers: [darkExecutive]
+      layers: [cartoDark]
     });
 
     const baseLayers = {
-      "🌙 Dark Executive": darkExecutive,
+      "🌙 Dark Modern": cartoDark,
       "🗺️ CARTO Voyager": cartoVoyager,
+      "🌐 OpenStreetMap": osmStandard,
       "🛰️ Satellite": esriSatellite
     };
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);

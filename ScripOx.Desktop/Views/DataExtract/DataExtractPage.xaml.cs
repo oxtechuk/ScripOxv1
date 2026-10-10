@@ -69,10 +69,16 @@ public partial class DataExtractPage : Page
         LocalizationService.LanguageChanged += OnLanguageChanged;
     }
 
+    private bool _isMapInitialized = false;
+
     private void DataExtractPage_Loaded(object sender, RoutedEventArgs e)
     {
         ApplyLanguage();
-        InitializeMapAsync();
+        if (!_isMapInitialized)
+        {
+            _isMapInitialized = true;
+            InitializeMapAsync();
+        }
     }
 
     private void OnLanguageChanged(object? sender, string lang)
@@ -128,6 +134,10 @@ public partial class DataExtractPage : Page
                 try
                 {
                     var raw = args.TryGetWebMessageAsString();
+                    if (string.IsNullOrEmpty(raw))
+                    {
+                        raw = args.WebMessageAsJson;
+                    }
                     if (string.IsNullOrEmpty(raw)) return;
                     using var doc = JsonDocument.Parse(raw);
                     if (doc.RootElement.TryGetProperty("type", out var typeEl) && typeEl.GetString() == "marker_moved")
@@ -139,6 +149,10 @@ public partial class DataExtractPage : Page
                             TxtLatitude.Text = lat.ToString("F4", CultureInfo.InvariantCulture);
                             TxtLongitude.Text = lng.ToString("F4", CultureInfo.InvariantCulture);
                         });
+                    }
+                    else if (doc.RootElement.TryGetProperty("action", out var actionEl) && actionEl.GetString() == "jsError")
+                    {
+                        Serilog.Log.Warning("DataExtract map JS warning: {Message}", doc.RootElement.GetProperty("message").GetString());
                     }
                 }
                 catch { }
@@ -152,14 +166,15 @@ public partial class DataExtractPage : Page
                 try
                 {
                     MapWebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-                        "appassets.scripox",
+                        "appassets.example",
                         mapFolder,
                         Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow
                     );
-                    MapWebView.CoreWebView2.Navigate("https://appassets.scripox/map_extract.html");
+                    MapWebView.CoreWebView2.Navigate("https://appassets.example/map_extract.html");
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Serilog.Log.Warning(ex, "SetVirtualHostNameToFolderMapping failed in DataExtractPage, falling back to direct URI");
                     MapWebView.CoreWebView2.Navigate(new Uri(mapPath).AbsoluteUri);
                 }
             }

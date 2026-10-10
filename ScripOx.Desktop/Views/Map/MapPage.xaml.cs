@@ -21,8 +21,12 @@ public partial class MapPage : Page
         Loaded += MapPage_Loaded;
     }
 
+    private bool _isInitialized = false;
+
     private async void MapPage_Loaded(object sender, RoutedEventArgs e)
     {
+        if (_isInitialized) return;
+        _isInitialized = true;
         await InitializeWebViewAsync();
     }
 
@@ -43,14 +47,15 @@ public partial class MapPage : Page
                 try
                 {
                     MapWebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-                        "appassets.scripox",
+                        "appassets.example",
                         mapFolder,
                         CoreWebView2HostResourceAccessKind.Allow
                     );
-                    MapWebView.CoreWebView2.Navigate("https://appassets.scripox/map.html");
+                    MapWebView.CoreWebView2.Navigate("https://appassets.example/map.html");
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Warning(ex, "SetVirtualHostNameToFolderMapping failed in MapPage, falling back to direct URI");
                     MapWebView.CoreWebView2.Navigate(new Uri(mapPath).AbsoluteUri);
                 }
             }
@@ -68,23 +73,33 @@ public partial class MapPage : Page
     private async void CoreWebView2_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
         var msg = e.TryGetWebMessageAsString();
-        if (msg == null) return;
+        if (string.IsNullOrEmpty(msg))
+        {
+            msg = e.WebMessageAsJson;
+        }
+        if (string.IsNullOrEmpty(msg)) return;
 
         try
         {
             var json = JsonDocument.Parse(msg);
-            var action = json.RootElement.GetProperty("action").GetString();
-
-            if (action == "mapReady")
+            if (json.RootElement.TryGetProperty("action", out var actionEl))
             {
-                _isMapReady = true;
-                await LoadMapDataAsync();
-            }
-            else if (action == "openCompany")
-            {
-                var id = json.RootElement.GetProperty("id").GetInt64();
-                var details = new CompanyDetailsWindow(id);
-                details.ShowDialog();
+                var action = actionEl.GetString();
+                if (action == "mapReady")
+                {
+                    _isMapReady = true;
+                    await LoadMapDataAsync();
+                }
+                else if (action == "openCompany" && json.RootElement.TryGetProperty("id", out var idEl))
+                {
+                    var id = idEl.GetInt64();
+                    var details = new CompanyDetailsWindow(id);
+                    details.ShowDialog();
+                }
+                else if (action == "jsError" && json.RootElement.TryGetProperty("message", out var msgEl))
+                {
+                    Log.Warning("Map JavaScript warning: {Message}", msgEl.GetString());
+                }
             }
         }
         catch (Exception ex)

@@ -4,9 +4,9 @@
 ; Contact: +201008616682
 ; =====================================================================
 
-#define MyAppName "ScripOx CRM"
+#define MyAppName "ScripOx"
 #ifndef MyAppVersion
-#define MyAppVersion "1.0.9"
+#define MyAppVersion "1.1.0"
 #endif
 #define MyAppPublisher "Ox Tech"
 #define MyAppURL "https://oxtech.uk"
@@ -28,8 +28,8 @@ VersionInfoDescription="ScripOx CRM - Lead & Market Intelligence Platform by Ox 
 VersionInfoVersion={#MyAppVersion}
 VersionInfoTextVersion={#MyAppVersion}
 VersionInfoCopyright="© 2025-2026 Ox Tech (oxtech.uk)"
-DefaultDirName={autopf}\{#MyAppPublisher}\{#MyAppName}
-DefaultGroupName={#MyAppPublisher}\{#MyAppName}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=no
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog commandline
