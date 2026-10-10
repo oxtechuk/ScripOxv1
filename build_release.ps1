@@ -77,14 +77,27 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "Publish completed successfully." -ForegroundColor Green
 
-Write-Host "`n[3.5/5] Copying Python Backend (ScripOx.Extractor)..." -ForegroundColor Yellow
+Write-Host "`n[3.5/5] Packaging Python Backend (Standalone ScripOxBackend.exe)..." -ForegroundColor Yellow
 $ExtractorSrc = Join-Path $RootDir "ScripOx.Extractor"
 $ExtractorDest = Join-Path $AppPublishDir "extractor"
-if (Test-Path $ExtractorDest) { Remove-Item $ExtractorDest -Recurse -Force }
-# Copy ignoring __pycache__ etc (simple copy for now)
-Copy-Item -Path $ExtractorSrc -Destination $ExtractorDest -Recurse -Force
-# Clean up pycache inside dist
-Get-ChildItem -Path $ExtractorDest -Include "__pycache__" -Recurse -Force | Remove-Item -Recurse -Force
+if (-not (Test-Path $ExtractorDest)) { New-Item -ItemType Directory -Path $ExtractorDest -Force | Out-Null }
+
+$BackendExe = Join-Path $ExtractorSrc "dist\ScripOxBackend.exe"
+if (-not (Test-Path $BackendExe)) {
+    Write-Host "Compiling standalone Python executable with PyInstaller..." -ForegroundColor Cyan
+    $VenvPython = Join-Path $ExtractorSrc ".venv\Scripts\python.exe"
+    $BuildScript = Join-Path $ExtractorSrc "build_backend.py"
+    & $VenvPython $BuildScript
+}
+
+if (Test-Path $BackendExe) {
+    Copy-Item -Path $BackendExe -Destination (Join-Path $ExtractorDest "ScripOxBackend.exe") -Force
+    Write-Host "✓ Bundled standalone ScripOxBackend.exe into installer package (Zero-Python client requirement)." -ForegroundColor Green
+} else {
+    Write-Warning "Could not find ScripOxBackend.exe! Falling back to copying source files."
+    Copy-Item -Path $ExtractorSrc -Destination $ExtractorDest -Recurse -Force
+    Get-ChildItem -Path $ExtractorDest -Include "__pycache__", ".venv" -Recurse -Force | Remove-Item -Recurse -Force
+}
 
 # 5. Compile Inno Setup Installer
 Write-Host "`n[4/5] Building Setup Installer with Inno Setup..." -ForegroundColor Yellow

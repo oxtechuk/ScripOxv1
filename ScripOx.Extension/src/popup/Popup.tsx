@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../index.css';
+import {
+  Crosshair,
+  PanelRight,
+  Download,
+  Settings as SettingsIcon,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 interface StatusData {
   connected: boolean;
@@ -42,27 +50,31 @@ function Popup() {
 
   return (
     <div
-      className="w-80 bg-[#FAFAFA] text-[#0F172A] p-5 space-y-4 rounded-2xl shadow-xl border border-slate-200"
-      style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}
+      className="w-80 bg-white text-slate-900 p-5 space-y-4 rounded-2xl shadow-xl border border-slate-100"
+      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
-      {/* Header (Hudson 8 & CRMEdge Style) */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <img src={chrome.runtime.getURL('assets/main_logo.png')} alt="ScripOx Logo" className="h-10 object-contain" />
+        <div className="flex items-center gap-2">
+          <img
+            src={chrome.runtime.getURL('assets/main_logo.png')}
+            alt="ScripOx Logo"
+            className="h-8 object-contain"
+          />
         </div>
 
         {/* Market Badge */}
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600">
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600">
           DE • UAE
         </span>
       </div>
 
-      {/* Connection Status Pill (CRMEdge Style) */}
+      {/* Connection Status Pill */}
       <div
         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border ${
           status.connected
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : 'bg-amber-50 border-amber-200 text-amber-800'
+            : 'bg-slate-50 border-slate-200 text-slate-700'
         }`}
       >
         <span
@@ -81,48 +93,56 @@ function Popup() {
         </span>
       </div>
 
-      {/* Action Buttons (CRMEdge Style) */}
+      {/* Action Buttons */}
       <div className="space-y-2 pt-1">
         <button
+          type="button"
           onClick={startPicker}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full
-                     bg-[#CEF22C] text-[#0F172A] font-bold text-xs hover:bg-[#bde01e]
-                     shadow-sm transition-all duration-150 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                     bg-blue-600 text-white font-medium text-xs hover:bg-blue-700
+                     shadow-sm transition-colors cursor-pointer"
         >
-          <span>🎯</span> Start Visual Picker
+          <Crosshair className="w-4 h-4" />
+          <span>Start Visual Picker</span>
         </button>
 
         <button
+          type="button"
           onClick={openSidebar}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full
-                     bg-[#0F172A] text-white font-semibold text-xs hover:bg-slate-800
-                     shadow-sm transition-all duration-150 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                     bg-slate-900 text-white font-medium text-xs hover:bg-slate-800
+                     shadow-sm transition-colors cursor-pointer"
         >
-          <span>📋</span> Open Data Sidebar
+          <PanelRight className="w-4 h-4" />
+          <span>Open Data Sidebar</span>
         </button>
 
         <button
+          type="button"
           onClick={() => window.open('http://oxtech.uk/p/scripox', '_blank')}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full
-                     bg-blue-600 text-white font-bold text-xs hover:bg-blue-700
-                     shadow-sm transition-all duration-150 cursor-pointer mt-2"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                     bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-100 hover:text-slate-900
+                     transition-colors cursor-pointer"
         >
-          <span>⬇️</span> حمل نسخة الدسكتوب
+          <Download className="w-4 h-4" />
+          <span>تحميل نسخة الديسكتوب</span>
         </button>
 
         <button
+          type="button"
           onClick={openOptions}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-full
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl
                      bg-white border border-slate-200 text-slate-600 font-medium text-xs
-                     hover:bg-slate-50 hover:text-slate-900 transition-all duration-150 cursor-pointer mt-1"
+                     hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
         >
-          <span>⚙️</span> Extension Settings
+          <SettingsIcon className="w-4 h-4" />
+          <span>Extension Settings</span>
         </button>
       </div>
 
       {/* Shortcuts */}
-      <div className="border-t border-slate-200 pt-3 space-y-1.5">
-        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+      <div className="border-t border-slate-100 pt-3 space-y-1.5">
+        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
           Quick Shortcuts
         </p>
         <div className="flex justify-between items-center text-xs text-slate-600">

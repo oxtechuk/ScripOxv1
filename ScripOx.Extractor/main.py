@@ -65,9 +65,16 @@ app.include_router(browser_router,  prefix="/api", tags=["Browser Extractor"])
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="ScripOx Extractor Service")
+    parser.add_argument("--port", type=int, default=settings.PORT, help="Port to listen on")
+    parser.add_argument("--host", type=str, default=settings.HOST, help="Host to bind to")
+    args, _ = parser.parse_known_args()
+
+    # Pass the app object directly to allow frozen PyInstaller executables to run
     uvicorn.run(
-        "main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG,
+        app,
+        host=args.host,
+        port=args.port,
+        reload=False,
     )

@@ -9,7 +9,9 @@
     <AssemblyName>ScripOx</AssemblyName>
     <RootNamespace>ScripOx.Desktop</RootNamespace>
     <ApplicationIcon>Resources\Icons\app.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.0.6</Version>
+    <FileVersion>1.0.6.0</FileVersion>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
     <Company>Ox Tech</Company>
     <Product>ScripOx</Product>
     <Copyright>© 2025 Ox Tech — oxtech.uk</Copyright>

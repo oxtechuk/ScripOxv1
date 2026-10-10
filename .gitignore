@@ -41,6 +41,8 @@ __pycache__/
 .pytest_cache/
 .env
 !.env.example
+*.spec
+ScripOx.Extractor/build/
 
 # Node / Web / Extension
 node_modules/
