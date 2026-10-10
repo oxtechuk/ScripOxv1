@@ -48,16 +48,7 @@ function Popup() {
       {/* Header (Hudson 8 & CRMEdge Style) */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#0F172A] flex items-center justify-center relative">
-            <span className="text-white font-bold text-sm">S</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-[#CEF22C] absolute top-1 right-1" />
-          </div>
-          <div>
-            <h1 className="font-bold text-sm tracking-tight text-[#0F172A]">
-              ScripOx Visual Hub
-            </h1>
-            <p className="text-[11px] text-slate-500 font-medium">Enterprise Data Extractor</p>
-          </div>
+          <img src={chrome.runtime.getURL('assets/main_logo.png')} alt="ScripOx Logo" className="h-10 object-contain" />
         </div>
 
         {/* Market Badge */}
@@ -111,10 +102,19 @@ function Popup() {
         </button>
 
         <button
+          onClick={() => window.open('http://oxtech.uk/p/scripox', '_blank')}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full
+                     bg-blue-600 text-white font-bold text-xs hover:bg-blue-700
+                     shadow-sm transition-all duration-150 cursor-pointer mt-2"
+        >
+          <span>⬇️</span> حمل نسخة الدسكتوب
+        </button>
+
+        <button
           onClick={openOptions}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-full
                      bg-white border border-slate-200 text-slate-600 font-medium text-xs
-                     hover:bg-slate-50 hover:text-slate-900 transition-all duration-150 cursor-pointer"
+                     hover:bg-slate-50 hover:text-slate-900 transition-all duration-150 cursor-pointer mt-1"
         >
           <span>⚙️</span> Extension Settings
         </button>

@@ -45,16 +45,12 @@
                 </StackPanel>
 
                 <!-- Right: 1-Click Communication Hub -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
                     <!-- WhatsApp Direct -->
-                    <Button x:Name="BtnWhatsApp" Style="{StaticResource ExBtnGhostPill}"
+                    <Button x:Name="BtnWhatsApp" Content="WhatsApp Direct" Style="{StaticResource ExBtnGhostPill}"
                             Height="36" Padding="14,0" Margin="0,0,8,0" Click="BtnWhatsApp_Click"
                             BorderBrush="#10B981" Foreground="#047857" FontWeight="SemiBold"
-                            ToolTip="Open International WhatsApp Direct Chat">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="WhatsApp Direct" FontSize="12" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                            ToolTip="Open International WhatsApp Direct Chat" />
 
                     <!-- Email -->
                     <Button x:Name="BtnEmail" Content="Email" Style="{StaticResource ExBtnGhostPill}"
@@ -63,7 +59,7 @@
                     <!-- Website -->
                     <Button x:Name="BtnWebsite" Content="Website" Style="{StaticResource ExBtnGhostPill}"
                             Height="36" Padding="14,0" Click="BtnWebsite_Click" FontSize="12"/>
-                </StackPanel>
+                </WrapPanel>
             </Grid>
         </Border>
 
@@ -81,37 +77,37 @@
                            FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0"/>
 
                 <!-- Quick Disposition Buttons -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <WrapPanel Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,-8">
                     <Button x:Name="BtnQualInterested" Content="Interested / مهتم" Height="32" Padding="14,0"
-                            Margin="0,0,8,0" Style="{StaticResource ExBtnGhostPill}"
+                            Margin="0,0,8,8" Style="{StaticResource ExBtnGhostPill}"
                             BorderBrush="#10B981" Foreground="#047857" FontWeight="SemiBold" FontSize="11"
                             Click="BtnQualInterested_Click"/>
 
                     <Button x:Name="BtnQualFollowUp" Content="Needs Follow-up / متابعة" Height="32" Padding="14,0"
-                            Margin="0,0,8,0" Style="{StaticResource ExBtnGhostPill}"
+                            Margin="0,0,8,8" Style="{StaticResource ExBtnGhostPill}"
                             BorderBrush="#F59E0B" Foreground="#B45309" FontWeight="SemiBold" FontSize="11"
                             Click="BtnQualFollowUp_Click"/>
 
                     <Button x:Name="BtnQualWon" Content="Deal Won / تم التعاقد" Height="32" Padding="14,0"
-                            Margin="0,0,8,0" Style="{StaticResource ExBtnGhostPill}"
+                            Margin="0,0,8,8" Style="{StaticResource ExBtnGhostPill}"
                             BorderBrush="#059669" Background="#ECFDF5" Foreground="#065F46" FontWeight="Bold" FontSize="11"
                             Click="BtnQualWon_Click"/>
 
                     <Button x:Name="BtnQualNotInterested" Content="Not Interested / غير مهتم" Height="32" Padding="14,0"
-                            Style="{StaticResource ExBtnGhostPill}"
+                            Margin="0,0,8,8" Style="{StaticResource ExBtnGhostPill}"
                             BorderBrush="#94A3B8" Foreground="#475569" FontSize="11"
                             Click="BtnQualNotInterested_Click"/>
-                </StackPanel>
 
-                <!-- Full Dropdown Backup -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ComboBox x:Name="CmbUpdateStatus" Width="140" Height="32" Margin="0,0,8,0"
-                              Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
-                              BorderBrush="{StaticResource ExBorderSubtle}" DisplayMemberPath="DisplayName"
-                              SelectedValuePath="Id" VerticalContentAlignment="Center" FontSize="11"/>
-                    <Button Content="Save" Style="{StaticResource ExBtnBlackPill}" Height="32" Padding="12,0"
-                            FontSize="11" Click="BtnSaveStatus_Click"/>
-                </StackPanel>
+                    <!-- Full Dropdown Backup -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <ComboBox x:Name="CmbUpdateStatus" Width="140" Height="32" Margin="0,0,8,0"
+                                  Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
+                                  BorderBrush="{StaticResource ExBorderSubtle}" DisplayMemberPath="DisplayName"
+                                  SelectedValuePath="Id" VerticalContentAlignment="Center" FontSize="11"/>
+                        <Button Content="Save" Style="{StaticResource ExBtnBlackPill}" Height="32" Padding="12,0"
+                                FontSize="11" Click="BtnSaveStatus_Click"/>
+                    </StackPanel>
+                </WrapPanel>
             </Grid>
         </Border>
 

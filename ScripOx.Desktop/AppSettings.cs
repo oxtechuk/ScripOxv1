@@ -16,12 +16,27 @@ public static class AppSettings
 
     private static string BuildConnectionString()
     {
-        var dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scripox.db");
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var appFolder = System.IO.Path.Combine(localAppData, "ScripOx");
+        if (!System.IO.Directory.Exists(appFolder))
+        {
+            System.IO.Directory.CreateDirectory(appFolder);
+        }
+        var dbPath = System.IO.Path.Combine(appFolder, "scripox.db");
+
+        // If local dev db exists in BaseDirectory and none exists in LocalAppData, copy it over
+        var devDb = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scripox.db");
+        if (!System.IO.File.Exists(dbPath) && System.IO.File.Exists(devDb))
+        {
+            try { System.IO.File.Copy(devDb, dbPath, true); } catch { }
+        }
+
         return $"Data Source={dbPath};";
     }
 
     // ── Python API ───────────────────────────────────────────
-    public static string ExtractorApiBaseUrl { get; set; } = "http://127.0.0.1:8765";
+    public static int ApiPort { get; set; } = 8765;
+    public static string ExtractorApiBaseUrl { get => $"http://127.0.0.1:{ApiPort}"; }
 
     // ── UI preferences (persisted per-session) ───────────────
     public static string Language { get; set; } = "en";

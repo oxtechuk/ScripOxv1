@@ -19,6 +19,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Images\**\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Database -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.2" />
 
@@ -38,6 +42,7 @@
     <PackageReference Include="Serilog" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.12" />
 
     <!-- HTTP (for calling Python FastAPI) -->
     <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
@@ -51,12 +56,15 @@
     <Content Include="Resources\map\map.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Resources\Flags\*.webp" />
+    <Content Include="Resources\Flags\*.webp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <!-- Bundle the Chrome Extension dist folder with the app -->
   <ItemGroup>
-    <Content Include="..\ScripOx.Extension\dist\**\*"
-             Link="Extension\%(RecursiveDir)%(Filename)%(Extension)">
+    <Content Include="..\ScripOx.Extension\dist\**\*" Link="Extension\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

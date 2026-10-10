@@ -14,4 +14,7 @@ public class Source
     public int? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public string InspectButtonText => Services.LocalizationService.IsRtl ? "معاينة المخطط" : "Inspect Schema";
+    public string UpdatedAtDisplay => UpdatedAt != DateTime.MinValue ? UpdatedAt.ToString("yyyy-MM-dd HH:mm") : "-";
 }

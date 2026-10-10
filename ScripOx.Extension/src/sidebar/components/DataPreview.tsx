@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { sendExtraction } from '../../api/ScripOxClient';
 import { AutoCrawler } from '../../content/engines/AutoCrawler';
+import { ExportGroupModal } from './ExportGroupModal';
 import type { ExtractedRecord } from '../../types';
 import {
   Table, Search, X, Wand2, Download, Send, Trash2,
@@ -48,6 +49,9 @@ export function DataPreview() {
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [isSendingToDesktop, setIsSendingToDesktop] = useState(false);
   const [desktopFallbackNotice, setDesktopFallbackNotice] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [sendOnlySelected, setSendOnlySelected] = useState(false);
+  const [activeGroupName, setActiveGroupName] = useState('عملاء محتملون');
 
   // All detected fields/columns across all records
   const allFields = useMemo(() => {
@@ -130,14 +134,31 @@ export function DataPreview() {
     }
   };
 
-  // ── Send to Desktop with Intelligent Fallback ───────────────
-  const handleSendToDesktop = async (onlySelected = false) => {
+  // ── Send to Desktop with Required Group Name ───────────────
+  const onTriggerSendToDesktop = (onlySelected = false) => {
     const rowsToSend = onlySelected
+      ? records.filter((_, idx) => selectedRowIndices.includes(idx))
+      : records;
+    if (rowsToSend.length === 0) return;
+    setSendOnlySelected(onlySelected);
+    setShowGroupModal(true);
+  };
+
+  const handleConfirmSendToDesktop = async (groupName: string) => {
+    const rowsToSend = sendOnlySelected
       ? records.filter((_, idx) => selectedRowIndices.includes(idx))
       : records;
 
     if (rowsToSend.length === 0) return;
+    setActiveGroupName(groupName);
+    setShowGroupModal(false);
     setIsSendingToDesktop(true);
+
+    const enrichedRows = rowsToSend.map((rec) => ({
+      ...rec,
+      category: groupName,
+      group_name: groupName,
+    }));
 
     try {
       await sendExtraction({
@@ -146,9 +167,10 @@ export function DataPreview() {
         selector: selectors?.bestSelector || 'scripox-grid-view',
         xpath: selectors?.xpath || '//div',
         mapping: {},
-        records: rowsToSend,
+        records: enrichedRows,
+        group_name: groupName,
       });
-      notify(`تم إرسال ${rowsToSend.length} سجل إلى ScripOx Desktop بنجاح ✓`);
+      notify(`تم إرسال ${enrichedRows.length} سجل إلى مجموعة [${groupName}] بالديسكتوب بنجاح ✓`);
       setDesktopFallbackNotice(false);
     } catch (err) {
       // Backend not running on port 8765 -> directly trigger desktop JSON export
@@ -160,22 +182,29 @@ export function DataPreview() {
   };
 
   const handleDownloadDesktopFile = () => {
+    const trimmedGroup = activeGroupName || 'عملاء محتملون';
     const payload = {
       scripox_version: '1.0',
       exported_at: new Date().toISOString(),
+      group_name: trimmedGroup,
+      category: trimmedGroup,
       url: location.href,
       title: document.title,
-      records: records,
+      records: records.map((r) => ({
+        ...r,
+        category: trimmedGroup,
+        group_name: trimmedGroup,
+      })),
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `scripox_desktop_${Date.now()}.json`;
+    a.download = `scripox_${trimmedGroup.replace(/\s+/g, '_')}_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setDesktopFallbackNotice(false);
-    notify('تم تنزيل ملف الديسكتوب (.json) بنجاح');
+    notify(`تم تنزيل ملف الديسكتوب لمجموعة [${trimmedGroup}] بنجاح`);
   };
 
   if (!selectors && records.length === 0) {
@@ -327,7 +356,7 @@ export function DataPreview() {
 
             {/* Send to Desktop Core (Always Responsive) */}
             <button
-              onClick={() => handleSendToDesktop(false)}
+              onClick={() => onTriggerSendToDesktop(false)}
               disabled={isSendingToDesktop}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border transition-all shadow-2xs cursor-pointer ${
                 isDark
@@ -472,7 +501,7 @@ export function DataPreview() {
             </button>
 
             <button
-              onClick={() => handleSendToDesktop(true)}
+              onClick={() => onTriggerSendToDesktop(true)}
               className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-2xs"
             >
               <Send className="w-3 h-3 text-emerald-400" />
@@ -666,6 +695,16 @@ export function DataPreview() {
           </div>
         </div>
       </div>
+
+      {/* Required Group Name Modal Before Export */}
+      <ExportGroupModal
+        isOpen={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        onConfirm={handleConfirmSendToDesktop}
+        recordCount={sendOnlySelected ? selectedRowIndices.length : records.length}
+        isDark={isDark}
+        isSending={isSendingToDesktop}
+      />
     </div>
   );
 }

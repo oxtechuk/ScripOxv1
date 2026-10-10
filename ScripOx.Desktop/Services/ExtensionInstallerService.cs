@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using Microsoft.Win32;
 using Serilog;
 
@@ -124,10 +125,19 @@ public static class ExtensionInstallerService
                 return new InstallResult(false,
                     $"Extension folder not found at:\n{extPath}\n\nPlease rebuild the extension first.");
 
-            // ── Step 1: Write a stable registry path hint ──────
+            // ── Step 1: Copy extension directory path to Windows Clipboard ──
+            try
+            {
+                Clipboard.SetText(extPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to copy extension path to clipboard");
+            }
+
+            // ── Step 2: Write Registry policies & external extension hints ──
             WriteRegistryHint(browser, extPath);
 
-            // ── Step 2: Open browser to its Extensions page ────
             var url = browser.Kind switch {
                 BrowserKind.Chrome  => "chrome://extensions",
                 BrowserKind.Edge    => "edge://extensions",
@@ -135,30 +145,94 @@ public static class ExtensionInstallerService
                 _                   => "chrome://extensions",
             };
 
-            if (browser.ExePath != null && File.Exists(browser.ExePath))
+            if (browser.ExePath == null || !File.Exists(browser.ExePath))
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName  = browser.ExePath,
-                    Arguments = url,
-                    UseShellExecute = false,
-                });
-                await Task.Delay(1500);
+                return new InstallResult(false, $"Browser executable not found: {browser.Name}");
             }
 
-            return new InstallResult(true,
-                $"Extension folder detected at:\n{extPath}\n\n" +
-                $"The browser has been opened to the extensions page.\n\n" +
-                $"Steps:\n" +
-                $"1. Enable 'Developer mode' (top-right toggle)\n" +
-                $"2. Click 'Load unpacked'\n" +
-                $"3. Select the folder above\n" +
-                $"4. Complete! ScripOx extension is active and linked.");
+            bool isAr = LocalizationService.CurrentLanguage == "ar";
+            var procName = Path.GetFileNameWithoutExtension(browser.ExePath);
+            var runningProcs = Process.GetProcessesByName(procName);
+
+            if (runningProcs.Length > 0)
+            {
+                var promptMsg = isAr
+                    ? $"متصفح {browser.Name} قيد التشغيل حالياً.\n\nلتثبيت وتحميل الإضافة تلقائياً، يحتاج المتصفح إلى إعادة التشغيل مع تحميل الإضافة.\n\nهل ترغب في إعادة تشغيل {browser.Name} الآن وتثبيت الإضافة فوراً؟\n\n(ملاحظة: تم نسخ مسار الإضافة إلى الحافظة Clipboard أيضاً)"
+                    : $"{browser.Name} is currently running.\n\nTo automatically attach and load the extension, the browser needs to restart with the extension loaded.\n\nWould you like to restart {browser.Name} now and install the extension?\n\n(Note: The extension folder path is also copied to your clipboard)";
+
+                var dialogResult = MessageBox.Show(promptMsg, isAr ? "تثبيت إضافة ScripOx" : "Install ScripOx Extension", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (dialogResult == MessageBoxResult.Yes)
+                {
+                    foreach (var p in runningProcs)
+                    {
+                        try { p.CloseMainWindow(); } catch { }
+                    }
+                    await Task.Delay(800);
+                    foreach (var p in Process.GetProcessesByName(procName))
+                    {
+                        try { p.Kill(); } catch { }
+                    }
+                    await Task.Delay(600);
+                }
+            }
+
+            // ── Step 3: Launch browser with --load-extension ──────
+            var args = $"--load-extension=\"{extPath}\" --enable-extensions \"{url}\"";
+            Process.Start(new ProcessStartInfo
+            {
+                FileName        = browser.ExePath,
+                Arguments       = args,
+                UseShellExecute = false,
+            });
+
+            var successMsg = isAr
+                ? $"✅ تم إطلاق {browser.Name} وتحميل إضافة ScripOx بنجاح!\n\n" +
+                  $"• تم إرفاق الإضافة تلقائياً عبر أمر: --load-extension\n" +
+                  $"• مسار الإضافة محفوظ في الحافظة (Clipboard): {extPath}\n\n" +
+                  $"يمكنك أيضاً الضغط على زر 'تحميل حزمة غير مضغوطة (Load unpacked)' في صفحة الإضافات ولصق المسار مباشرة (Ctrl + V) لتثبيتها بصورة دائمة."
+                : $"✅ {browser.Name} launched with ScripOx Extension loaded!\n\n" +
+                  $"• Extension automatically attached via --load-extension\n" +
+                  $"• Extension path copied to Clipboard: {extPath}\n\n" +
+                  $"You can also click 'Load unpacked' on the opened extensions page and paste (Ctrl+V) the path to persist permanently.";
+
+            return new InstallResult(true, successMsg);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Extension install failed for {Browser}", browser.Name);
             return new InstallResult(false, $"Error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Creates a desktop shortcut for the browser that always launches with ScripOx extension loaded.
+    /// </summary>
+    public static bool CreateDesktopShortcut(BrowserInfo browser)
+    {
+        try
+        {
+            if (browser.ExePath == null || !File.Exists(browser.ExePath)) return false;
+            var extPath = GetExtensionDistPath();
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var shortcutFile = Path.Combine(desktop, $"{browser.Name} (ScripOx Extractor).lnk");
+
+            var script = $"$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('{shortcutFile.Replace("'", "''")}'); $s.TargetPath = '{browser.ExePath.Replace("'", "''")}'; $s.Arguments = '--load-extension=\"\"{extPath.Replace("'", "''")}\"\" --enable-extensions'; $s.Description = 'Launch {browser.Name} with ScripOx Visual Extractor'; $s.Save()";
+
+            var psi = new ProcessStartInfo
+            {
+                FileName        = "powershell.exe",
+                Arguments       = $"-NoProfile -Command \"{script}\"",
+                CreateNoWindow  = true,
+                UseShellExecute = false
+            };
+            var p = Process.Start(psi);
+            p?.WaitForExit(3000);
+            return File.Exists(shortcutFile);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to create desktop shortcut");
+            return false;
         }
     }
 
@@ -214,17 +288,51 @@ public static class ExtensionInstallerService
     {
         try
         {
-            // Write a simple registry marker so other tools can find the path
+            // 1. Write application registry hint
             const string keyPath = @"SOFTWARE\OxTech\ScripOx\Extension";
-            using var key = Registry.CurrentUser.CreateSubKey(keyPath, true);
-            key.SetValue("InstallPath",  extPath);
-            key.SetValue("Browser",      browser.Name);
-            key.SetValue("Version",      ExtVersion);
-            key.SetValue("InstalledAt",  DateTime.Now.ToString("O"));
+            using (var key = Registry.CurrentUser.CreateSubKey(keyPath, true))
+            {
+                key?.SetValue("InstallPath",  extPath);
+                key?.SetValue("Browser",      browser.Name);
+                key?.SetValue("Version",      ExtVersion);
+                key?.SetValue("InstalledAt",  DateTime.Now.ToString("O"));
+            }
+
+            // 2. Write Chrome / Chromium Policy keys (allow file:// extension sources)
+            string? policyBase = browser.Kind switch
+            {
+                BrowserKind.Chrome => @"Software\Policies\Google\Chrome",
+                BrowserKind.Edge   => @"Software\Policies\Microsoft\Edge",
+                BrowserKind.Brave  => @"Software\Policies\BraveSoftware\Brave",
+                _                  => null
+            };
+
+            if (policyBase != null)
+            {
+                using var srcKey = Registry.CurrentUser.CreateSubKey($@"{policyBase}\ExtensionInstallSources", true);
+                srcKey?.SetValue("1", "file:///*");
+                srcKey?.SetValue("2", "http://127.0.0.1:*/*");
+            }
+
+            // 3. Register external extension in HKCU
+            string? extRegBase = browser.Kind switch
+            {
+                BrowserKind.Chrome => @"Software\Google\Chrome\Extensions\scripox_extractor",
+                BrowserKind.Edge   => @"Software\Microsoft\Edge\Extensions\scripox_extractor",
+                BrowserKind.Brave  => @"Software\BraveSoftware\Brave-Browser\Extensions\scripox_extractor",
+                _                  => null
+            };
+
+            if (extRegBase != null)
+            {
+                using var extKey = Registry.CurrentUser.CreateSubKey(extRegBase, true);
+                extKey?.SetValue("path", extPath);
+                extKey?.SetValue("version", ExtVersion);
+            }
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Could not write registry hint");
+            Log.Warning(ex, "Could not write registry hints or policies");
         }
     }
 }

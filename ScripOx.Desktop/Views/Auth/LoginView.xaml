@@ -122,26 +122,11 @@
                 </Border.Background>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <!-- Logo -->
-                    <Ellipse Width="80" Height="80" HorizontalAlignment="Center">
-                        <Ellipse.Fill>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#1D6FA4" Offset="0"/>
-                                <GradientStop Color="#4A9FD4" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Ellipse.Fill>
-                    </Ellipse>
-                    <TextBlock Text="ScripOx"
-                               FontSize="32" FontWeight="Bold"
-                               Foreground="White"
-                               HorizontalAlignment="Center"
-                               Margin="0,16,0,4"
-                               FontFamily="Segoe UI"/>
-                    <TextBlock Text="Ox Tech — oxtech.uk"
-                               FontSize="13"
-                               Foreground="#7AAFCC"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,32"
-                               FontFamily="Segoe UI"/>
+                    <Image Source="pack://application:,,,/Resources/Images/logo_vertical_white.png"
+                           Width="200"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,32"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
 
                     <!-- Features list -->
                     <StackPanel>

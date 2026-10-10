@@ -20,11 +20,47 @@ public partial class SourcesPage : Page
         InitializeComponent();
         _sourceService = new SourceService(AppSettings.ConnectionString);
         Loaded += OnLoaded;
+        LocalizationService.LanguageChanged += (s, l) => ApplyLanguage();
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        ApplyLanguage();
         await LoadSourcesAsync();
+    }
+
+    public void ApplyLanguage()
+    {
+        var lang = LocalizationService.CurrentLanguage;
+        var isAr = lang == "ar";
+        var isDe = lang == "de";
+
+        FlowDirection = isAr ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+
+        TxtHeaderTitle.Text = isAr ? "مصادر البيانات وسكربتات الاستخراج" : (isDe ? "Datenquellen & Scripte" : "Data Sources & Extraction Scripts");
+        TxtHeaderSubtitle.Text = isAr
+            ? "المصادر المفعلة وسكربتات التحديد المرئي التي تم التقاطها عبر إضافة المتصفح."
+            : (isDe ? "Aktive Quellen und visuelle Selektoren, erfasst über die Browser-Erweiterung."
+                    : "Active sources and visual selector schemas captured via the browser extension.");
+        BtnRefresh.Content = isAr ? "🔄 تحديث المصادر" : (isDe ? "🔄 Aktualisieren" : "🔄 Refresh Sources");
+
+        TxtNoSources.Text = isAr
+            ? "لا توجد مصادر أو سكربتات مكتشفة حالياً. استخدم إضافة المتصفح لالتقاط وتحديد بيانات الصفحات."
+            : (isDe ? "Keine Quellen vorhanden. Verwenden Sie die Browser-Erweiterung."
+                    : "No data sources found. Use the browser extension to capture page schemas.");
+
+        TxtEmptyInspectorMsg.Text = isAr
+            ? "اختر مصدراً من القائمة لمعاينة عناصر ومحددات الاستخراج."
+            : (isDe ? "Wählen Sie eine Quelle aus der Liste aus."
+                    : "Select a source from the list to preview schema selectors and field mappings.");
+
+        TxtInspectorTitle.Text = isAr ? "مخطط السكربت" : (isDe ? "Script-Schema" : "Schema Details");
+        TabSelectors.Header = isAr ? "محددات CSS & XPath" : (isDe ? "CSS & XPath Selektoren" : "CSS & XPath Selectors");
+        TabMappings.Header = isAr ? "مطابقة الحقول" : (isDe ? "Feldzuordnung" : "Field Mappings");
+
+        LblCssSelector.Text = isAr ? "محدد CSS (CSS Selector):" : (isDe ? "CSS-Selektor:" : "CSS Selector:");
+        LblXPath.Text = isAr ? "مسار XPath:" : (isDe ? "XPath-Pfad:" : "XPath Path:");
+        LblFieldSchema.Text = isAr ? "مخطط الحقول المستخرجة:" : (isDe ? "Extrahierte Felder:" : "Extracted Fields Schema:");
     }
 
     private async void BtnRefresh_Click(object sender, RoutedEventArgs e)

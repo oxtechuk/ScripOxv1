@@ -27,14 +27,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build Extension (if needed)
-        run: |
-          cd ScripOx.Extension
-          if (Test-Path package.json) {
-            npm ci --ignore-scripts
-            npm run build --if-present
-          }
-        shell: powershell
+      - name: Setup Inno Setup
+        uses: chrebel/action-inno-setup@v2
 
       - name: Extract Tag Version
         id: get_version
@@ -48,31 +42,57 @@ jobs:
           Write-Output "APP_VERSION=$ver" >> $env:GITHUB_ENV
         shell: powershell
 
-      - name: Publish ScripOx Desktop
+      - name: Build Chrome Extension
+        run: |
+          cd ScripOx.Extension
+          if (Test-Path package.json) {
+            npm ci --ignore-scripts
+            npm run build --if-present
+          }
+        shell: powershell
+
+      - name: Publish ScripOx Desktop (Self-Contained win-x64)
         run: |
           dotnet publish ScripOx.Desktop/ScripOx.Desktop.csproj `
             -c Release `
             -r win-x64 `
-            --self-contained false `
+            --self-contained true `
             -p:PublishSingleFile=false `
             -p:Version=$env:APP_VERSION `
-            -o ./publish/ScripOx
+            -o ./dist/app
         shell: powershell
 
-      - name: Compress Publish Directory
+      - name: Build Inno Setup Installer
         run: |
-          Compress-Archive -Path ./publish/ScripOx/* -DestinationPath ./publish/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+          iscc "/DMyAppVersion=$env:APP_VERSION" installer.iss
+        shell: powershell
+
+      - name: Create Portable ZIP & Checksums
+        run: |
+          Compress-Archive -Path ./dist/app/* -DestinationPath ./dist/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+          
+          $installer = "./dist/installer/ScripOx-Setup-v${{ env.APP_VERSION }}.exe"
+          $zip = "./dist/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip"
+          $iHash = (Get-FileHash -Path $installer -Algorithm SHA256).Hash
+          $zHash = (Get-FileHash -Path $zip -Algorithm SHA256).Hash
+          
+          @"
+          $iHash  ScripOx-Setup-v${{ env.APP_VERSION }}.exe
+          $zHash  ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+          "@ | Out-File -FilePath ./dist/SHA256SUMS.txt -Encoding utf8
         shell: powershell
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: "ScripOx Release ${{ github.ref_name }}"
+          name: "ScripOx CRM Release ${{ github.ref_name }}"
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            ./publish/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+            ./dist/installer/ScripOx-Setup-v${{ env.APP_VERSION }}.exe
+            ./dist/ScripOx-v${{ env.APP_VERSION }}-win-x64.zip
+            ./dist/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

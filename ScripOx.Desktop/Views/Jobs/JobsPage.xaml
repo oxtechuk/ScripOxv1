@@ -1,110 +1,338 @@
 <Page x:Class="ScripOx.Desktop.Views.Jobs.JobsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      Title="Extraction Jobs"
+      Title="Smart Web &amp; Contact Crawler"
       Background="{StaticResource ExCanvasBg}">
 
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>  <!-- New Extraction Card -->
-            <RowDefinition Height="*"/>     <!-- History Card -->
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- Header -->
+                <RowDefinition Height="Auto"/>  <!-- Configuration Card -->
+                <RowDefinition Height="Auto"/>  <!-- Live Metrics Card -->
+                <RowDefinition Height="370"/>   <!-- Split: Terminal & Discovered -->
+                <RowDefinition Height="Auto"/>  <!-- Jobs History Card -->
+            </Grid.RowDefinitions>
 
-        <!-- ── New Extraction Pipeline Card (Apple Style) ─────── -->
-        <Border Grid.Row="0" Style="{StaticResource ExCard}" Margin="0,0,0,20">
-            <StackPanel>
-                <TextBlock Text="Start Extraction Pipeline" FontSize="16" FontWeight="Bold"
-                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
+            <!-- ── 0. Top Header ────────────────────────────────────── -->
+            <Grid Grid.Row="0" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource ExAccentLime}" Margin="0,0,12,0">
+                            <Path Data="{StaticResource IconJobsGeom}" Stroke="{StaticResource ExDarkObsidian}" StrokeThickness="1.5"
+                                  Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="TxtHeaderTitle" Text="مركز الاستخراج والزحف الذكي للمواقع (Web &amp; Contact Crawler)"
+                                   FontSize="20" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtHeaderSubtitle" Text="محرك متقدم لفحص مواقع الشركات، زيارة صفحات /contact والتواصل، واستخراج الإيميلات (@) وأرقام الهواتف وتحديث قاعدة البيانات فورياً"
+                               FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="48,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnRefreshJobs" Content="تحديث السجل 🔄" Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" Padding="16,0" Click="BtnRefreshJobs_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── 1. Crawler Configuration Card (Never Cut-Off) ───── -->
+            <Border Grid.Row="1" Style="{StaticResource ExCard}" Margin="0,0,0,16" Padding="22">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>  <!-- Title & Status -->
+                        <RowDefinition Height="Auto"/>  <!-- Row 1: Source & Filters -->
+                        <RowDefinition Height="Auto"/>  <!-- Row 2: Checkboxes & Big Action Buttons -->
+                    </Grid.RowDefinitions>
 
-                    <!-- Source Selector -->
-                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                        <TextBlock Text="Source Gateway" FontSize="11" FontWeight="Medium" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                        <ComboBox x:Name="CmbSource" Width="180" Height="36" SelectedIndex="0"
-                                  Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
-                                  BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center">
-                            <ComboBoxItem Content="Google Maps Places"/>
-                            <ComboBoxItem Content="CSV / Excel Pipeline"/>
-                        </ComboBox>
-                    </StackPanel>
+                    <!-- Title & Target Counter -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtConfigTitle" Text="إعدادات مصدر البيانات والزحف الذكي" FontSize="15" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}"/>
+                            <Border CornerRadius="10" Background="{StaticResource ExAccentLimeLight}" Padding="10,3" Margin="12,0,0,0">
+                                <TextBlock x:Name="TxtAntiBotBadge" Text="🛡️ نظام التخفي وتفادي حظر الروبوتات مفعّل" FontSize="11" FontWeight="SemiBold" Foreground="#3F6212"/>
+                            </Border>
+                        </StackPanel>
 
-                    <!-- Keyword Input -->
-                    <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                        <TextBlock Text="Search Keyword" FontSize="11" FontWeight="Medium" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                        <TextBox x:Name="TxtKeyword" Width="200" Height="36" Style="{StaticResource ExSearchBox}"
-                                 VerticalContentAlignment="Center" FontSize="12"/>
-                    </StackPanel>
-
-                    <!-- Location Input -->
-                    <StackPanel Grid.Column="2" Margin="0,0,16,0">
-                        <TextBlock Text="Target Location / Market" FontSize="11" FontWeight="Medium" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                        <TextBox x:Name="TxtLocation" Width="200" Height="36" Style="{StaticResource ExSearchBox}"
-                                 VerticalContentAlignment="Center" FontSize="12"/>
-                    </StackPanel>
-
-                    <!-- Launch Button -->
-                    <StackPanel Grid.Column="3" VerticalAlignment="Bottom">
-                        <Button Content="Launch Job" Style="{StaticResource ExBtnBlackPill}"
-                                Height="36" Padding="20,0" Click="BtnStartJob_Click"/>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <!-- ── Job History & Status DataGrid Card ────────────── -->
-        <Border Grid.Row="1" Style="{StaticResource ExCard}" Padding="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="0" Padding="20,16" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <TextBlock Text="Pipeline History &amp; Status" FontSize="15" FontWeight="Bold"
-                                   Foreground="{StaticResource ExTextPrimary}"/>
-                        <TextBlock Text="Live monitoring of automated scrapers" FontSize="11"
+                        <TextBlock x:Name="TxtAvailableTargets" Text="جارٍ حصر المواقع المستهدفة..." FontSize="12" FontWeight="SemiBold"
                                    Foreground="{StaticResource ExTextSecondary}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Row 1: Selectors -->
+                    <Grid Grid.Row="1" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Source Type -->
+                        <StackPanel Grid.Column="0" Margin="0,0,14,0">
+                            <TextBlock x:Name="LblSourceType" Text="مصدر الروابط والشركات" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="CmbSourceType" Height="36" SelectedIndex="0"
+                                      Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
+                                      BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center"
+                                      SelectionChanged="CmbSourceType_SelectionChanged">
+                                <ComboBoxItem Content="🌐 كل الشركات التي لها موقع"/>
+                                <ComboBoxItem Content="📁 تصفية بمجموعة / تصنيف"/>
+                                <ComboBoxItem Content="🔗 روابط مخصصة"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Category Selector -->
+                        <StackPanel x:Name="PnlCategory" Grid.Column="1" Margin="0,0,14,0">
+                            <TextBlock x:Name="LblTargetCategory" Text="المجموعة / التصنيف المستهدف" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="CmbTargetCategory" Height="36"
+                                      Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
+                                      BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center"
+                                      SelectionChanged="CmbTargetCategory_SelectionChanged"/>
+                        </StackPanel>
+
+                        <!-- Anti-Bot Mode -->
+                        <StackPanel Grid.Column="2" Margin="0,0,14,0">
+                            <TextBlock x:Name="LblCrawlMode" Text="نمط الزحف والحماية" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="CmbCrawlMode" Height="36" SelectedIndex="0"
+                                      Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
+                                      BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center">
+                                <ComboBoxItem Content="🛡️ وضع التخفي البشري (موصى به)"/>
+                                <ComboBoxItem Content="⚡ وضع السرعة الفائقة"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Row 2: Checkboxes (Left) + Prominent Action Buttons (Right) -->
+                    <Grid Grid.Row="2" Background="#F8FAFC" Margin="-6,0,-6,-6" HorizontalAlignment="Stretch">
+                        <Border CornerRadius="12" Padding="14,12" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Options Checkboxes -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox x:Name="ChkProbeContact" Content="فحص مسار /contact وصفحات التواصل تلقائياً" IsChecked="True"
+                                              FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,20,0"/>
+                                    <CheckBox x:Name="ChkExtractEmails" Content="استخراج الإيميلات (@)" IsChecked="True"
+                                              FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,20,0"/>
+                                    <CheckBox x:Name="ChkExtractPhones" Content="استخراج أرقام الهواتف" IsChecked="True"
+                                              FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,10,0"/>
+                                </StackPanel>
+
+                                <!-- Prominent Action Buttons (ALWAYS VISIBLE) -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="BtnStartCrawler" Content="▶ بدء الاستخراج والزحف الذكي" Style="{StaticResource ExBtnLimePill}"
+                                            Height="38" Padding="22,0" Margin="0,0,12,0" Click="BtnStartCrawler_Click"/>
+                                    <Button x:Name="BtnStopCrawler" Content="⏹ إيقاف الزحف" Style="{StaticResource ExBtnGhostPill}"
+                                            Height="38" Padding="18,0" IsEnabled="False" Click="BtnStopCrawler_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ── 2. Live Metrics & Progress Card (4 Adaptive Tiles) ── -->
+            <Border Grid.Row="2" Style="{StaticResource ExCard}" Margin="0,0,0,16" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Title & Percentage Row -->
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtProgressTitle" Text="حالة الزحف المباشر ونسبة الإنجاز" FontSize="14" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}"/>
+                            <TextBlock x:Name="TxtStatusHint" Text="جاهز للبدء" FontSize="11" Foreground="{StaticResource ExTextSecondary}" Margin="12,2,0,0"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtProgressPct" Text="0%" FontSize="15" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- Modern Progress Bar -->
+                    <ProgressBar x:Name="PbCrawlProgress" Grid.Row="1" Height="8" Minimum="0" Maximum="100" Value="0"
+                                 Foreground="{StaticResource ExAccentLime}" Background="{StaticResource ExBorderLight}"
+                                 BorderThickness="0" Margin="0,0,0,16"/>
+
+                    <!-- 4 Refined Adaptive Metric Tiles -->
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Tile 1: Total Targets -->
+                        <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16,12" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock x:Name="LblMetricTotal" Text="🌐 إجمالي المواقع المستهدفة" FontSize="11" FontWeight="Medium" Foreground="{StaticResource ExTextSecondary}"/>
+                                <TextBlock x:Name="TxtMetricTotal" Text="0" FontSize="22" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tile 2: Processed -->
+                        <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16,12" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock x:Name="LblMetricChecked" Text="⚡ تم فحصها" FontSize="11" FontWeight="Medium" Foreground="{StaticResource ExTextSecondary}"/>
+                                <TextBlock x:Name="TxtMetricChecked" Text="0" FontSize="22" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tile 3: Emails Extracted -->
+                        <Border Grid.Column="2" Background="{StaticResource ExAccentLimeLight}" BorderBrush="{StaticResource ExAccentLime}" BorderThickness="1" CornerRadius="12" Padding="16,12" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock x:Name="LblMetricEmails" Text="✉️ إيميلات مستخرجة (@)" FontSize="11" FontWeight="Bold" Foreground="#3F6212"/>
+                                <TextBlock x:Name="TxtMetricEmails" Text="0" FontSize="22" FontWeight="Bold" Foreground="#3F6212" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tile 4: Phones Extracted -->
+                        <Border Grid.Column="3" Background="{StaticResource ExStatusInfoBg}" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="16,12">
+                            <StackPanel>
+                                <TextBlock x:Name="LblMetricPhones" Text="📞 أرقام هواتف مستخرجة" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExStatusInfoText}"/>
+                                <TextBlock x:Name="TxtMetricPhones" Text="0" FontSize="22" FontWeight="Bold" Foreground="{StaticResource ExStatusInfoText}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ── 3. Split: Terminal Console & Live Discovered Table ── -->
+            <Grid Grid.Row="3" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.1*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="0.9*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Column: Live Terminal Console -->
+                <Border Grid.Column="0" Style="{StaticResource ExCard}" Padding="0" Background="#090D16" BorderBrush="#1E293B">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Terminal Title Bar -->
+                        <Border Grid.Row="0" Background="#0F172A" Padding="14,10" BorderBrush="#1E293B" BorderThickness="0,0,0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse Width="10" Height="10" Fill="#EF4444" Margin="0,0,6,0"/>
+                                    <Ellipse Width="10" Height="10" Fill="#F59E0B" Margin="0,0,6,0"/>
+                                    <Ellipse Width="10" Height="10" Fill="#10B981" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="TxtConsoleTitle" Text="CRAWLER CONSOLE // Live Stream Activity" FontSize="11" FontWeight="Bold"
+                                               Foreground="#94A3B8" FontFamily="Consolas, Cascadia Code, Courier New"/>
+                                </StackPanel>
+                                <Button x:Name="BtnClearLog" Content="مسح الشاشة 🧹" Background="Transparent" Foreground="#64748B" BorderThickness="0"
+                                        FontSize="11" HorizontalAlignment="Right" Cursor="Hand" Click="BtnClearLog_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Terminal Output -->
+                        <ListBox x:Name="LstLogs" Grid.Row="1" Background="Transparent" BorderThickness="0"
+                                 Foreground="#E2E8F0" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="12"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto" Margin="10">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Margin="0,2" TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Grid>
                 </Border>
 
-                <DataGrid x:Name="DgJobs" Grid.Row="1" Style="{StaticResource ExDataGrid}"
-                          ColumnHeaderStyle="{StaticResource ExDataGridHeader}"
-                          AutoGenerateColumns="False" IsReadOnly="True">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Job ID" Binding="{Binding Id}" Width="80"/>
-                        <DataGridTextColumn Header="Source" Binding="{Binding SourceId}" Width="120"/>
-                        <DataGridTemplateColumn Header="Status" Width="130">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border CornerRadius="12" Padding="10,4" HorizontalAlignment="Left" Background="{StaticResource ExStatusInfoBg}">
-                                        <TextBlock Text="{Binding Status}" Foreground="{StaticResource ExStatusInfoText}" FontSize="11" FontWeight="SemiBold"/>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPct}" Width="90"/>
-                        <DataGridTextColumn Header="Records Found" Binding="{Binding TotalFound}" Width="120"/>
-                        <DataGridTextColumn Header="Records Saved" Binding="{Binding TotalSaved}" Width="120"/>
-                        <DataGridTextColumn Header="Timestamp" Binding="{Binding StartedAt}" Width="160"/>
-                        <DataGridTemplateColumn Header="Action" Width="100">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Content="Cancel" Style="{StaticResource ExBtnGhostPill}" Padding="10,2"
-                                            Click="BtnCancelJob_Click" Tag="{Binding Id}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <!-- Right Column: Discovered Contacts Stream Table -->
+                <Border Grid.Column="2" Style="{StaticResource ExCard}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Padding="16,12" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,0,1">
+                            <Grid>
+                                <TextBlock x:Name="TxtDiscoveredTitle" Text="البيانات المكتشفة والمحفوظة فورياً" FontSize="13" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}"/>
+                                <Border CornerRadius="8" Background="{StaticResource ExStatusSuccessBg}" Padding="8,2" HorizontalAlignment="Right">
+                                    <TextBlock x:Name="TxtDiscoveredBadge" Text="حفظ مباشر SQLite" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <DataGrid x:Name="DgDiscovered" Grid.Row="1" Style="{StaticResource ExDataGrid}"
+                                  ColumnHeaderStyle="{StaticResource ExDataGridHeader}"
+                                  AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="الشركة" Binding="{Binding Name}" Width="130"/>
+                                <DataGridTextColumn Header="البريد المستخرج" Binding="{Binding EmailsDisplay}" Width="160"/>
+                                <DataGridTextColumn Header="الهاتف المستخرج" Binding="{Binding PhonesDisplay}" Width="130"/>
+                                <DataGridTextColumn Header="الموقع" Binding="{Binding Url}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
             </Grid>
-        </Border>
-    </Grid>
+
+            <!-- ── 4. All Jobs History Card (Direct SQLite) ────────── -->
+            <Border Grid.Row="4" Style="{StaticResource ExCard}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="260"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Padding="20,14" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtJobsHistoryTitle" Text="سجل عمليات ومهام الاستخراج في النظام" FontSize="14" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}"/>
+                                <Border CornerRadius="10" Background="{StaticResource ExStatusInfoBg}" Padding="8,2" Margin="12,0,0,0">
+                                    <TextBlock x:Name="TxtJobsDbBadge" Text="قاعدة البيانات المحلية SQLite" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource ExStatusInfoText}"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtJobsAuditSubtitle" Text="سجل المراقبة والمتابعة المباشر" FontSize="11" Foreground="{StaticResource ExTextSecondary}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid x:Name="DgJobs" Grid.Row="1" Style="{StaticResource ExDataGrid}"
+                              ColumnHeaderStyle="{StaticResource ExDataGridHeader}"
+                              AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="رقم المهمة" Binding="{Binding Id}" Width="80"/>
+                            <DataGridTextColumn Header="نوع المهمة / المصدر" Binding="{Binding SourceName}" Width="180"/>
+                            <DataGridTemplateColumn Header="الحالة" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="12" Padding="10,4" HorizontalAlignment="Left" Background="{StaticResource ExStatusInfoBg}">
+                                            <TextBlock Text="{Binding Status}" Foreground="{StaticResource ExStatusInfoText}" FontSize="11" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="نسبة الإنجاز" Binding="{Binding ProgressPct, StringFormat='{}{0}%'}" Width="90"/>
+                            <DataGridTextColumn Header="مستخرجة" Binding="{Binding TotalFound}" Width="90"/>
+                            <DataGridTextColumn Header="محفوظة" Binding="{Binding TotalSaved}" Width="90"/>
+                            <DataGridTextColumn Header="أخطاء" Binding="{Binding TotalErrors}" Width="80"/>
+                            <DataGridTextColumn Header="وقت البدء" Binding="{Binding StartedAt}" Width="150"/>
+                            <DataGridTemplateColumn Header="إجراء" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="إلغاء" Style="{StaticResource ExBtnGhostPill}" Padding="10,2"
+                                                Click="BtnCancelJob_Click" Tag="{Binding Id}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </Page>

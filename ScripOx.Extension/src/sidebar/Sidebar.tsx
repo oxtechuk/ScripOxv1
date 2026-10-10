@@ -196,16 +196,7 @@ export function Sidebar() {
           {/* Logo & Drag indicator */}
           <div className="flex items-center gap-2">
             <GripVertical className={`w-3.5 h-3.5 transition-colors ${isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`} />
-            <div className="w-6 h-6 rounded-lg bg-[#0F172A] border border-slate-700 flex items-center justify-center relative shadow-xs">
-              <span className="text-white font-bold text-xs">S</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute top-0.5 right-0.5" />
-            </div>
-            <div>
-              <span className={`font-bold text-xs tracking-tight block ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                ScripOx Hub
-              </span>
-              <span className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Smart Lead Extractor</span>
-            </div>
+            <img src={chrome.runtime.getURL('assets/main_logo.png')} alt="ScripOx Logo" className="h-9 object-contain" />
           </div>
 
           {/* Controls: Theme Switcher + Quick Dock + Close */}

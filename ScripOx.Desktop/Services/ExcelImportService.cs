@@ -36,11 +36,11 @@ public class ExcelImportService
                 Priority = string.IsNullOrWhiteSpace(row.Cell(12).GetString()) ? "medium" : row.Cell(12).GetString(),
             };
 
-            // Parse coordinates
+            // Parse coordinates (X = Longitude, Y = Latitude)
             var latStr = row.Cell(14).GetString();
             var lngStr = row.Cell(15).GetString();
-            if (double.TryParse(latStr, out var lat)) co.X = lat;
-            if (double.TryParse(lngStr, out var lng)) co.Y = lng;
+            if (double.TryParse(lngStr, out var lng)) co.X = lng;
+            if (double.TryParse(latStr, out var lat)) co.Y = lat;
 
             list.Add(co);
         }

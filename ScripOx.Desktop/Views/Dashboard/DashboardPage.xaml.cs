@@ -30,17 +30,40 @@ public partial class DashboardPage : Page
         _dashboardService = new DashboardService(AppSettings.ConnectionString);
         _companyService = new CompanyService(AppSettings.ConnectionString);
         Loaded += DashboardPage_Loaded;
+        Unloaded += DashboardPage_Unloaded;
+        LocalizationService.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void DashboardPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        LocalizationService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, string lang)
+    {
+        ApplyLanguage();
+        _ = LoadRecentCompaniesAsync(); // reload status displays
+    }
+
+    private void ApplyLanguage()
+    {
+        TxtDashTitle.Text = LocalizationService.Get("dash.title");
+        TxtDashSubtitle.Text = LocalizationService.Get("dash.subtitle");
+        TxtViewAll.Text = LocalizationService.Get("dash.view_all");
+        
+        TxtLblTotalCompanies.Text = LocalizationService.Get("dash.total_companies");
+        TxtLblExtractionJobs.Text = LocalizationService.Get("dash.extraction_jobs");
+        TxtLblRawStaging.Text = LocalizationService.Get("dash.raw_staging");
+        TxtLblDataSources.Text = LocalizationService.Get("dash.data_sources");
+        
+        TxtLblPortfolioStatus.Text = LocalizationService.Get("dash.portfolio_status");
+        TxtLblRecentActivities.Text = LocalizationService.Get("dash.recent_activities");
+        TxtLblShowingLatest.Text = LocalizationService.Get("dash.showing_latest");
     }
 
     private async void DashboardPage_Loaded(object sender, RoutedEventArgs e)
     {
-        if (LocalizationService.IsRtl)
-        {
-            TxtDashTitle.Text = "حركة العملاء والشركات";
-            TxtDashSubtitle.Text = "ذكاء استخراج وتحليل بيانات الشركات والعملاء لحظياً";
-            TxtViewAll.Text = "نظرة عامة حية";
-            TxtPipelineHealthTitle.Text = "حالة النظام وخط البيانات";
-        }
+        ApplyLanguage();
 
         var stats = await _dashboardService.GetStatsAsync();
         

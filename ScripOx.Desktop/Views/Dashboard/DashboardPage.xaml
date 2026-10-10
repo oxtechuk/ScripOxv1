@@ -46,7 +46,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="TOTAL COMPANIES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <TextBlock x:Name="TxtLblTotalCompanies" Text="TOTAL COMPANIES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
                             <Border Margin="10,0,0,0" Background="{StaticResource ExStatusSuccessBg}" CornerRadius="8" Padding="6,2">
                                 <TextBlock Text="+14%" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
                             </Border>
@@ -66,7 +66,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <TextBlock Text="EXTRACTION JOBS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <TextBlock x:Name="TxtLblExtractionJobs" Text="EXTRACTION JOBS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
                             <Border Margin="10,0,0,0" Background="{StaticResource ExAccentLimeLight}" CornerRadius="8" Padding="6,2">
                                 <TextBlock Text="Active" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExDarkObsidian}"/>
                             </Border>
@@ -86,7 +86,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <TextBlock Text="RAW STAGING" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <TextBlock x:Name="TxtLblRawStaging" Text="RAW STAGING" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
                             <Border Margin="10,0,0,0" Background="{StaticResource ExStatusInfoBg}" CornerRadius="8" Padding="6,2">
                                 <TextBlock Text="Staged Queue" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusInfoText}"/>
                             </Border>
@@ -106,7 +106,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <TextBlock Text="DATA SOURCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
+                            <TextBlock x:Name="TxtLblDataSources" Text="DATA SOURCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExTextSecondary}"/>
                             <Border Margin="10,0,0,0" Background="{StaticResource ExStatusSuccessBg}" CornerRadius="8" Padding="6,2">
                                 <TextBlock Text="Live Sync" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
                             </Border>
@@ -136,10 +136,10 @@
                         <!-- Table Header Bar -->
                         <Border Grid.Row="0" Padding="20,16" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,0,1">
                             <Grid>
-                                <TextBlock Text="Recent Company Activities" FontSize="15" FontWeight="Bold"
+                                <TextBlock x:Name="TxtLblRecentActivities" Text="Recent Company Activities" FontSize="15" FontWeight="Bold"
                                            Foreground="{StaticResource ExTextPrimary}"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <TextBlock Text="Showing latest verified entities" FontSize="11"
+                                    <TextBlock x:Name="TxtLblShowingLatest" Text="Showing latest verified entities" FontSize="11"
                                                Foreground="{StaticResource ExTextSecondary}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Grid>
@@ -162,9 +162,8 @@
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>   <!-- Avatar -->
-                                                    <ColumnDefinition Width="2*"/>     <!-- Company Info -->
+                                                    <ColumnDefinition Width="2.5*"/>   <!-- Company Info -->
                                                     <ColumnDefinition Width="1.5*"/>   <!-- Progress Bar (Lime) -->
-                                                    <ColumnDefinition Width="*"/>      <!-- City / Region -->
                                                     <ColumnDefinition Width="Auto"/>   <!-- Status Pill -->
                                                 </Grid.ColumnDefinitions>
 
@@ -187,19 +186,15 @@
                                                 <!-- Progress Bar (CRMEdge Style) -->
                                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0">
                                                     <Grid Margin="0,0,0,4">
-                                                        <TextBlock Text="Profile Quality" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
-                                                        <TextBlock Text="{Binding ProgressText}" FontSize="10" FontWeight="Bold"
-                                                                   Foreground="{StaticResource ExDarkObsidian}" HorizontalAlignment="Right"/>
+                                                         <TextBlock Text="Profile Quality" FontSize="10" Foreground="{StaticResource ExTextMuted}"/>
+                                                         <TextBlock Text="{Binding ProgressText}" FontSize="10" FontWeight="Bold"
+                                                                    Foreground="{StaticResource ExDarkObsidian}" HorizontalAlignment="Right"/>
                                                     </Grid>
                                                     <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Style="{StaticResource ExProgressBar}"/>
                                                 </StackPanel>
 
-                                                <!-- City / Country -->
-                                                <TextBlock Grid.Column="3" Text="{Binding LocationDisplay}" VerticalAlignment="Center"
-                                                           FontSize="12" Foreground="{StaticResource ExTextSecondary}" TextTrimming="CharacterEllipsis"/>
-
                                                 <!-- Status Pill Tag -->
-                                                <Border Grid.Column="4" Background="{Binding PillBgBrush}" CornerRadius="12"
+                                                <Border Grid.Column="3" Background="{Binding PillBgBrush}" CornerRadius="12"
                                                         Padding="12,5" VerticalAlignment="Center" Margin="10,0,0,0">
                                                     <TextBlock Text="{Binding StatusName}" FontSize="11" FontWeight="SemiBold"
                                                                Foreground="{Binding PillTextBrush}"/>
@@ -218,7 +213,7 @@
                     <!-- Status Matrix Card -->
                     <Border Style="{StaticResource ExCard}" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Portfolio by Status" FontSize="15" FontWeight="Bold"
+                            <TextBlock x:Name="TxtLblPortfolioStatus" Text="Portfolio by Status" FontSize="15" FontWeight="Bold"
                                        Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
 
                             <ItemsControl x:Name="StatusItemsControl">
@@ -243,47 +238,6 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
-
-                    <!-- System & Bridge Live Health Card -->
-                    <Border Style="{StaticResource ExCard}">
-                        <StackPanel>
-                            <TextBlock x:Name="TxtPipelineHealthTitle" Text="System &amp; Pipeline Status" FontSize="15" FontWeight="Bold"
-                                       Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,12"/>
-
-                            <!-- Extractor Desktop Bridge Status -->
-                            <Border Background="#F8FAFC" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
-                                    CornerRadius="10" Padding="12" Margin="0,0,0,10">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Ellipse Width="10" Height="10" Fill="#10B981" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="Browser Bridge (Port 8765)" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}"/>
-                                        <TextBlock Text="FastAPI Daemon Connected &amp; Ready" FontSize="10" Foreground="{StaticResource ExStatusSuccessText}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <!-- Ingestion Queue Indicator -->
-                            <Border Background="#F8FAFC" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
-                                    CornerRadius="10" Padding="12">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Ellipse Width="10" Height="10" Fill="#3B82F6" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="Data Pipeline &amp; Deduplication" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource ExTextPrimary}"/>
-                                        <TextBlock Text="Automatic deduplication enabled" FontSize="10" Foreground="{StaticResource ExStatusInfoText}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-
                 </StackPanel>
             </Grid>
 

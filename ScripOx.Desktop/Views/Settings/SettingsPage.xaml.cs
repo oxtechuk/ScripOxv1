@@ -19,6 +19,7 @@ public partial class SettingsPage : Page
         ChkAutoUpdate.IsChecked = AppSettings.AutoCheckUpdatesOnStartup;
         TxtGithubOwner.Text = AppSettings.GitHubOwner;
         TxtGithubRepo.Text = AppSettings.GitHubRepo;
+        TxtApiPort.Text = AppSettings.ApiPort.ToString();
 
         var curVer = UpdateService.GetCurrentVersion();
         TxtUpdateStatus.Text = LocalizationService.CurrentLanguage == "ar"
@@ -80,6 +81,41 @@ public partial class SettingsPage : Page
         finally
         {
             BtnCheckUpdates.IsEnabled = true;
+        }
+    }
+
+    private void BtnRestartServer_Click(object sender, RoutedEventArgs e)
+    {
+        if (int.TryParse(TxtApiPort.Text.Trim(), out int port) && port > 0 && port < 65536)
+        {
+            AppSettings.ApiPort = port;
+            ((App)Application.Current).RestartPythonBackend();
+            TxtApiStatus.Text = "Server restarted on port " + port;
+        }
+        else
+        {
+            MessageBox.Show("Please enter a valid port number (1-65535).", "Invalid Port", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private async void BtnTestConnection_Click(object sender, RoutedEventArgs e)
+    {
+        TxtApiStatus.Text = "Testing connection...";
+        BtnTestConnection.IsEnabled = false;
+
+        try
+        {
+            var apiService = new ExtractorApiService();
+            bool isHealthy = await apiService.IsHealthyAsync();
+            TxtApiStatus.Text = isHealthy ? "Status: Connected (OK)" : "Status: Disconnected / Not Running";
+        }
+        catch (Exception ex)
+        {
+            TxtApiStatus.Text = "Status: Error - " + ex.Message;
+        }
+        finally
+        {
+            BtnTestConnection.IsEnabled = true;
         }
     }
 }

@@ -142,8 +142,8 @@ public class RawRecordService
                 cmd.Parameters.AddWithValue("@email", string.IsNullOrWhiteSpace(email) ? DBNull.Value : email);
                 cmd.Parameters.AddWithValue("@website", string.IsNullOrWhiteSpace(website) ? DBNull.Value : website);
                 cmd.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(address) ? DBNull.Value : address);
-                cmd.Parameters.AddWithValue("@x", (object?)latVal ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@y", (object?)lngVal ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@x", (object?)lngVal ?? DBNull.Value); // x = longitude
+                cmd.Parameters.AddWithValue("@y", (object?)latVal ?? DBNull.Value); // y = latitude
                 cmd.Parameters.AddWithValue("@raw_record_id", recordId);
                 cmd.Parameters.AddWithValue("@status_id", statusId > 0 ? statusId : 1);
                 cmd.Parameters.AddWithValue("@priority", string.IsNullOrWhiteSpace(priority) ? "medium" : priority.ToLower());
@@ -185,5 +185,94 @@ public class RawRecordService
             };
         }
         return null;
+    }
+
+    /// <summary>
+    /// Bulk deletes raw records by their IDs.
+    /// </summary>
+    public async Task<int> DeleteBatchAsync(List<long> ids)
+    {
+        if (ids == null || ids.Count == 0) return 0;
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            var idList = string.Join(",", ids);
+            await using var cmd = new SqliteCommand($"DELETE FROM raw_records WHERE id IN ({idList})", conn);
+            return await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "DeleteBatchAsync failed for raw_records");
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Clears/wipes all raw records from the database.
+    /// </summary>
+    public async Task<int> ClearAllAsync()
+    {
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new SqliteCommand("DELETE FROM raw_records", conn);
+            return await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "ClearAllAsync failed for raw_records");
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Imports a list of raw JSON records into the database.
+    /// </summary>
+    public async Task<int> ImportFromJsonAsync(List<string> jsonRecords, int userId)
+    {
+        if (jsonRecords == null || jsonRecords.Count == 0) return 0;
+        int importedCount = 0;
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            await using var transaction = conn.BeginTransaction();
+
+            // Insert a dummy extraction job for the imported records to satisfy the foreign key constraint
+            const string insertJobSql = """
+                INSERT INTO extraction_jobs (source_id, triggered_by, status, params_json, total_found, total_saved, progress_pct, started_at, ended_at)
+                VALUES (1, @userId, 'completed', '{"type": "manual_import"}', @count, @count, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+                SELECT last_insert_rowid();
+            """;
+            
+            await using var jobCmd = new SqliteCommand(insertJobSql, conn, transaction);
+            jobCmd.Parameters.AddWithValue("@userId", userId);
+            jobCmd.Parameters.AddWithValue("@count", jsonRecords.Count);
+            long jobId = (long)await jobCmd.ExecuteScalarAsync()!;
+
+            const string sql = """
+                INSERT INTO raw_records (job_id, raw_json, status, created_at)
+                VALUES (@job_id, @raw_json, 'pending', CURRENT_TIMESTAMP)
+            """;
+
+            foreach (var json in jsonRecords)
+            {
+                await using var cmd = new SqliteCommand(sql, conn, transaction);
+                cmd.Parameters.AddWithValue("@job_id", jobId);
+                cmd.Parameters.AddWithValue("@raw_json", json);
+                await cmd.ExecuteNonQueryAsync();
+                importedCount++;
+            }
+
+            await transaction.CommitAsync();
+            return importedCount;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "ImportFromJsonAsync failed");
+            return 0;
+        }
     }
 }

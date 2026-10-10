@@ -54,8 +54,17 @@
 
                         <TextBlock Text="FastAPI Bridge Service Port" FontSize="11" FontWeight="Medium"
                                    Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                        <TextBox Text="8765" Width="140" HorizontalAlignment="Left" Style="{StaticResource ExSearchBox}"
-                                 Height="36" Margin="0,0,0,16"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <TextBox x:Name="TxtApiPort" Text="8765" Width="140" HorizontalAlignment="Left" Style="{StaticResource ExSearchBox}"
+                                     Height="36" Margin="0,0,10,0"/>
+                            <Button x:Name="BtnRestartServer" Content="Save &amp; Restart Server"
+                                    Style="{StaticResource ExBtnBlackPill}" Height="36" Padding="16,0" FontSize="12"
+                                    Click="BtnRestartServer_Click"/>
+                            <Button x:Name="BtnTestConnection" Content="Test Connection"
+                                    Style="{StaticResource ExBtnSecondary}" Height="36" Padding="16,0" FontSize="12" Margin="10,0,0,0"
+                                    Click="BtnTestConnection_Click"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtApiStatus" Text="Status: Unknown" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,16"/>
 
                         <TextBlock Text="Primary Currency Schema" FontSize="11" FontWeight="Medium"
                                    Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>

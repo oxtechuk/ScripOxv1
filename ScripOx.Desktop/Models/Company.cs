@@ -49,6 +49,11 @@ public class Company
     public DateTime CreatedAt   { get; set; }
     public DateTime UpdatedAt   { get; set; }
 
+    // UI helpers
+    public bool    IsSelected   { get; set; }
+    public string  CreatedAtDisplay => CreatedAt != DateTime.MinValue ? CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-";
+    public string  UpdatedAtDisplay => UpdatedAt != DateTime.MinValue ? UpdatedAt.ToString("yyyy-MM-dd HH:mm") : "-";
+
     // Navigation (loaded on demand)
     public List<CompanyNote>    Notes    { get; set; } = [];
     public List<CompanyComment> Comments { get; set; } = [];
@@ -56,15 +61,52 @@ public class Company
 
     // Display helpers
     public bool HasCoordinates => X.HasValue && Y.HasValue;
-    public string DisplayName  => string.IsNullOrWhiteSpace(NameAr)
-                                  ? Name : NameAr;
-    public string PriorityDisplay => Priority?.ToLower() switch
-    {
-        "high" => "★★★ High",
-        "medium" => "★★ Medium",
-        "low" => "★ Low",
-        _ => Priority ?? "Medium"
-    };
+    public string DisplayName =>
+        Services.LocalizationService.IsRtl && !string.IsNullOrWhiteSpace(NameAr)
+            ? NameAr
+            : (!string.IsNullOrWhiteSpace(Name) ? Name : (NameAr ?? string.Empty));
+
+    public string PriorityDisplay => Services.LocalizationService.IsRtl
+        ? (Priority?.ToLower() switch
+        {
+            "high" => "★★★ أولوية عالية",
+            "medium" => "★★ أولوية متوسطة",
+            "low" => "★ أولوية منخفضة",
+            _ => Priority ?? "متوسطة"
+        })
+        : (Priority?.ToLower() switch
+        {
+            "high" => "★★★ High",
+            "medium" => "★★ Medium",
+            "low" => "★ Low",
+            _ => Priority ?? "Medium"
+        });
+
+    public string StatusDisplay =>
+        Services.LocalizationService.IsRtl
+            ? (StatusName switch
+            {
+                "New" => "جديد",
+                "Contacted" => "تم التواصل",
+                "Interested" => "مهتم",
+                "In Negotiation" => "قيد التفاوض",
+                "Customer" => "عميل معتمد",
+                "Lost" => "مفقود",
+                _ => StatusName ?? ""
+            })
+            : (StatusName switch
+            {
+                "New" => "New",
+                "Contacted" => "Contacted",
+                "Interested" => "Interested",
+                "In Negotiation" => "In Negotiation",
+                "Customer" => "Customer",
+                "Lost" => "Lost",
+                _ => StatusName ?? ""
+            });
+
+    public string ViewProfileText =>
+        Services.LocalizationService.IsRtl ? "عرض الملف" : "View Profile";
     public string PriorityColor => Priority?.ToLower() switch
     {
         "high" => "#EF4444",

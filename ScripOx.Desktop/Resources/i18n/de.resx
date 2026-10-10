@@ -73,4 +73,107 @@
   <data name="action.filter"   ><value>Filtern</value></data>
   <data name="action.export"   ><value>Exportieren</value></data>
   <data name="action.close"    ><value>Schließen</value></data>
+
+  <data name="exports.page_title"><value>Schritt-für-Schritt Export- &amp; Abgleich-Assistent</value></data>
+  <data name="exports.page_sub"><value>Schritt-für-Schritt Datenexport- und Abgleich-Assistent mit offiziellen Plattformvorlagen.</value></data>
+  <data name="exports.wizard_title"><value>Export- &amp; Filter-Assistent</value></data>
+  <data name="exports.wizard_sub"><value>Wählen Sie Gruppe, Kategorie, Priorität und Exporttyp</value></data>
+  
+  <data name="exports.step1"><value>Gruppe / Quelle:</value></data>
+  <data name="exports.step2"><value>Kategorie / Sektor:</value></data>
+  <data name="exports.step3"><value>Priorität:</value></data>
+  <data name="exports.step4"><value>Exporttyp &amp; Zielvorlage:</value></data>
+  
+  <data name="exports.filter_all_groups"><value>Alle (Alle Gruppen und Quellen)</value></data>
+  <data name="exports.filter_all_categories"><value>Alle (Alle Kategorien und Sektoren)</value></data>
+  <data name="exports.filter_all_priorities"><value>Alle (Alle Prioritäten)</value></data>
+  <data name="exports.filter_all_statuses"><value>Alle (Alle Status)</value></data>
+
+  <data name="exports.priority_high"><value>★★★ Hohe Priorität</value></data>
+  <data name="exports.priority_medium"><value>★★ Mittlere Priorität</value></data>
+  <data name="exports.priority_low"><value>★ Niedrige Priorität</value></data>
+  
+  <data name="exports.chk_contact"><value>Datensätze ohne Kontaktinfos (Telefon/E-Mail) ausschließen</value></data>
+  <data name="exports.lbl_status"><value>Statusfilter:</value></data>
+  
+  <data name="exports.btn_copy_csv"><value>📋 Angezeigte Daten in Zwischenablage kopieren (CSV)</value></data>
+  <data name="exports.backup_title"><value>Datenbank-Backup</value></data>
+  <data name="exports.backup_desc"><value>Erstellen Sie ein vollständiges Backup-Archiv der ScripOx SQLite-Datenbank.</value></data>
+  <data name="exports.btn_backup"><value>Backup erstellen (.db)</value></data>
+  
+  <data name="exports.refresh"><value>🔄 Aktualisieren</value></data>
+  <data name="exports.copy_csv"><value>📋 CSV Kopieren</value></data>
+  <data name="exports.export_now"><value>⬇ Jetzt exportieren</value></data>
+  
+  <data name="exports.records_count"><value>Gefundene Datensätze: </value></data>
+  <data name="exports.ltv"><value>  •  Geschätzter Gesamtwert (LTV): </value></data>
+
+  <data name="exports.meta_title"><value>Live-Vorschau: Meta Custom Audience</value></data>
+  <data name="exports.meta_sub"><value>Value-Based Audience Format, 100% kompatibel mit der offiziellen Meta-Vorlage</value></data>
+  <data name="exports.meta_spec"><value>19 Spalten, exakt abgestimmt auf die Meta Custom Audiences Spezifikationen</value></data>
+  <data name="exports.meta_btn"><value>⬇ Meta Ads CSV exportieren</value></data>
+  <data name="exports.meta_combo"><value>🎯 Meta Ads — Value-Based Audience (19 Spalten)</value></data>
+
+  <data name="exports.google_title"><value>Live-Vorschau: Google Ads Customer Match</value></data>
+  <data name="exports.google_sub"><value>Offizielle Vorlage für den Kundenabgleich bei Google Ads</value></data>
+  <data name="exports.google_spec"><value>Internationale E.164-Telefonformatierung und Unterstützung für gehashte E-Mails</value></data>
+  <data name="exports.google_btn"><value>⬇ Google Ads Customer Match exportieren</value></data>
+  <data name="exports.google_combo"><value>🔍 Google Ads — Customer Match List (4 Spalten)</value></data>
+
+  <data name="exports.mail_title"><value>Live-Vorschau: E-Mail-Marketing-Liste</value></data>
+  <data name="exports.mail_sub"><value>Bereinigte Kontaktliste, bereit für den Direktimport zu Mailchimp und Brevo</value></data>
+  <data name="exports.mail_spec"><value>8 Spalten mit Details zu Name, Unternehmen, Branche und Status</value></data>
+  <data name="exports.mail_btn"><value>⬇ E-Mail-Marketing CSV exportieren</value></data>
+  <data name="exports.mail_combo"><value>📧 E-Mail Marketing — Mailchimp &amp; Brevo (8 Spalten)</value></data>
+
+  <data name="exports.excel_title"><value>Live-Vorschau: Business Dossier (.xlsx)</value></data>
+  <data name="exports.excel_sub"><value>Offizielle mehrblättrige Excel-Datei mit Unternehmenskarten und KPI-Übersichten</value></data>
+  <data name="exports.excel_spec"><value>GoBD-konformer Export mit nativer Lokalisierungsunterstützung</value></data>
+  <data name="exports.excel_btn"><value>⬇ Vollständiges Excel-Dossier erstellen (.xlsx)</value></data>
+  <data name="exports.excel_combo"><value>📊 Excel Business Dossier — Offizieller Bericht (.xlsx)</value></data>
+
+  <data name="exports.contact"><value>Kontakte</value></data>
+  <data name="exports.subscriber"><value>Abonnenten</value></data>
+  <data name="exports.company_count"><value>Unternehmen</value></data>
+
+  <data name="title.sources"><value>Datenquellen</value></data>
+  <data name="search.placeholder"><value>Suchen...</value></data>
+  <data name="btn.create_record"><value>+ Neuer Eintrag</value></data>
+  <data name="nav.extension"><value>Browser-Erweiterung</value></data>
+
+  <data name="title.dashboard"><value>Dashboard</value></data>
+  <data name="title.jobs"><value>Extraktionsjobs</value></data>
+  <data name="title.raw_records"><value>Rohdaten</value></data>
+  <data name="title.companies"><value>Unternehmen</value></data>
+  <data name="title.map"><value>Karten-Explorer</value></data>
+  <data name="title.exports"><value>Exporte</value></data>
+  <data name="title.settings"><value>Einstellungen</value></data>
+  
+  <data name="nav.dashboard"><value>Dashboard</value></data>
+  <data name="nav.companies"><value>Unternehmen</value></data>
+  <data name="nav.sources"><value>Quellen</value></data>
+  <data name="nav.jobs"><value>Jobs</value></data>
+  <data name="nav.raw_records"><value>Rohdaten</value></data>
+  <data name="nav.map"><value>Karten-Explorer</value></data>
+  <data name="nav.exports"><value>Exporte</value></data>
+  <data name="nav.settings"><value>Einstellungen</value></data>
+  
+  <data name="search.suggestions_live"><value>Live-Ergebnisse</value></data>
+  <data name="search.matches"><value>Treffer</value></data>
+  <data name="search.no_matches"><value>Keine Treffer</value></data>
+  
+  <data name="auth.logout"><value>Abmelden</value></data>
+  <data name="role.super_admin"><value>Super-Admin</value></data>
+  <data name="role.admin"><value>Admin</value></data>
+
+  <data name="dash.title"><value>Dashboard Übersicht</value></data>
+  <data name="dash.subtitle"><value>Echtzeit-Extraktionsintelligenz und Portfolio-Metriken</value></data>
+  <data name="dash.view_all"><value>Live-Übersicht</value></data>
+  <data name="dash.total_companies"><value>UNTERNEHMEN GESAMT</value></data>
+  <data name="dash.extraction_jobs"><value>EXTRAKTIONSJOBS</value></data>
+  <data name="dash.raw_staging"><value>ROHDATEN</value></data>
+  <data name="dash.data_sources"><value>DATENQUELLEN</value></data>
+  <data name="dash.portfolio_status"><value>Portfolio nach Status</value></data>
+  <data name="dash.recent_activities"><value>Aktuelle Unternehmensaktivitäten</value></data>
+  <data name="dash.showing_latest"><value>Zeige neueste verifizierte Einträge</value></data>
 </root>

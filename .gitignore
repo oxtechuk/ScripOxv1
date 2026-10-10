@@ -26,6 +26,8 @@ scripox.db
 python-installer.exe
 *.msi
 *.exe
+*.zip
+dist/
 !ScripOx.Desktop/Resources/**/*.exe
 
 # Python / FastAPI

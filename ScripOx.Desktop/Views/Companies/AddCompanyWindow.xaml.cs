@@ -64,8 +64,8 @@ public partial class AddCompanyWindow : Window
                 Address = string.IsNullOrWhiteSpace(TxtAddress.Text) ? null : TxtAddress.Text.Trim(),
                 City = string.IsNullOrWhiteSpace(TxtCity.Text) ? null : TxtCity.Text.Trim(),
                 Country = string.IsNullOrWhiteSpace(TxtCountry.Text) ? "UK" : TxtCountry.Text.Trim(),
-                X = latVal,
-                Y = lngVal,
+                X = lngVal, // Longitude
+                Y = latVal, // Latitude
                 Priority = (CmbPriority.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString() ?? "medium"
             };
 

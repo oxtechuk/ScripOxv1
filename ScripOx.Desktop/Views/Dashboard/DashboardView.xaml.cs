@@ -2,21 +2,43 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ScripOx.Desktop.Models;
 using ScripOx.Desktop.Services;
 using ScripOx.Desktop.Views.Auth;
 using ScripOx.Desktop.Views.Updates;
 
 namespace ScripOx.Desktop.Views.Dashboard;
 
+public static class NavHelper
+{
+    public static readonly DependencyProperty IconProperty =
+        DependencyProperty.RegisterAttached("Icon", typeof(Geometry), typeof(NavHelper), new PropertyMetadata(null));
+
+    public static Geometry? GetIcon(DependencyObject obj) => (Geometry?)obj.GetValue(IconProperty);
+    public static void SetIcon(DependencyObject obj, Geometry? value) => obj.SetValue(IconProperty, value);
+}
+
 public partial class DashboardView : Window
 {
     private readonly List<Button> _navButtons = [];
     private Button? _activeNavButton;
     private UpdateReleaseInfo? _latestUpdate;
+    private readonly CompanyService _companyService = new(AppSettings.ConnectionString);
+    private readonly System.Windows.Threading.DispatcherTimer _searchDebounceTimer;
 
     public DashboardView()
     {
         InitializeComponent();
+
+        _searchDebounceTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(180)
+        };
+        _searchDebounceTimer.Tick += async (s, e) =>
+        {
+            _searchDebounceTimer.Stop();
+            await PerformSearchAutocompleteAsync();
+        };
 
         _navButtons.AddRange([
             BtnNavDashboard,
@@ -64,18 +86,17 @@ public partial class DashboardView : Window
 
     private void UpdatePageTitle(string tag)
     {
-        var lang = LocalizationService.CurrentLanguage;
         TxtPageTitle.Text = tag switch
         {
-            "dashboard" => lang == "ar" ? "حركة العملاء والشركات" : (lang == "de" ? "Kundenbewegungen" : "Customer Movements"),
-            "sources"   => lang == "ar" ? "مصادر الاستخراج والربط" : (lang == "de" ? "Datenquellen & Gateways" : "Data Sources & Gateways"),
-            "jobs"      => lang == "ar" ? "مهام وعمليات الاستخراج" : (lang == "de" ? "Extraktions-Pipelines" : "Extraction Pipelines & Jobs"),
-            "raw"       => lang == "ar" ? "السجلات والبيانات الخام" : (lang == "de" ? "Rohdatensätze" : "Raw Data Records"),
-            "companies" => lang == "ar" ? "إدارة الشركات والعملاء" : (lang == "de" ? "Unternehmensverwaltung" : "Companies Management"),
-            "map"       => lang == "ar" ? "مستكشف الخرائط الجغرافية" : (lang == "de" ? "Geografischer Explorer" : "Geographical Explorer"),
-            "exports"   => lang == "ar" ? "مركز تصدير التقارير" : (lang == "de" ? "Datenexport-Zentrum" : "Data Exports Center"),
-            "extension" => lang == "ar" ? "إضافة المتصفح الذكية" : (lang == "de" ? "Erweiterungs-Hub" : "Visual Extension Hub"),
-            "settings"  => lang == "ar" ? "إعدادات النظام" : (lang == "de" ? "Systemeinstellungen" : "System Settings"),
+            "dashboard" => LocalizationService.Get("title.dashboard"),
+            "sources"   => LocalizationService.Get("title.sources"),
+            "jobs"      => LocalizationService.Get("title.jobs"),
+            "raw"       => LocalizationService.Get("title.raw_records"),
+            "companies" => LocalizationService.Get("title.companies"),
+            "map"       => LocalizationService.Get("title.map"),
+            "exports"   => LocalizationService.Get("title.exports"),
+            "extension" => LocalizationService.Get("title.extension"),
+            "settings"  => LocalizationService.Get("title.settings"),
             _           => tag
         };
     }
@@ -83,15 +104,16 @@ public partial class DashboardView : Window
     private void SetActiveNavButton(Button activeBtn)
     {
         _activeNavButton = activeBtn;
-        var darkBrush = (Brush)FindResource("ExDarkObsidian");
-        var secBrush = (Brush)FindResource("ExTextSecondary");
+        var activePill = new SolidColorBrush(Color.FromRgb(0xEA, 0xEE, 0xF2)); // VS Code soft pill #EAEEF2
+        var activeText = (Brush)FindResource("ExDarkObsidian"); // #0F172A
+        var secBrush = (Brush)FindResource("ExTextSecondary"); // #64748B
 
         foreach (var btn in _navButtons)
         {
             if (btn == activeBtn)
             {
-                btn.Background = darkBrush;
-                btn.Foreground = Brushes.White;
+                btn.Background = activePill;
+                btn.Foreground = activeText;
                 btn.FontWeight = FontWeights.SemiBold;
             }
             else
@@ -100,6 +122,167 @@ public partial class DashboardView : Window
                 btn.Foreground = secBrush;
                 btn.FontWeight = FontWeights.Medium;
             }
+        }
+    }
+
+    private void TxtGlobalSearch_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (TxtGlobalSearch.Text == LocalizationService.Get("search.placeholder"))
+        {
+            TxtGlobalSearch.Text = "";
+            TxtGlobalSearch.Foreground = (Brush)FindResource("ExTextPrimary");
+        }
+    }
+
+    private void TxtGlobalSearch_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(TxtGlobalSearch.Text))
+        {
+            TxtGlobalSearch.Text = LocalizationService.Get("search.placeholder");
+            TxtGlobalSearch.Foreground = (Brush)FindResource("ExTextSecondary");
+            BtnClearSearch.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void TxtGlobalSearch_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (BtnClearSearch == null || PopupSuggestions == null || TxtGlobalSearch == null)
+            return;
+
+        var text = TxtGlobalSearch.Text.Trim();
+        bool isPlaceholder = text == LocalizationService.Get("search.placeholder");
+
+        BtnClearSearch.Visibility = !string.IsNullOrEmpty(text) && !isPlaceholder
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (string.IsNullOrEmpty(text) || isPlaceholder || text.Length < 1)
+        {
+            PopupSuggestions.IsOpen = false;
+            return;
+        }
+
+        _searchDebounceTimer?.Stop();
+        _searchDebounceTimer?.Start();
+    }
+
+    private async Task PerformSearchAutocompleteAsync()
+    {
+        var query = TxtGlobalSearch.Text.Trim();
+        if (string.IsNullOrWhiteSpace(query) ||
+            query == LocalizationService.Get("search.placeholder"))
+        {
+            PopupSuggestions.IsOpen = false;
+            return;
+        }
+
+        try
+        {
+            var (results, total) = await _companyService.GetPagedAsync(new CompanyFilter { Search = query }, page: 1, pageSize: 8);
+            if (results.Count > 0)
+            {
+                LstSuggestions.ItemsSource = results;
+                TxtSuggestionsHeader.Text = LocalizationService.Get("search.suggestions_live");
+                TxtSuggestionsCount.Text = $"{total} " + LocalizationService.Get("search.matches");
+                PopupSuggestions.IsOpen = true;
+            }
+            else
+            {
+                LstSuggestions.ItemsSource = null;
+                TxtSuggestionsHeader.Text = LocalizationService.Get("search.no_matches");
+                TxtSuggestionsCount.Text = "0";
+                PopupSuggestions.IsOpen = true;
+            }
+        }
+        catch
+        {
+            PopupSuggestions.IsOpen = false;
+        }
+    }
+
+    private void TxtGlobalSearch_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            PopupSuggestions.IsOpen = false;
+            ExecuteSearchNavigation();
+        }
+        else if (e.Key == Key.Escape)
+        {
+            PopupSuggestions.IsOpen = false;
+        }
+        else if (e.Key == Key.Down && PopupSuggestions.IsOpen)
+        {
+            LstSuggestions.Focus();
+        }
+    }
+
+    private void LstSuggestions_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LstSuggestions.SelectedItem is Company comp)
+        {
+            PopupSuggestions.IsOpen = false;
+            LstSuggestions.SelectedItem = null;
+
+            try
+            {
+                var details = new Views.Companies.CompanyDetailsWindow(comp.Id) { Owner = this };
+                details.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Failed to open details from autocomplete");
+            }
+        }
+    }
+
+    private void BtnClearSearch_Click(object sender, RoutedEventArgs e)
+    {
+        TxtGlobalSearch.Text = "";
+        PopupSuggestions.IsOpen = false;
+        BtnClearSearch.Visibility = Visibility.Collapsed;
+        TxtGlobalSearch.Focus();
+    }
+
+    private void BtnViewAllSearch_Click(object sender, RoutedEventArgs e)
+    {
+        PopupSuggestions.IsOpen = false;
+        ExecuteSearchNavigation();
+    }
+
+    private void ExecuteSearchNavigation()
+    {
+        var text = TxtGlobalSearch.Text.Trim();
+        if (text == LocalizationService.Get("search.placeholder"))
+        {
+            text = "";
+        }
+
+        NavigateToCompaniesWithSearch(text);
+    }
+
+    private void NavigateToCompaniesWithSearch(string search)
+    {
+        _currentPageTag = "companies";
+        UpdatePageTitle("companies");
+        SetActiveNavButton(BtnNavCompanies);
+        MainFrame.Navigate(new Views.Companies.CompaniesPage(search));
+    }
+
+    private void BtnCreateRecord_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var addWindow = new Views.Companies.AddCompanyWindow { Owner = this };
+            if (addWindow.ShowDialog() == true)
+            {
+                NavigateTo(_currentPageTag);
+            }
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to open AddCompanyWindow");
         }
     }
 
@@ -193,15 +376,15 @@ public partial class DashboardView : Window
 
         SepNav.Margin = isExpanded ? new Thickness(12, 10, 12, 10) : new Thickness(4, 8, 4, 8);
 
-        UpdateButton(BtnNavDashboard,  "Dashboard",     "DB", isExpanded);
-        UpdateButton(BtnNavCompanies,  "Companies",     "CP", isExpanded);
-        UpdateButton(BtnNavSources,    "Sources",       "SC", isExpanded);
-        UpdateButton(BtnNavJobs,       "Jobs",          "JB", isExpanded);
-        UpdateButton(BtnNavRaw,        "Raw Records",   "RR", isExpanded);
-        UpdateButton(BtnNavMap,        "Map Explorer",  "MP", isExpanded);
-        UpdateButton(BtnNavExports,    "Exports",       "EX", isExpanded);
-        UpdateButton(BtnNavExtension,  "Extension",     "ET", isExpanded);
-        UpdateButton(BtnNavSettings,   "Settings",      "ST", isExpanded);
+        UpdateButton(BtnNavDashboard,  "dashboard", isExpanded);
+        UpdateButton(BtnNavCompanies,  "companies", isExpanded);
+        UpdateButton(BtnNavSources,    "sources",   isExpanded);
+        UpdateButton(BtnNavJobs,       "jobs",      isExpanded);
+        UpdateButton(BtnNavRaw,        "raw",       isExpanded);
+        UpdateButton(BtnNavMap,        "map",       isExpanded);
+        UpdateButton(BtnNavExports,    "exports",   isExpanded);
+        UpdateButton(BtnNavExtension,  "extension", isExpanded);
+        UpdateButton(BtnNavSettings,   "settings",  isExpanded);
 
         if (_activeNavButton != null)
         {
@@ -209,23 +392,66 @@ public partial class DashboardView : Window
         }
     }
 
-    private static void UpdateButton(Button btn, string expandedText, string collapsedText, bool isExpanded)
+    private void UpdateButton(Button btn, string tag, bool isExpanded)
     {
-        btn.Content = isExpanded ? expandedText : collapsedText;
-        btn.Padding = isExpanded ? new Thickness(16, 11, 16, 11) : new Thickness(0, 11, 0, 11);
+        var text = GetNavText(tag);
+        btn.Content = isExpanded ? text : null;
+        btn.ToolTip = isExpanded ? null : text;
+        btn.Padding = isExpanded ? new Thickness(14, 10, 14, 10) : new Thickness(0, 10, 0, 10);
         btn.HorizontalContentAlignment = isExpanded ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+    }
+
+    private static string GetNavText(string tag)
+    {
+        return tag switch
+        {
+            "dashboard" => LocalizationService.Get("nav.dashboard"),
+            "companies" => LocalizationService.Get("nav.companies"),
+            "sources"   => LocalizationService.Get("nav.sources"),
+            "jobs"      => LocalizationService.Get("nav.jobs"),
+            "raw"       => LocalizationService.Get("nav.raw_records"),
+            "map"       => LocalizationService.Get("nav.map"),
+            "exports"   => LocalizationService.Get("nav.exports"),
+            "extension" => LocalizationService.Get("nav.extension"),
+            "settings"  => LocalizationService.Get("nav.settings"),
+            _ => tag
+        };
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            return;
+        }
+
         if (e.ButtonState == MouseButtonState.Pressed)
             DragMove();
+    }
+
+    private void Window_StateChanged(object? sender, EventArgs e)
+    {
+        if (BtnMaximize != null)
+        {
+            BtnMaximize.Content = WindowState == WindowState.Maximized ? "❐" : "☐";
+            BtnMaximize.ToolTip = WindowState == WindowState.Maximized ? "استعادة / Restore" : "تكبير / Maximize";
+        }
+
+        if (RootBorder != null)
+        {
+            RootBorder.CornerRadius = WindowState == WindowState.Maximized ? new CornerRadius(0) : new CornerRadius(16);
+            RootBorder.BorderThickness = WindowState == WindowState.Maximized ? new Thickness(0) : new Thickness(1);
+        }
     }
 
     private void BtnLang_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is string lang)
         {
+            AppSettings.Language = lang;
+            if (AuthService.CurrentUser != null)
+                AuthService.CurrentUser.Language = lang;
             LocalizationService.SetLanguage(lang);
             ApplyLanguage();
         }
@@ -233,53 +459,30 @@ public partial class DashboardView : Window
 
     private void ApplyLanguage()
     {
-        var lang = LocalizationService.CurrentLanguage;
-        FlowDirection = lang == "ar" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        FlowDirection = LocalizationService.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        UpdateSidebarLayout();
 
-        if (lang == "ar")
+        BtnSignOut.Content      = LocalizationService.Get("auth.logout");
+        BtnCreateRecord.Content = LocalizationService.Get("btn.create_record");
+        TxtGlobalSearch.Text    = LocalizationService.Get("search.placeholder");
+        
+        BtnNavDashboard.Content = LocalizationService.Get("nav.dashboard");
+        BtnNavCompanies.Content = LocalizationService.Get("nav.companies");
+        BtnNavSources.Content   = LocalizationService.Get("nav.sources");
+        BtnNavJobs.Content      = LocalizationService.Get("nav.jobs");
+        BtnNavRaw.Content       = LocalizationService.Get("nav.raw_records");
+        BtnNavMap.Content       = LocalizationService.Get("nav.map");
+        BtnNavExports.Content   = LocalizationService.Get("nav.exports");
+        BtnNavExtension.Content = LocalizationService.Get("nav.extension");
+        BtnNavSettings.Content  = LocalizationService.Get("nav.settings");
+        
+        var user = AuthService.CurrentUser;
+        if (user != null)
         {
-            BtnNavDashboard.Content = "لوحة التحكم";
-            BtnNavCompanies.Content = "الشركات والعملاء";
-            BtnNavSources.Content   = "مصادر الاستخراج";
-            BtnNavJobs.Content      = "مهام الاستخراج";
-            BtnNavRaw.Content       = "السجلات الخام";
-            BtnNavMap.Content       = "مستكشف الخرائط";
-            BtnNavExports.Content   = "مركز التصدير";
-            BtnNavExtension.Content = "إضافة المتصفح";
-            BtnNavSettings.Content  = "الإعدادات";
-            BtnSignOut.Content      = "تسجيل الخروج";
-            BtnCreateRecord.Content = "+ سجل جديد";
-            TxtGlobalSearch.Text    = "ابحث عن الشركات، السجلات، أو المهام...";
-        }
-        else if (lang == "de")
-        {
-            BtnNavDashboard.Content = "Übersicht";
-            BtnNavCompanies.Content = "Unternehmen";
-            BtnNavSources.Content   = "Datenquellen";
-            BtnNavJobs.Content      = "Extraktions-Jobs";
-            BtnNavRaw.Content       = "Rohdaten";
-            BtnNavMap.Content       = "Karten-Explorer";
-            BtnNavExports.Content   = "Exporte";
-            BtnNavExtension.Content = "Erweiterung";
-            BtnNavSettings.Content  = "Einstellungen";
-            BtnSignOut.Content      = "Abmelden";
-            BtnCreateRecord.Content = "+ Neuer Datensatz";
-            TxtGlobalSearch.Text    = "Unternehmen, Datensätze suchen...";
-        }
-        else
-        {
-            BtnNavDashboard.Content = "Dashboard";
-            BtnNavCompanies.Content = "Companies";
-            BtnNavSources.Content   = "Sources";
-            BtnNavJobs.Content      = "Jobs";
-            BtnNavRaw.Content       = "Raw Records";
-            BtnNavMap.Content       = "Map Explorer";
-            BtnNavExports.Content   = "Exports";
-            BtnNavExtension.Content = "Extension";
-            BtnNavSettings.Content  = "Settings";
-            BtnSignOut.Content      = "Sign Out";
-            BtnCreateRecord.Content = "+ Create Record";
-            TxtGlobalSearch.Text    = "Search companies, records, or pipelines...";
+            if (user.RoleName.Contains("super", StringComparison.OrdinalIgnoreCase))
+                TxtUserRole.Text = LocalizationService.Get("role.super_admin");
+            else
+                TxtUserRole.Text = LocalizationService.Get("role.admin");
         }
 
         UpdatePageTitle(_currentPageTag);

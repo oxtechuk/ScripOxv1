@@ -1,140 +1,275 @@
 <Page x:Class="ScripOx.Desktop.Views.Exports.ExportsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      Title="Exports &amp; Audiences Center"
+      Title="Exports &amp; Audiences Hub"
       Background="{StaticResource ExCanvasBg}">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="28" MaxWidth="820" HorizontalAlignment="Left">
-            <StackPanel>
-                <TextBlock Text="Data Exports &amp; Ad Audiences Hub" FontSize="24" FontWeight="Bold"
-                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,6"/>
-                <TextBlock Text="Synchronize qualified CRM leads directly with advertising platforms (Meta, Google) or generate compliance reports."
-                           FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,24"/>
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <!-- Left Side: 4-Step Selection & Filter Wizard (420px) -->
+            <ColumnDefinition Width="420"/>
+            <!-- Right Side: Dynamic Template Matching Preview Matrix (*) -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-                <!-- ── Card 1: Ad Platform & CRM Audience Sync ───────── -->
-                <Border Style="{StaticResource ExCard}" Margin="0,0,0,20">
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- LEFT COLUMN: 4-STEP EXPORT & AUDIENCE WIZARD                   -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,16,0">
+            <StackPanel>
+                <!-- Title Header -->
+                <TextBlock x:Name="TxtPageHeaderTitle" Text="Data Exports &amp; Ad Audiences Hub" FontSize="20" FontWeight="Bold"
+                           Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,4"/>
+                <TextBlock x:Name="TxtPageHeaderSub" Text="معالج تصدير ومطابقة البيانات الإعلانية خطوة بخطوة مع قوالب المنصات الرسمية."
+                           FontSize="11.5" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,16" TextWrapping="Wrap"/>
+
+                <!-- ── Card: 4-Step Filter Wizard ── -->
+                <Border Style="{StaticResource ExCard}" Margin="0,0,0,16">
                     <StackPanel>
-                        <Grid Margin="0,0,0,12">
+                        <!-- Step Header -->
+                        <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Digital Advertising &amp; Email Marketing Audiences"
-                                           Foreground="{StaticResource ExTextPrimary}" FontSize="16" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock Text="1-click exports formatted to exact platform specifications for lookalike and retargeting campaigns."
-                                           Foreground="{StaticResource ExTextSecondary}" FontSize="12"/>
+                                <TextBlock x:Name="TxtWizardTitle" Text="معالج الفرز والتصدير (Wizard)"
+                                           Foreground="{StaticResource ExTextPrimary}" FontSize="14" FontWeight="Bold" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="TxtWizardSub" Text="اختر المجموعة ثم الفئة ثم الأولوية ثم نوع التصدير"
+                                           Foreground="{StaticResource ExTextSecondary}" FontSize="11"/>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="{StaticResource ExStatusSuccessBg}" CornerRadius="12" Padding="10,4" VerticalAlignment="Center">
-                                <TextBlock Text="Ready for Meta &amp; Google" FontSize="10" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
+                            <Border Grid.Column="1" Background="{StaticResource ExStatusSuccessBg}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+                                <TextBlock Text="Live Sync" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource ExStatusSuccessText}"/>
                             </Border>
                         </Grid>
 
-                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="10" Padding="14,10" Margin="0,0,0,16"
+                        <!-- ── STEP 1: المجموعة / المصدر ── -->
+                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="8" Padding="12,10" Margin="0,0,0,10"
                                 BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
-                            <CheckBox x:Name="ChkQualifiedOnly"
-                                      Content="Targeting Filter: Export Qualified Leads Only (Interested / Deal Won) — مهتمين فقط"
-                                      Foreground="{StaticResource ExTextPrimary}" FontWeight="SemiBold"
-                                      IsChecked="True" FontSize="12"/>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <Border Background="#2563EB" CornerRadius="10" Width="18" Height="18" Margin="0,0,6,0">
+                                        <TextBlock Text="1" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock x:Name="TxtStep1" Text="المجموعة / المصدر (Group / Source):" FontSize="11.5" FontWeight="Bold"
+                                               Foreground="{StaticResource ExTextPrimary}"/>
+                                </StackPanel>
+                                <ComboBox x:Name="CmbGroup" Height="32"
+                                          Background="{StaticResource ExSurfaceBg}" Foreground="{StaticResource ExTextPrimary}"
+                                          BorderBrush="{StaticResource ExBorderSubtle}" VerticalContentAlignment="Center" FontSize="11.5"
+                                          SelectionChanged="FilterCriteria_Changed"/>
+                            </StackPanel>
                         </Border>
 
-                        <!-- Platform Export Buttons Grid -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Meta Ads Button -->
-                            <Border Grid.Column="0" Margin="0,0,8,0" Background="{StaticResource ExCanvasBg}" CornerRadius="12"
-                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="14">
-                                <StackPanel>
-                                    <TextBlock Text="Meta Ads (FB &amp; IG)" FontWeight="Bold" FontSize="13" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Custom Audiences CSV with clean hashed phone &amp; email schema." FontSize="11" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap"/>
-                                    <Button Content="Export Meta CSV" Style="{StaticResource ExBtnBlackPill}"
-                                            Height="34" FontSize="11" Click="BtnExportMeta_Click"/>
+                        <!-- ── STEP 2: الفئة / التصنيف ── -->
+                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="8" Padding="12,10" Margin="0,0,0,10"
+                                BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <Border Background="#2563EB" CornerRadius="10" Width="18" Height="18" Margin="0,0,6,0">
+                                        <TextBlock Text="2" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock x:Name="TxtStep2" Text="الفئة / التصنيف (Category / Sector):" FontSize="11.5" FontWeight="Bold"
+                                               Foreground="{StaticResource ExTextPrimary}"/>
                                 </StackPanel>
-                            </Border>
+                                <ComboBox x:Name="CmbCategory" Height="32"
+                                          Background="{StaticResource ExSurfaceBg}" Foreground="{StaticResource ExTextPrimary}"
+                                          BorderBrush="{StaticResource ExBorderSubtle}" VerticalContentAlignment="Center" FontSize="11.5"
+                                          SelectionChanged="FilterCriteria_Changed"/>
+                            </StackPanel>
+                        </Border>
 
-                            <!-- Google Ads Button -->
-                            <Border Grid.Column="1" Margin="4,0,4,0" Background="{StaticResource ExCanvasBg}" CornerRadius="12"
-                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="14">
-                                <StackPanel>
-                                    <TextBlock Text="Google Ads" FontWeight="Bold" FontSize="13" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Customer Match CSV formatted for Search, YouTube &amp; Display." FontSize="11" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap"/>
-                                    <Button Content="Export Google CSV" Style="{StaticResource ExBtnBlackPill}"
-                                            Height="34" FontSize="11" Click="BtnExportGoogle_Click"/>
+                        <!-- ── STEP 3: درجة الأولوية ── -->
+                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="8" Padding="12,10" Margin="0,0,0,10"
+                                BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <Border Background="#2563EB" CornerRadius="10" Width="18" Height="18" Margin="0,0,6,0">
+                                        <TextBlock Text="3" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock x:Name="TxtStep3" Text="درجة الأولوية (Lead Priority):" FontSize="11.5" FontWeight="Bold"
+                                               Foreground="{StaticResource ExTextPrimary}"/>
                                 </StackPanel>
-                            </Border>
+                                <ComboBox x:Name="CmbPriority" Height="32" SelectedIndex="0"
+                                          Background="{StaticResource ExSurfaceBg}" Foreground="{StaticResource ExTextPrimary}"
+                                          BorderBrush="{StaticResource ExBorderSubtle}" VerticalContentAlignment="Center" FontSize="11.5"
+                                          SelectionChanged="FilterCriteria_Changed">
+                                    <ComboBoxItem Content="الكل (جميع درجات الأولوية)"/>
+                                    <ComboBoxItem Content="★★★ أولوية عالية (High Priority)"/>
+                                    <ComboBoxItem Content="★★ أولوية متوسطة (Medium Priority)"/>
+                                    <ComboBoxItem Content="★ أولوية منخفضة (Low Priority)"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
 
-                            <!-- Mailchimp / CRM Button -->
-                            <Border Grid.Column="2" Margin="8,0,0,0" Background="{StaticResource ExCanvasBg}" CornerRadius="12"
-                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="14">
-                                <StackPanel>
-                                    <TextBlock Text="Email Marketing" FontWeight="Bold" FontSize="13" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Mailchimp, Brevo &amp; ActiveCampaign segmented contact list." FontSize="11" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap"/>
-                                    <Button Content="Export Email CSV" Style="{StaticResource ExBtnBlackPill}"
-                                            Height="34" FontSize="11" Click="BtnExportMarketing_Click"/>
+                        <!-- ── STEP 4: نوع التصدير والقالب المستهدف ── -->
+                        <Border Background="#F0F7FF" CornerRadius="8" Padding="12,10" Margin="0,0,0,12"
+                                BorderBrush="#93C5FD" BorderThickness="1.5">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <Border Background="#0284C7" CornerRadius="10" Width="18" Height="18" Margin="0,0,6,0">
+                                        <TextBlock Text="4" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock x:Name="TxtStep4" Text="نوع التصدير والقالب المستهدف (Target Template):" FontSize="11.5" FontWeight="Bold"
+                                               Foreground="#0F172A"/>
                                 </StackPanel>
-                            </Border>
-                        </Grid>
+                                <ComboBox x:Name="CmbExportFormat" Height="34" SelectedIndex="0" FontWeight="SemiBold"
+                                          Background="White" Foreground="{StaticResource ExTextPrimary}"
+                                          BorderBrush="#93C5FD" VerticalContentAlignment="Center" FontSize="11.5"
+                                          SelectionChanged="CmbExportFormat_SelectionChanged">
+                                    <ComboBoxItem Content="🎯 Meta Ads — Value-Based Audience (19 عمود ميتا)"/>
+                                    <ComboBoxItem Content="🔍 Google Ads — Customer Match List (4 أعمدة)"/>
+                                    <ComboBoxItem Content="📧 Email Marketing — Mailchimp &amp; Brevo (8 أعمدة)"/>
+                                    <ComboBoxItem Content="📊 Excel Business Dossier — تقرير إكسل رسمي (.xlsx)"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── Additional Quick Filters ── -->
+                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="8" Padding="10,8" Margin="0,0,0,12"
+                                BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkOnlyWithContact"
+                                          Content="استبعاد السجلات بدون وسيلة اتصال (هاتف أو إيميل)"
+                                          Foreground="{StaticResource ExTextPrimary}" FontWeight="Normal"
+                                          IsChecked="False" FontSize="11" Click="FilterCriteria_Changed" Margin="0,0,0,6"/>
+
+                                <Grid Margin="0,2,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="TxtLblStatus" Text="فلترة الحالة:" Foreground="{StaticResource ExTextSecondary}" FontSize="11" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Column="1" x:Name="CmbStatus" Height="28"
+                                              Background="{StaticResource ExSurfaceBg}" Foreground="{StaticResource ExTextPrimary}"
+                                              BorderBrush="{StaticResource ExBorderSubtle}" DisplayMemberPath="DisplayName" SelectedValuePath="Id"
+                                              VerticalContentAlignment="Center" FontSize="11" SelectionChanged="FilterCriteria_Changed"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── Action Buttons ── -->
+                        <Button x:Name="BtnExportActive" Style="{StaticResource ExBtnBlackPill}" Height="36" Margin="0,0,0,8"
+                                Click="BtnExportActive_Click" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtBtnExportLabel" Text="⬇ تصدير ملف ميتا Meta Ads CSV" FontWeight="Bold" FontSize="11.5"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnCopyActive" Style="{StaticResource ExBtnGhostPill}" Height="34" Margin="0,0,0,8"
+                                Click="BtnCopyActive_Click" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtBtnCopyCsv" Text="📋 نسخ البيانات المعروضة إلى الحافظة (CSV)" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
 
-                <!-- ── Card 2: Excel & Business Reporting Dossier ───── -->
-                <Border Style="{StaticResource ExCard}" Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="Excel &amp; GoBD Compliance Export" Foreground="{StaticResource ExTextPrimary}" FontSize="16" FontWeight="Bold" Margin="0,0,0,4"/>
-                        <TextBlock Text="Generate multi-sheet Excel spreadsheet with company dossiers and KPI summaries."
-                                   Foreground="{StaticResource ExTextSecondary}" FontSize="12" Margin="0,0,0,16"/>
-
-                        <Grid Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Status Filter" Foreground="{StaticResource ExTextSecondary}" FontSize="12" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Column="1" x:Name="CmbStatus" Width="260" Height="34" HorizontalAlignment="Left"
-                                      Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
-                                      BorderBrush="{StaticResource ExBorderSubtle}" DisplayMemberPath="DisplayName" SelectedValuePath="Id"
-                                      VerticalContentAlignment="Center" FontSize="12"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Language Schema" Foreground="{StaticResource ExTextSecondary}" FontSize="12" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Column="1" x:Name="CmbLang" Width="260" Height="34" HorizontalAlignment="Left" SelectedIndex="0"
-                                      Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
-                                      BorderBrush="{StaticResource ExBorderSubtle}" VerticalContentAlignment="Center" FontSize="12">
-                                <ComboBoxItem Content="English / German (LTR)"/>
-                                <ComboBoxItem Content="Arabic / UAE Market (RTL)"/>
-                            </ComboBox>
-                        </Grid>
-
-                        <CheckBox x:Name="ChkSummary" Content="Include Executive Portfolio Summary Sheet"
-                                  Foreground="{StaticResource ExTextPrimary}" IsChecked="True" FontSize="12" Margin="0,0,0,18"/>
-
-                        <Button Content="Generate Full Excel Dossier (.xlsx)" Style="{StaticResource ExBtnGhostPill}"
-                                Height="36" Padding="20,0" HorizontalAlignment="Left" Click="BtnExport_Click"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- ── Card 3: Database Backup ──────────────────────── -->
+                <!-- ── Card: Database Backup ── -->
                 <Border Style="{StaticResource ExCard}">
                     <StackPanel>
-                        <TextBlock Text="System Backup Archive" Foreground="{StaticResource ExTextPrimary}" FontSize="16" FontWeight="Bold" Margin="0,0,0,6"/>
-                        <TextBlock Text="Create a standalone offline backup archive of your SQLite lead pipeline database."
-                                   Foreground="{StaticResource ExTextSecondary}" FontSize="12" Margin="0,0,0,16"/>
-                        <Button Content="Backup Database Archive (.db)" Style="{StaticResource ExBtnGhostPill}"
-                                Height="36" Padding="18,0" HorizontalAlignment="Left" Click="BtnBackup_Click"/>
+                        <TextBlock x:Name="TxtBackupTitle" Text="نسخة احتياطية لقاعدة البيانات" Foreground="{StaticResource ExTextPrimary}" FontSize="13" FontWeight="Bold" Margin="0,0,0,2"/>
+                        <TextBlock x:Name="TxtBackupDesc" Text="إنشاء أرشيف احتياطي كامل لقاعدة بيانات ScripOx SQLite."
+                                   Foreground="{StaticResource ExTextSecondary}" FontSize="10.5" Margin="0,0,0,8"/>
+                        <Button x:Name="BtnBackup" Content="أخذ نسخة احتياطية (.db)" Style="{StaticResource ExBtnGhostPill}"
+                                Height="32" Click="BtnBackup_Click"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- RIGHT COLUMN: DYNAMIC TEMPLATE MATCHING PREVIEW MATRIX         -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Border Grid.Column="1" Style="{StaticResource ExCard}" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Header with Dynamic Title, Template Badge, and Quick Actions -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- DataGrid Dynamic Matrix -->
+                    <RowDefinition Height="*"/>
+                    <!-- Footer Info Bar -->
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ── Dynamic Header ── -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
+                            <TextBlock x:Name="TxtPreviewTitle" Text="معاينة حية لملف جمهور ميتا (Meta Custom Audience)"
+                                       FontSize="15" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" VerticalAlignment="Center"/>
+                            <Border x:Name="BadgeTemplateBorder" Background="#1877F2" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtBadgeTemplate" Text="Meta Template" Foreground="White" FontSize="9.5" FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtPreviewSubtitle"
+                                   Text="صيغة الجمهور المخصص المبني على القيمة (Value-Based Audience) متطابقة 100% مع تمبلت ميتا الرسمي example_value_based_audience_file.csv"
+                                   FontSize="11" Foreground="{StaticResource ExTextSecondary}" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Top Right Quick Actions -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource ExBtnGhostPill}" Height="32" Padding="12,0" Margin="0,0,6,0"
+                                Click="BtnRefresh_Click" ToolTip="تحديث المعاينة بناءً على الفلاتر الحالية">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtRefresh" Text="🔄 تحديث" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource ExBtnGhostPill}" Height="32" Padding="12,0" Margin="0,0,6,0"
+                                Click="BtnCopyActive_Click" ToolTip="نسخ أسطر CSV المنسقة مباشرة للحافظة">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtCopyCsv" Text="📋 نسخ CSV" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource ExBtnBlackPill}" Height="32" Padding="14,0"
+                                Click="BtnExportActive_Click" ToolTip="تصدير وحفظ الملف بالصيغة المختارة">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtExportNow" Text="⬇ تصدير الآن" FontSize="11" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── DataGrid Live Matrix ── -->
+                <Border Grid.Row="1" Background="{StaticResource ExSurfaceBg}" CornerRadius="8"
+                        BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" ClipToBounds="True">
+                    <DataGrid x:Name="DgPreview"
+                              Style="{StaticResource ExDataGrid}"
+                              ColumnHeaderStyle="{StaticResource ExDataGridHeader}"
+                              IsReadOnly="True"
+                              AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"/>
+                </Border>
+
+                <!-- ── Footer Info Bar ── -->
+                <Grid Grid.Row="2" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtLblRecordsCount" Text="عدد السجلات المطابقة: " Foreground="{StaticResource ExTextSecondary}" FontSize="11.5"/>
+                        <TextBlock x:Name="TxtRecordCount" Text="0 جهة اتصال" FontWeight="Bold"
+                                   Foreground="{StaticResource ExTextPrimary}" FontSize="11.5"/>
+                        <TextBlock x:Name="TxtLblLtv" Text="  •  إجمالي القيمة التقديرية (LTV): " Foreground="{StaticResource ExTextSecondary}" FontSize="11.5" Margin="8,0,0,0"/>
+                        <TextBlock x:Name="TxtTotalValue" Text="$0" FontWeight="Bold"
+                                   Foreground="{StaticResource ExStatusSuccessText}" FontSize="11.5"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="TxtTemplateSpec" Grid.Column="1" Text="19 أعمدة متطابقة تماماً مع مواصفات Meta Custom Audiences"
+                               Foreground="{StaticResource ExTextSecondary}" FontSize="10.5" VerticalAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
 </Page>

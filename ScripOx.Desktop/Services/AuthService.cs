@@ -104,7 +104,7 @@ public class AuthService
             RoleId = 1,
             RoleName = "super_admin",
             IsActive = true,
-            Language = "en"
+            Language = AppSettings.Language
         };
         Log.Warning("Development mode active: Bypassed login with mock user.");
     }

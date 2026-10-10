@@ -83,10 +83,16 @@
                            Foreground="{StaticResource ExTextPrimary}" Margin="0,8,0,12"/>
 
                 <Button x:Name="BtnInstall"
-                        Content="Open Browser Extensions Page"
+                        Content="⚡ Install &amp; Load Extension in Browser"
                         Style="{StaticResource ExBtnBlackPill}"
                         Height="42" IsEnabled="False"
-                        Click="BtnInstall_Click" Margin="0,0,0,14"/>
+                        Click="BtnInstall_Click" Margin="0,0,0,10"/>
+
+                <Button x:Name="BtnCreateShortcut"
+                        Content="📌 Create Browser Desktop Shortcut (With Extension)"
+                        Style="{StaticResource ExBtnGhostPill}"
+                        Height="36" IsEnabled="False"
+                        Click="BtnCreateShortcut_Click" Margin="0,0,0,14"/>
 
                 <!-- Extension Folder Path Info -->
                 <Border Style="{StaticResource ExCard}" Padding="16,12">

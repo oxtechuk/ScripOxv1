@@ -38,6 +38,11 @@ public class CompanyService
             conditions.Add("c.status_id = @status");
             parameters["@status"] = filter.StatusId;
         }
+        if (filter.SourceId.HasValue && filter.SourceId.Value > 0)
+        {
+            conditions.Add("c.source_id = @source_id");
+            parameters["@source_id"] = filter.SourceId.Value;
+        }
         if (!string.IsNullOrWhiteSpace(filter.Category))
         {
             conditions.Add("c.category LIKE @category");
@@ -67,6 +72,15 @@ public class CompanyService
         var where  = string.Join(" AND ", conditions);
         var offset = (page - 1) * pageSize;
 
+        var sortCol = filter.OrderBy?.ToLower() switch
+        {
+            "created_at" => "c.created_at",
+            "name"       => "c.name",
+            "id"         => "c.id",
+            _            => "c.updated_at"
+        };
+        var sortDir = filter.OrderDesc ? "DESC" : "ASC";
+
         var sql = $"""
             SELECT c.*,
                    s.name  AS status_name,
@@ -76,7 +90,7 @@ public class CompanyService
             LEFT JOIN company_statuses s ON s.id = c.status_id
             LEFT JOIN users u ON u.id = c.assigned_to
             WHERE {where}
-            ORDER BY c.updated_at DESC
+            ORDER BY {sortCol} {sortDir}
             LIMIT @limit OFFSET @offset
         """;
 
@@ -137,9 +151,14 @@ public class CompanyService
         var company = MapCompany(reader);
         await reader.CloseAsync();
 
-        company.Notes    = await GetNotesAsync(id, conn);
-        company.Comments = await GetCommentsAsync(id, conn);
-        company.Links    = await GetLinksAsync(id, conn);
+        try { company.Notes = await GetNotesAsync(id, conn); }
+        catch (Exception ex) { Log.Error(ex, "Failed to load company notes for ID {Id}", id); company.Notes = []; }
+
+        try { company.Comments = await GetCommentsAsync(id, conn); }
+        catch (Exception ex) { Log.Error(ex, "Failed to load company comments for ID {Id}", id); company.Comments = []; }
+
+        try { company.Links = await GetLinksAsync(id, conn); }
+        catch (Exception ex) { Log.Error(ex, "Failed to load company links for ID {Id}", id); company.Links = []; }
 
         return company;
     }
@@ -348,9 +367,32 @@ public class CompanyService
             AssignedName= NullStr("assigned_name"),
             Priority    = r.GetString(Ord("priority")),
             IsVerified  = r.GetBoolean(Ord("is_verified")),
-            CreatedAt   = r.GetDateTime(Ord("created_at")),
-            UpdatedAt   = r.GetDateTime(Ord("updated_at")),
+            CreatedAt   = SafeGetDateTime(r, "created_at"),
+            UpdatedAt   = SafeGetDateTime(r, "updated_at"),
         };
+    }
+
+    private static DateTime SafeGetDateTime(SqliteDataReader r, string col)
+    {
+        try
+        {
+            var o = r.GetOrdinal(col);
+            if (r.IsDBNull(o)) return DateTime.UtcNow;
+            return r.GetDateTime(o);
+        }
+        catch
+        {
+            try
+            {
+                var o = r.GetOrdinal(col);
+                var s = r.GetString(o);
+                return DateTime.TryParse(s, out var dt) ? dt : DateTime.UtcNow;
+            }
+            catch
+            {
+                return DateTime.UtcNow;
+            }
+        }
     }
 
     private static async Task<List<CompanyNote>> GetNotesAsync(long companyId, SqliteConnection conn)
@@ -375,8 +417,8 @@ public class CompanyService
                 UserName  = r.GetString(r.GetOrdinal("user_name")),
                 Content   = r.GetString(r.GetOrdinal("content")),
                 IsPinned  = r.GetBoolean(r.GetOrdinal("is_pinned")),
-                CreatedAt = r.GetDateTime(r.GetOrdinal("created_at")),
-                UpdatedAt = r.GetDateTime(r.GetOrdinal("updated_at")),
+                CreatedAt = SafeGetDateTime(r, "created_at"),
+                UpdatedAt = SafeGetDateTime(r, "updated_at"),
             });
         return list;
     }
@@ -406,7 +448,7 @@ public class CompanyService
                 Content   = r.GetString(r.GetOrdinal("content")),
                 ParentId  = r.IsDBNull(pidOrd) ? null : r.GetInt32(pidOrd),
                 IsEdited  = r.GetBoolean(r.GetOrdinal("is_edited")),
-                CreatedAt = r.GetDateTime(r.GetOrdinal("created_at")),
+                CreatedAt = SafeGetDateTime(r, "created_at"),
             });
         }
         return list;
@@ -455,6 +497,186 @@ public class CompanyService
         }
         return list;
     }
+
+    public async Task<int> UpdateCategoryBatchAsync(List<long> companyIds, string newCategory)
+    {
+        if (companyIds == null || companyIds.Count == 0 || string.IsNullOrWhiteSpace(newCategory)) return 0;
+        await using var conn = new SqliteConnection(_connectionString);
+        await conn.OpenAsync();
+        var idList = string.Join(",", companyIds);
+        await using var cmd = new SqliteCommand(
+            $"UPDATE companies SET category = @c, updated_at = CURRENT_TIMESTAMP WHERE id IN ({idList})", conn);
+        cmd.Parameters.AddWithValue("@c", newCategory.Trim());
+        return await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Retrieves companies that have a non-empty website, optionally filtered by category or specific IDs.
+    /// </summary>
+    public async Task<List<Company>> GetCompaniesWithWebsitesAsync(string? category = null, List<long>? specificIds = null)
+    {
+        var list = new List<Company>();
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var conditions = new List<string> { "website IS NOT NULL", "TRIM(website) != ''" };
+            var prms = new Dictionary<string, object>();
+
+            if (!string.IsNullOrWhiteSpace(category) && category != "الكل" && category != "All")
+            {
+                conditions.Add("category = @cat");
+                prms["@cat"] = category.Trim();
+            }
+
+            if (specificIds != null && specificIds.Count > 0)
+            {
+                conditions.Add($"id IN ({string.Join(",", specificIds)})");
+            }
+
+            var sql = $"SELECT id, name, category, phone, phone2, email, website FROM companies WHERE {string.Join(" AND ", conditions)} ORDER BY id ASC";
+            await using var cmd = new SqliteCommand(sql, conn);
+            foreach (var kvp in prms)
+            {
+                cmd.Parameters.AddWithValue(kvp.Key, kvp.Value);
+            }
+
+            await using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                list.Add(new Company
+                {
+                    Id       = r.GetInt64(0),
+                    Name     = r.GetString(1),
+                    Category = r.IsDBNull(2) ? null : r.GetString(2),
+                    Phone    = r.IsDBNull(3) ? null : r.GetString(3),
+                    Phone2   = r.IsDBNull(4) ? null : r.GetString(4),
+                    Email    = r.IsDBNull(5) ? null : r.GetString(5),
+                    Website  = r.IsDBNull(6) ? null : r.GetString(6)
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load companies with websites");
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// Updates email, phone, and/or phone2 for a company when discovered by crawler.
+    /// </summary>
+    public async Task<bool> UpdateContactInfoAsync(long companyId, string? email, string? phone, string? phone2 = null)
+    {
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+
+            // First inspect current values so we don't erase existing ones
+            string? currentEmail = null;
+            string? currentPhone = null;
+            string? currentPhone2 = null;
+
+            await using (var checkCmd = new SqliteCommand("SELECT email, phone, phone2 FROM companies WHERE id = @id", conn))
+            {
+                checkCmd.Parameters.AddWithValue("@id", companyId);
+                await using var r = await checkCmd.ExecuteReaderAsync();
+                if (await r.ReadAsync())
+                {
+                    currentEmail  = r.IsDBNull(0) ? null : r.GetString(0);
+                    currentPhone  = r.IsDBNull(1) ? null : r.GetString(1);
+                    currentPhone2 = r.IsDBNull(2) ? null : r.GetString(2);
+                }
+            }
+
+            var finalEmail  = !string.IsNullOrWhiteSpace(email) ? email.Trim() : currentEmail;
+            var finalPhone  = currentPhone;
+            var finalPhone2 = currentPhone2;
+
+            if (!string.IsNullOrWhiteSpace(phone))
+            {
+                var cleanNewPhone = phone.Trim();
+                if (string.IsNullOrWhiteSpace(currentPhone))
+                {
+                    finalPhone = cleanNewPhone;
+                }
+                else if (currentPhone != cleanNewPhone && string.IsNullOrWhiteSpace(currentPhone2))
+                {
+                    finalPhone2 = cleanNewPhone;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(phone2) && string.IsNullOrWhiteSpace(finalPhone2))
+            {
+                finalPhone2 = phone2.Trim();
+            }
+
+            const string updateSql = """
+                UPDATE companies
+                SET email = @email,
+                    phone = @phone,
+                    phone2 = @phone2,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = @id
+            """;
+
+            await using var updCmd = new SqliteCommand(updateSql, conn);
+            updCmd.Parameters.AddWithValue("@email",  (object?)finalEmail ?? DBNull.Value);
+            updCmd.Parameters.AddWithValue("@phone",  (object?)finalPhone ?? DBNull.Value);
+            updCmd.Parameters.AddWithValue("@phone2", (object?)finalPhone2 ?? DBNull.Value);
+            updCmd.Parameters.AddWithValue("@id",     companyId);
+
+            int affected = await updCmd.ExecuteNonQueryAsync();
+            return affected > 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to update contact info for company {CompanyId}", companyId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Bulk deletes companies by their IDs.
+    /// </summary>
+    public async Task<int> DeleteBatchAsync(List<long> ids)
+    {
+        if (ids == null || ids.Count == 0) return 0;
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            var idList = string.Join(",", ids);
+            await using var cmd = new SqliteCommand($"DELETE FROM companies WHERE id IN ({idList})", conn);
+            return await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "DeleteBatchAsync failed for companies");
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Clears/wipes all companies from the database.
+    /// </summary>
+    public async Task<int> ClearAllAsync()
+    {
+        try
+        {
+            await using var conn = new SqliteConnection(_connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new SqliteCommand("DELETE FROM companies", conn);
+            return await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "ClearAllAsync failed for companies");
+            return 0;
+        }
+    }
 }
 
 /// <summary>Filter parameters for company queries.</summary>
@@ -462,9 +684,12 @@ public class CompanyFilter
 {
     public string? Search     { get; set; }
     public int?    StatusId   { get; set; }
+    public int?    SourceId   { get; set; }
     public string? Category   { get; set; }
     public string? City       { get; set; }
     public string? Country    { get; set; }
     public string? Priority   { get; set; }
     public int?    AssignedTo { get; set; }
+    public string? OrderBy    { get; set; } = "updated_at";
+    public bool    OrderDesc  { get; set; } = true;
 }

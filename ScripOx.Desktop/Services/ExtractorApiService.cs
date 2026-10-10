@@ -13,9 +13,9 @@ public class ExtractorApiService
 {
     private readonly HttpClient _http;
 
-    public ExtractorApiService(string baseUrl = "http://127.0.0.1:8765")
+    public ExtractorApiService(string? baseUrl = null)
     {
-        _http = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        _http = new HttpClient { BaseAddress = new Uri(baseUrl ?? AppSettings.ExtractorApiBaseUrl) };
         _http.DefaultRequestHeaders.Add("Accept", "application/json");
     }
 

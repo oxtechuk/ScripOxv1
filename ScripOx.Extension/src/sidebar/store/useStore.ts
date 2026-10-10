@@ -400,7 +400,7 @@ export const useStore = create<ScripOxState>()(
       setApiStatus: (status) => set({ apiStatus: status }),
 
       // ── Sidebar ───────────────────────────────────────────
-      sidebarOpen: true,
+      sidebarOpen: false,
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 

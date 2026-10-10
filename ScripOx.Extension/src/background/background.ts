@@ -5,16 +5,23 @@
 
 import type { ChromeMessage, ApiStatus } from '../types';
 
-const API_BASE = 'http://127.0.0.1:8765';
-
 let cachedStatus: ApiStatus = { connected: false, checkedAt: 0 };
+
+async function getApiBase(): Promise<string> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get('settings', (res) => {
+      resolve(res.settings?.apiUrl || 'http://127.0.0.1:8765');
+    });
+  });
+}
 
 // ── Health check ─────────────────────────────────────────────
 async function checkHealth(): Promise<ApiStatus> {
   // Cache for 10 seconds
   if (Date.now() - cachedStatus.checkedAt < 10_000) return cachedStatus;
   try {
-    const res = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(3000) });
+    const apiBase = await getApiBase();
+    const res = await fetch(`${apiBase}/api/health`, { signal: AbortSignal.timeout(3000) });
     const data = res.ok ? await res.json() : null;
     cachedStatus = { connected: res.ok, version: data?.version, checkedAt: Date.now() };
   } catch {
@@ -31,7 +38,8 @@ async function callApi(method: string, path: string, body?: unknown): Promise<un
     signal: AbortSignal.timeout(15_000),
   };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${API_BASE}${path}`, opts);
+  const apiBase = await getApiBase();
+  const res = await fetch(`${apiBase}${path}`, opts);
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`API ${res.status}: ${err}`);

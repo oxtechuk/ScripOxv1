@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "icons": "node scripts/generate-icons.mjs",
-    "build": "node scripts/generate-icons.mjs && tsc --noEmit --skipLibCheck && node scripts/build.mjs",
-    "build:fast": "node scripts/generate-icons.mjs && node scripts/build.mjs",
+    "icons": "echo 'Icons manually created.'",
+    "build": "tsc --noEmit --skipLibCheck && node scripts/build.mjs",
+    "build:fast": "node scripts/build.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -23,12 +23,13 @@ router = APIRouter()
 # ── Request / Response Models ─────────────────────────────────
 
 class BrowserExtractRequest(BaseModel):
-    url:      str
-    title:    str
-    selector: str
-    xpath:    Optional[str] = None
-    mapping:  dict[str, str] = {}
-    records:  list[dict[str, Any]] = []
+    url:        str
+    title:      str
+    selector:   str
+    xpath:      Optional[str] = None
+    mapping:    dict[str, str] = {}
+    records:    list[dict[str, Any]] = []
+    group_name: Optional[str] = None
 
 
 class BrowserExtractResponse(BaseModel):
@@ -178,6 +179,10 @@ async def browser_extract(
     saved = 0
     for rec in payload.records:
         try:
+            if payload.group_name:
+                rec["group_name"] = payload.group_name
+                rec["category"] = payload.group_name
+
             await db.execute(
                 text("""
                     INSERT INTO raw_records (job_id, raw_json, status)
@@ -195,11 +200,12 @@ async def browser_extract(
 
             # If the record has a 'name' field, save directly to companies too
             if norm_rec.get("name"):
+                category_val = payload.group_name or norm_rec.get("category")
                 await db.execute(
                     text("""
                         INSERT OR IGNORE INTO companies
                           (name, phone, email, website, address, category,
-                           latitude, longitude,
+                           y, x,
                            source_name, source_url, status_id, priority, created_at)
                         VALUES
                           (:name, :phone, :email, :website, :address, :category,
@@ -212,7 +218,7 @@ async def browser_extract(
                         "email":       norm_rec.get("email"),
                         "website":     norm_rec.get("website"),
                         "address":     norm_rec.get("address"),
-                        "category":    norm_rec.get("category"),
+                        "category":    category_val,
                         "latitude":    float(norm_rec.get("latitude")) if norm_rec.get("latitude") else None,
                         "longitude":   float(norm_rec.get("longitude")) if norm_rec.get("longitude") else None,
                         "source_name": "Chrome Extension",

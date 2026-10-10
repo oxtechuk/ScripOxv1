@@ -83,6 +83,7 @@ export interface BrowserExtractPayload {
   xpath: string;
   mapping: FieldMapping;
   records: ExtractedRecord[];
+  group_name?: string;
 }
 
 export interface ApiStatus {

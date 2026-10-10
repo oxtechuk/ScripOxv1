@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { sendExtraction } from '../../api/ScripOxClient';
 import { GoogleMapsDetector } from '../../content/detectors/GoogleMapsDetector';
 import { AutoCrawler } from '../../content/engines/AutoCrawler';
+import { ExportGroupModal } from './ExportGroupModal';
 import {
   MousePointer, Table, Send, RotateCw, Sparkles, Wand2,
   Compass, Square, Download, Copy, Check, AlertCircle, RefreshCw
@@ -18,6 +19,8 @@ export function Toolbar() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
   const [copiedFallback, setCopiedFallback] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [currentGroup, setCurrentGroup] = useState('VIP Prospect');
   const isMaps = GoogleMapsDetector.isGoogleMapsPage() || location.href.includes('maps');
   const isDark = theme === 'dark';
 
@@ -80,23 +83,38 @@ export function Toolbar() {
     });
   };
 
-  // ── Send To Desktop with Fallback ───────────────────────────
-  const handleSendToScripOx = async () => {
+  // ── Send To Desktop with Required Group Name ───────────────
+  const onTriggerSendToScripOx = () => {
     if (records.length === 0) return;
+    setShowGroupModal(true);
+  };
+
+  const handleConfirmSendToScripOx = async (groupName: string) => {
+    setCurrentGroup(groupName);
+    setShowGroupModal(false);
     setShowConfirm(false);
     setIsSending(true);
     setSendResult(null);
 
+    // Enrich every record with the chosen category / group name
+    const enrichedRecords = records.map((rec) => ({
+      ...rec,
+      category: groupName,
+      group_name: groupName,
+    }));
+    setRecords(enrichedRecords);
+
     try {
       await sendExtraction({
-        url:      location.href,
-        title:    document.title,
-        selector: selectors?.bestSelector || 'scripox-smart-lead-feed',
-        xpath:    selectors?.xpath || '//div',
-        mapping:  mapping || {},
-        records,
+        url:        location.href,
+        title:      document.title,
+        selector:   selectors?.bestSelector || 'scripox-smart-lead-feed',
+        xpath:      selectors?.xpath || '//div',
+        mapping:    mapping || {},
+        records:    enrichedRecords,
+        group_name: groupName,
       });
-      setSendResult({ ok: true, message: `تم إرسال ${records.length} سجل للديسكتوب بنجاح ✓` });
+      setSendResult({ ok: true, message: `تم إرسال ${records.length} شركة إلى مجموعة [${groupName}] بالديسكتوب بنجاح ✓` });
       setShowFallback(false);
     } catch (err) {
       // Backend not running on port 8765 -> offer instant Desktop File Export
@@ -111,20 +129,27 @@ export function Toolbar() {
   };
 
   const handleSaveDesktopFile = () => {
+    const trimmedGroup = currentGroup || 'VIP Prospect';
+    const enrichedRecords = records.map((rec) => ({
+      ...rec,
+      category: trimmedGroup,
+      group_name: trimmedGroup,
+    }));
     const payload = {
       scripox_version: '1.0',
       exported_at: new Date().toISOString(),
       url: location.href,
       title: document.title,
-      records_count: records.length,
-      records: records,
+      group_name: trimmedGroup,
+      records_count: enrichedRecords.length,
+      records: enrichedRecords,
     };
     const content = JSON.stringify(payload, null, 2);
     const blob = new Blob([content], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `scripox_desktop_${Date.now()}.json`;
+    a.download = `scripox_${trimmedGroup.replace(/[\s/\\?%*:|"<>]/g, '_')}_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setShowFallback(false);
@@ -245,7 +270,7 @@ export function Toolbar() {
 
       {/* Primary Dispatch to Desktop Button (Always Responsive) */}
       <button
-        onClick={handleSendToScripOx}
+        onClick={onTriggerSendToScripOx}
         disabled={records.length === 0 || isSending}
         className={`w-full py-2 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
           records.length === 0
@@ -327,6 +352,16 @@ export function Toolbar() {
           إعادة ضبط التحديد والسجلات
         </button>
       )}
+
+      {/* Required Group Name Modal */}
+      <ExportGroupModal
+        isOpen={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        onConfirm={handleConfirmSendToScripOx}
+        recordCount={records.length}
+        isDark={isDark}
+        isSending={isSending}
+      />
     </div>
   );
 }

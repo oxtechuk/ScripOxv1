@@ -25,8 +25,15 @@ public partial class CompanyDetailsWindow : Window
 
     private async void CompanyDetailsWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        await LoadStatusesAsync();
-        await LoadDetailsAsync();
+        try
+        {
+            await LoadStatusesAsync();
+            await LoadDetailsAsync();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error in CompanyDetailsWindow_Loaded for ID {CompanyId}", _companyId);
+        }
     }
 
     private async Task LoadStatusesAsync()
@@ -44,7 +51,16 @@ public partial class CompanyDetailsWindow : Window
 
     private async Task LoadDetailsAsync()
     {
-        _company = await _companyService.GetByIdAsync(_companyId);
+        try
+        {
+            _company = await _companyService.GetByIdAsync(_companyId);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to load company ID {CompanyId}", _companyId);
+            return;
+        }
+
         if (_company != null)
         {
             TxtName.Text = _company.DisplayName;

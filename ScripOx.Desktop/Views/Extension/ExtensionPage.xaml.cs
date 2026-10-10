@@ -138,7 +138,8 @@ public partial class ExtensionPage : Page
         BdrSelectedBrowser.Visibility = Visibility.Visible;
         TxtSelectedIcon.Text        = browser.Name.Length > 0 ? browser.Name.Substring(0, 1).ToUpper() : "";
         TxtSelectedName.Text        = browser.Name;
-        BtnInstall.IsEnabled        = true;
+        BtnInstall.IsEnabled        = browser.IsInstalled;
+        BtnCreateShortcut.IsEnabled = browser.IsInstalled;
     }
 
     private void DetectExtensionPath()
@@ -153,14 +154,19 @@ public partial class ExtensionPage : Page
     private void BuildStepsPanel()
     {
         StepsPanel.Children.Clear();
-        var steps = new[]
+        bool isAr = LocalizationService.CurrentLanguage == "ar";
+        var steps = isAr ? new[]
         {
-            ("1", "Click 'Open Browser Extensions Page' below"),
-            ("2", "Browser opens to extensions manager"),
-            ("3", "Enable Developer Mode (top-right toggle)"),
-            ("4", "Click 'Load unpacked' button"),
-            ("5", "Select the extension folder shown above"),
-            ("6", "Extension is active and linked to ScripOx"),
+            ("1", "اختر المتصفح المستهدف من القائمة أعلاه (Google Chrome / Brave)"),
+            ("2", "اضغط على زر '⚡ تثبيت وتحميل الإضافة في المتصفح تلقائياً'"),
+            ("3", "يقوم ScripOx بنسخ المسار وإطلاق المتصفح مع أمر التحميل المباشر (--load-extension)"),
+            ("4", "تظهر إضافة ScripOx Visual Extractor مباشرة في المتصفح وتصبح جاهزة للاستخراج!"),
+        } : new[]
+        {
+            ("1", "Select your target browser above (Google Chrome / Brave)"),
+            ("2", "Click '⚡ Install & Load Extension in Browser' below"),
+            ("3", "ScripOx copies folder path & launches browser with extension auto-loaded (--load-extension)"),
+            ("4", "ScripOx Visual Extractor is active in your browser and ready for data extraction!"),
         };
 
         foreach (var (num, text) in steps)
@@ -208,8 +214,9 @@ public partial class ExtensionPage : Page
     {
         if (_selectedBrowser == null) return;
 
+        bool isAr = LocalizationService.CurrentLanguage == "ar";
         BtnInstall.IsEnabled = false;
-        BtnInstall.Content   = "Opening Browser...";
+        BtnInstall.Content   = isAr ? "جاري التثبيت والتحميل..." : "Installing & Loading...";
 
         var result = await ExtensionInstallerService.InstallAsync(_selectedBrowser);
 
@@ -225,7 +232,27 @@ public partial class ExtensionPage : Page
         BdrResult.BorderThickness = new Thickness(1);
 
         BtnInstall.IsEnabled = true;
-        BtnInstall.Content   = "Open Browser Extensions Page";
+        BtnInstall.Content   = isAr ? "⚡ تثبيت وتحميل الإضافة في المتصفح تلقائياً" : "⚡ Install & Load Extension in Browser";
+    }
+
+    private void BtnCreateShortcut_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedBrowser == null) return;
+        bool isAr = LocalizationService.CurrentLanguage == "ar";
+        bool ok = ExtensionInstallerService.CreateDesktopShortcut(_selectedBrowser);
+        if (ok)
+        {
+            MessageBox.Show(
+                isAr ? $"تم إنشاء اختصار لمتصفح {_selectedBrowser.Name} مع إضافة ScripOx على سطح المكتب بنجاح!\n\nيمكنك الآن تشغيل المتصفح من هذا الاختصار لتكون الإضافة مفعلة دائماً."
+                     : $"Desktop shortcut for {_selectedBrowser.Name} with ScripOx Extension created successfully!\n\nYou can use this shortcut anytime to start the browser with the extension active.",
+                "ScripOx", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        else
+        {
+            MessageBox.Show(
+                isAr ? "تعذر إنشاء الاختصار على سطح المكتب." : "Failed to create desktop shortcut.",
+                "ScripOx", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)

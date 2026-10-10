@@ -122,18 +122,39 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <script>
-    // ── Map init ──────────────────────────────────────────────
-    const map = L.map('map', {
-      center: [51.505, -0.09],  // London default
-      zoom: 6,
-      zoomControl: true,
+    // ── Free Tile Layers (No API key, No watermarks) ────────
+    const esriDarkBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri, &copy; OpenStreetMap',
+      maxZoom: 16,
+    });
+    const esriDarkLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+    });
+    const darkExecutive = L.layerGroup([esriDarkBase, esriDarkLabels]);
+
+    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
     });
 
-    // Dark tile layer (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap contributors © CARTO',
-      maxZoom: 19,
-    }).addTo(map);
+    const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri, Maxar',
+      maxZoom: 18,
+    });
+
+    const map = L.map('map', {
+      center: [26.0, 45.0],
+      zoom: 4,
+      zoomControl: true,
+      layers: [darkExecutive]
+    });
+
+    const baseLayers = {
+      "🌙 Dark Executive": darkExecutive,
+      "🗺️ OpenStreetMap": osmStandard,
+      "🛰️ Satellite": esriSatellite
+    };
+    L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 
     // ── State ─────────────────────────────────────────────────
     let allPoints   = [];
@@ -205,7 +226,15 @@
       points.forEach(p => {
         if (!p.y || !p.x) return;
 
-        const marker = L.marker([p.y, p.x], { icon: makeIcon(p.statusColor) });
+        let lat = Number(p.y);
+        let lng = Number(p.x);
+
+        // Ensure lat is within [-90, 90]. If reversed, swap them
+        if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
+          const temp = lat; lat = lng; lng = temp;
+        }
+
+        const marker = L.marker([lat, lng], { icon: makeIcon(p.statusColor) });
 
         const popup = `
           <div class="popup-name">${escHtml(p.name)}</div>
