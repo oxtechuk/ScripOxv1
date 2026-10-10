@@ -157,16 +157,16 @@ public partial class ExtensionPage : Page
         bool isAr = LocalizationService.CurrentLanguage == "ar";
         var steps = isAr ? new[]
         {
-            ("1", "اختر المتصفح المستهدف من القائمة أعلاه (Google Chrome / Brave)"),
-            ("2", "اضغط على زر '⚡ تثبيت وتحميل الإضافة في المتصفح تلقائياً'"),
-            ("3", "يقوم ScripOx بنسخ المسار وإطلاق المتصفح مع أمر التحميل المباشر (--load-extension)"),
-            ("4", "تظهر إضافة ScripOx Visual Extractor مباشرة في المتصفح وتصبح جاهزة للاستخراج!"),
+            ("1", "اختر المتصفح المستهدف من القائمة أعلاه (Google Chrome / Brave / Firefox)"),
+            ("2", "اضغط على زر 'تثبيت وتحميل الإضافة في المتصفح تلقائياً'"),
+            ("3", "يقوم ScripOx بنسخ المسار، فتح مجلد الإضافة، وإطلاق صفحة الإضافات بالمتصفح"),
+            ("4", "اتبع الخطوات السريعة الموضحة أسفل زر التثبيت لتفعيل وتثبيت الإضافة فوراً!"),
         } : new[]
         {
-            ("1", "Select your target browser above (Google Chrome / Brave)"),
-            ("2", "Click '⚡ Install & Load Extension in Browser' below"),
-            ("3", "ScripOx copies folder path & launches browser with extension auto-loaded (--load-extension)"),
-            ("4", "ScripOx Visual Extractor is active in your browser and ready for data extraction!"),
+            ("1", "Select your target browser above (Google Chrome / Brave / Firefox)"),
+            ("2", "Click 'Install & Load Extension in Browser' below"),
+            ("3", "ScripOx copies path, opens extension folder, and launches the browser"),
+            ("4", "Follow the quick setup steps shown below to activate and Pin the extension!"),
         };
 
         foreach (var (num, text) in steps)

@@ -34,8 +34,7 @@ public partial class UpdateDialog : Window
             TxtTitle.Text = "يتوفر تحديث جديد لـ ScripOx";
             TxtSubtitle.Text = "تم إصدار نسخة أحدث تتضمن تحسينات ومزايا جديدة.";
             BtnUpdateNow.Content = "تحديث الآن";
-            BtnLater.Content = "لاحقاً";
-            BtnViewGitHub.Content = "عرض على GitHub";
+            BtnLater.Content = "إغلاق";
             TxtProgressStatus.Text = "جاري تحميل التحديث...";
         }
     }
@@ -52,33 +51,17 @@ public partial class UpdateDialog : Window
         Close();
     }
 
-    private void BtnViewGitHub_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var url = string.IsNullOrEmpty(_info.HtmlUrl)
-                ? $"https://github.com/{AppSettings.GitHubOwner}/{AppSettings.GitHubRepo}/releases"
-                : _info.HtmlUrl;
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            });
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to open GitHub release URL.");
-        }
-    }
-
     private async void BtnUpdateNow_Click(object sender, RoutedEventArgs e)
     {
+        bool isAr = LocalizationService.CurrentLanguage == "ar";
+
         if (string.IsNullOrEmpty(_info.DownloadUrl) ||
             _info.DownloadUrl.Equals(_info.HtmlUrl, StringComparison.OrdinalIgnoreCase))
         {
-            // If there is no binary asset attached directly, take user to the release webpage
-            BtnViewGitHub_Click(sender, e);
+            MessageBox.Show(
+                isAr ? "لا يتوفر ملف تثبيت مباشر لهذا التحديث حالياً. يرجى مراجعة الدعم الفني."
+                     : "Direct installer is not available for this update. Please contact support.",
+                "ScripOx Update", MessageBoxButton.OK, MessageBoxImage.Information);
             Close();
             return;
         }
@@ -89,7 +72,7 @@ public partial class UpdateDialog : Window
         PanelProgress.Visibility = Visibility.Visible;
 
         _cts = new CancellationTokenSource();
-        var fileName = _info.AssetName ?? $"ScripOx-{_info.TagName}.zip";
+        var fileName = _info.AssetName ?? $"ScripOx-Setup-{_info.TagName}.exe";
 
         var progress = new Progress<double>(p =>
         {
@@ -119,13 +102,14 @@ public partial class UpdateDialog : Window
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to download update asset.");
-            var msg = LocalizationService.CurrentLanguage == "ar"
-                ? "تعذر تنزيل التحديث تلقائياً. يمكنك تنزيله يدوياً من GitHub."
-                : "Failed to download update automatically. You can download it directly from GitHub.";
+            var msg = isAr
+                ? "تعذر تنزيل التحديث تلقائياً، يرجى التأكد من اتصال الإنترنت والمحاولة مرة أخرى."
+                : $"Failed to download update: {ex.Message}";
             MessageBox.Show(msg, "ScripOx Update", MessageBoxButton.OK, MessageBoxImage.Warning);
 
-            BtnViewGitHub_Click(sender, e);
-            Close();
+            PanelProgress.Visibility = Visibility.Collapsed;
+            BtnUpdateNow.IsEnabled = true;
+            BtnLater.IsEnabled = true;
         }
     }
 }

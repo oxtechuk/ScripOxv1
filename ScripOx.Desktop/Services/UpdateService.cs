@@ -167,15 +167,26 @@ public static class UpdateService
 
         Log.Information("Downloading update from {Url} to {Path}...", downloadUrl, targetPath);
 
-        using var response = await HttpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+        var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = true,
+            AutomaticDecompression = System.Net.DecompressionMethods.All
+        };
+        using var downloadClient = new HttpClient(handler)
+        {
+            Timeout = TimeSpan.FromMinutes(30)
+        };
+        downloadClient.DefaultRequestHeaders.UserAgent.ParseAdd("ScripOx-Desktop-App");
+
+        using var response = await downloadClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
         var totalBytes = response.Content.Headers.ContentLength ?? -1L;
 
         await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
-        await using var fileStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+        await using var fileStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None, 65536, true);
 
-        var buffer = new byte[8192];
+        var buffer = new byte[65536];
         long totalRead = 0;
         int bytesRead;
 

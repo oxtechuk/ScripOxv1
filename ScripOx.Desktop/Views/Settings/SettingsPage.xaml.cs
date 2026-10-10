@@ -97,8 +97,8 @@ public partial class SettingsPage : Page
             if (update == null)
             {
                 TxtUpdateStatus.Text = isAr
-                    ? "تعذر الاتصال بخوادم GitHub أو لا يوجد إصدار منشور بعد."
-                    : "Could not connect to GitHub or no releases published yet.";
+                    ? "تعذر الاتصال بخوادم التحديث حالياً، يرجى المحاولة لاحقاً."
+                    : "Could not connect to update servers currently, please try again later.";
             }
             else if (update.IsUpdateAvailable)
             {

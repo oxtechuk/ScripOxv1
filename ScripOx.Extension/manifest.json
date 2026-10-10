@@ -1,22 +1,27 @@
 {
   "manifest_version": 3,
-  "name": "ScripOx Visual Extractor",
+  "name": "ScripOx ",
   "version": "1.0.0",
   "description": "Visually pick any HTML element or table and send extraction config to ScripOx Desktop",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "scripox-extractor@oxtech.uk",
+      "strict_min_version": "109.0"
+    }
+  },
   "icons": {
-    "16":  "icons/icon16.png",
-    "32":  "icons/icon32.png",
-    "48":  "icons/icon48.png",
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16":  "icons/icon16.png",
-      "48":  "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png""128": "icons/icon128.png"
     },
-    "default_title": "ScripOx Visual Extractor"
+    "default_title": "ScripOx  "
   },
   "background": {
     "service_worker": "background.js",
@@ -24,16 +29,25 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icons/*", "assets/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "icons/*",
+        "assets/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "permissions": [
@@ -53,11 +67,15 @@
   },
   "commands": {
     "toggle-picker": {
-      "suggested_key": { "default": "Alt+Shift+P" },
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
       "description": "Toggle Element Picker"
     },
     "toggle-sidebar": {
-      "suggested_key": { "default": "Alt+Shift+S" },
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
       "description": "Toggle Sidebar"
     }
   }

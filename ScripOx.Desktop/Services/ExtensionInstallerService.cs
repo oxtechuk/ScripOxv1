@@ -22,7 +22,7 @@ public static class ExtensionInstallerService
 
     // ── Browser Definitions ───────────────────────────────────
 
-    public enum BrowserKind { Chrome, Edge, Brave, Vivaldi }
+    public enum BrowserKind { Chrome, Edge, Brave, Vivaldi, Firefox }
 
     public record BrowserInfo(
         BrowserKind Kind,
@@ -83,6 +83,19 @@ public static class ExtensionInstallerService
             @"SOFTWARE\Policies\BraveSoftware\Brave\ExtensionInstallSources"
         ));
 
+        // Mozilla Firefox
+        var firefoxPath = FindExe(
+            @"Mozilla Firefox\firefox.exe",
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\firefox.exe"
+        );
+        browsers.Add(new BrowserInfo(
+            BrowserKind.Firefox, "Mozilla Firefox", "🦊", firefoxPath,
+            firefoxPath != null,
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                         @"Mozilla\Firefox"),
+            "", ""
+        ));
+
         return browsers;
     }
 
@@ -138,10 +151,12 @@ public static class ExtensionInstallerService
             // ── Step 2: Write Registry policies & external extension hints ──
             WriteRegistryHint(browser, extPath);
 
+            var isFirefox = browser.Kind == BrowserKind.Firefox;
             var url = browser.Kind switch {
                 BrowserKind.Chrome  => "chrome://extensions",
                 BrowserKind.Edge    => "edge://extensions",
                 BrowserKind.Brave   => "brave://extensions",
+                BrowserKind.Firefox => "about:debugging#/runtime/this-firefox",
                 _                   => "chrome://extensions",
             };
 
@@ -154,48 +169,92 @@ public static class ExtensionInstallerService
             var procName = Path.GetFileNameWithoutExtension(browser.ExePath);
             var runningProcs = Process.GetProcessesByName(procName);
 
-            if (runningProcs.Length > 0)
+            if (!isFirefox && runningProcs.Length > 0)
             {
                 var promptMsg = isAr
-                    ? $"متصفح {browser.Name} قيد التشغيل حالياً.\n\nلتثبيت وتحميل الإضافة تلقائياً، يحتاج المتصفح إلى إعادة التشغيل مع تحميل الإضافة.\n\nهل ترغب في إعادة تشغيل {browser.Name} الآن وتثبيت الإضافة فوراً؟\n\n(ملاحظة: تم نسخ مسار الإضافة إلى الحافظة Clipboard أيضاً)"
-                    : $"{browser.Name} is currently running.\n\nTo automatically attach and load the extension, the browser needs to restart with the extension loaded.\n\nWould you like to restart {browser.Name} now and install the extension?\n\n(Note: The extension folder path is also copied to your clipboard)";
+                    ? $"متصفح {browser.Name} قيد التشغيل حالياً.\n\nلتفعيل الإضافة تلقائياً، يفضل إعادة تشغيل المتصفح.\n\nهل ترغب في إغلاق {browser.Name} وإعادة تشغيله الآن؟\n\n(ملاحظة: سيتم فتح مجلد الإضافة ونسخ المسار تلقائياً في جميع الأحوال)"
+                    : $"{browser.Name} is currently running.\n\nTo auto-load the extension, restarting the browser is recommended.\n\nWould you like to restart {browser.Name} now?\n\n(The extension folder and path will be prepared either way)";
 
                 var dialogResult = MessageBox.Show(promptMsg, isAr ? "تثبيت إضافة ScripOx" : "Install ScripOx Extension", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (dialogResult == MessageBoxResult.Yes)
                 {
-                    foreach (var p in runningProcs)
+                    try
                     {
-                        try { p.CloseMainWindow(); } catch { }
+                        var psiKill = new ProcessStartInfo
+                        {
+                            FileName = "taskkill",
+                            Arguments = $"/F /IM {procName}.exe /T",
+                            CreateNoWindow = true,
+                            UseShellExecute = false
+                        };
+                        Process.Start(psiKill)?.WaitForExit(2000);
                     }
+                    catch { }
                     await Task.Delay(800);
-                    foreach (var p in Process.GetProcessesByName(procName))
-                    {
-                        try { p.Kill(); } catch { }
-                    }
-                    await Task.Delay(600);
                 }
             }
 
-            // ── Step 3: Launch browser with --load-extension ──────
-            var args = $"--load-extension=\"{extPath}\" --enable-extensions \"{url}\"";
-            Process.Start(new ProcessStartInfo
+            // ── Step 3: Launch browser & Open folder ──────
+            if (isFirefox)
             {
-                FileName        = browser.ExePath,
-                Arguments       = args,
-                UseShellExecute = false,
-            });
+                var manifestPath = Path.Combine(extPath, "manifest.json");
+                try { Clipboard.SetText(manifestPath); } catch { }
 
-            var successMsg = isAr
-                ? $"✅ تم إطلاق {browser.Name} وتحميل إضافة ScripOx بنجاح!\n\n" +
-                  $"• تم إرفاق الإضافة تلقائياً عبر أمر: --load-extension\n" +
-                  $"• مسار الإضافة محفوظ في الحافظة (Clipboard): {extPath}\n\n" +
-                  $"يمكنك أيضاً الضغط على زر 'تحميل حزمة غير مضغوطة (Load unpacked)' في صفحة الإضافات ولصق المسار مباشرة (Ctrl + V) لتثبيتها بصورة دائمة."
-                : $"✅ {browser.Name} launched with ScripOx Extension loaded!\n\n" +
-                  $"• Extension automatically attached via --load-extension\n" +
-                  $"• Extension path copied to Clipboard: {extPath}\n\n" +
-                  $"You can also click 'Load unpacked' on the opened extensions page and paste (Ctrl+V) the path to persist permanently.";
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName        = browser.ExePath,
+                    Arguments       = $"\"{url}\"",
+                    UseShellExecute = false,
+                });
 
-            return new InstallResult(true, successMsg);
+                try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
+
+                var firefoxSuccessMsg = isAr
+                    ? $"✅ تم إطلاق Mozilla Firefox وفتح صفحة مطوري الإضافات ({url})!\n\n" +
+                      $"1. تم فتح مجلد الإضافة في نافذة منفصلة وتحديد ملف (manifest.json).\n" +
+                      $"2. في صفحة Firefox المفتوحة، اضغط على زر:\n" +
+                      $"   'تحميل وظيفة إضافية مؤقتة... (Load Temporary Add-on...)'\n" +
+                      $"3. اختر ملف (manifest.json) مباشرة أو الصق المسار (Ctrl + V) واضغط فتح (Open).\n\n" +
+                      $"ستظهر إضافة ScripOx Visual Extractor فوراً وتعمل بكامل وظائفها!"
+                    : $"✅ Launched Mozilla Firefox debugging page ({url})!\n\n" +
+                      $"1. Extension folder opened with manifest.json highlighted.\n" +
+                      $"2. On the Firefox page, click 'Load Temporary Add-on...'\n" +
+                      $"3. Select manifest.json (or press Ctrl+V to paste path) and click Open.\n\n" +
+                      $"ScripOx Visual Extractor is active and ready!";
+
+                return new InstallResult(true, firefoxSuccessMsg);
+            }
+            else
+            {
+                // Chromium: Chrome / Brave / Edge
+                var args = $"--load-extension=\"{extPath}\" --enable-extensions \"{url}\"";
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName        = browser.ExePath,
+                    Arguments       = args,
+                    UseShellExecute = false,
+                });
+
+                try { Process.Start("explorer.exe", extPath); } catch { }
+
+                var successMsg = isAr
+                    ? $"✅ تم إطلاق {browser.Name} وفتح صفحة الإضافات ({url})!\n\n" +
+                      $"• تم تمرير أمر التحميل التلقائي: --load-extension\n" +
+                      $"• تم فتح مجلد الإضافة في نافذة منفصلة ونسخ مساره للحافظة.\n\n" +
+                      $"📌 خطوات إضافية هامة لمتصفح {browser.Name}:\n" +
+                      $"1. في صفحة الإضافات المفتوحة، تأكد من تفعيل زر: (وضع مطور البرامج / Developer mode) بأعلى اليمين.\n" +
+                      $"2. يمكنك سحب مجلد الإضافة المفتوح أمامك وإفلاته داخل نافذة المتصفح (Drag & Drop)، أو الضغط على زر 'تحميل حزمة غير مضغوطة (Load unpacked)' ولصق المسار (Ctrl + V).\n" +
+                      $"3. اضغط على أيقونة الإضافات (🧩) بجوار شريط العنوان في كروم، واضغط على زر التثبيت (Pin 📌) لتظهر أيقونة ScripOx بجوار شريط العنوان دائماً."
+                    : $"✅ {browser.Name} launched with extensions page ({url})!\n\n" +
+                      $"• Loaded via --load-extension command argument\n" +
+                      $"• Extension folder opened in Explorer and path copied to clipboard\n\n" +
+                      $"📌 Quick Setup Steps for {browser.Name}:\n" +
+                      $"1. Enable 'Developer mode' toggle in the top-right corner of the extensions page.\n" +
+                      $"2. Drag & drop the open extension folder directly into the browser, or click 'Load unpacked' and paste (Ctrl+V).\n" +
+                      $"3. Click the Extensions puzzle piece icon (🧩) on your browser toolbar and click Pin (📌) so ScripOx is always visible!";
+
+                return new InstallResult(true, successMsg);
+            }
         }
         catch (Exception ex)
         {
@@ -216,7 +275,11 @@ public static class ExtensionInstallerService
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             var shortcutFile = Path.Combine(desktop, $"{browser.Name} (ScripOx Extractor).lnk");
 
-            var script = $"$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('{shortcutFile.Replace("'", "''")}'); $s.TargetPath = '{browser.ExePath.Replace("'", "''")}'; $s.Arguments = '--load-extension=\"\"{extPath.Replace("'", "''")}\"\" --enable-extensions'; $s.Description = 'Launch {browser.Name} with ScripOx Visual Extractor'; $s.Save()";
+            var args = browser.Kind == BrowserKind.Firefox
+                ? "about:debugging#/runtime/this-firefox"
+                : $"--load-extension=\"\"{extPath.Replace("'", "''")}\"\" --enable-extensions";
+
+            var script = $"$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('{shortcutFile.Replace("'", "''")}'); $s.TargetPath = '{browser.ExePath.Replace("'", "''")}'; $s.Arguments = '{args}'; $s.Description = 'Launch {browser.Name} with ScripOx Visual Extractor'; $s.Save()";
 
             var psi = new ProcessStartInfo
             {
