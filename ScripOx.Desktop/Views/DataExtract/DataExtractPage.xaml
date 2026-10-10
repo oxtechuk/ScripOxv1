@@ -1,0 +1,154 @@
+<Page x:Class="ScripOx.Desktop.Views.DataExtract.DataExtractPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+      Title="Data Extract">
+
+    <Grid Background="Transparent">
+        <Grid.ColumnDefinitions>
+            <!-- Left panel for search parameters -->
+            <ColumnDefinition Width="340"/>
+            <!-- Right panel for map & datagrid -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel -->
+        <Border Grid.Column="0" Background="{StaticResource ExCanvasBg}" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,1,0" Padding="20">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock x:Name="TxtStep1" Text="1. Choose the area" FontSize="15" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,12"/>
+                    
+                    <TextBlock x:Name="TxtLblSearchAddress" Text="Search a city / address" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtSearchAddress" Text="Düsseldorf" Grid.Column="0" Height="36" Margin="0,0,8,0" Style="{StaticResource ExSearchBox}" KeyDown="TxtSearchAddress_KeyDown"/>
+                        <Button x:Name="BtnFindLocation" Grid.Column="1" Content="Find" Width="68" Height="36" Style="{StaticResource ExBtnGhostPill}" Click="BtnFindLocation_Click"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <TextBlock x:Name="TxtLblLatitude" Text="Latitude" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtLatitude" Height="36" Style="{StaticResource ExSearchBox}" Text="51.2277"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock x:Name="TxtLblLongitude" Text="Longitude" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtLongitude" Height="36" Style="{StaticResource ExSearchBox}" Text="6.7735"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="TxtLblRadius" Text="Radius" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="CmbRadius" Height="36" Margin="0,0,0,22" SelectedIndex="0" SelectionChanged="CmbRadius_SelectionChanged">
+                        <ComboBoxItem Content="5 km"/>
+                        <ComboBoxItem Content="10 km"/>
+                        <ComboBoxItem Content="20 km"/>
+                        <ComboBoxItem Content="50 km"/>
+                    </ComboBox>
+
+                    <Separator Background="{StaticResource ExBorderSubtle}" Margin="0,0,0,18"/>
+
+                    <TextBlock x:Name="TxtStep2" Text="2. Business filter" FontSize="15" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,12"/>
+                    
+                    <TextBlock x:Name="TxtLblCategory" Text="Category" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="TxtCategory" Height="36" Margin="0,0,16,0" Style="{StaticResource ExSearchBox}" Text="Gebäudereinigung" KeyDown="TxtCategory_KeyDown"/>
+
+                    <Button x:Name="BtnExtractData" Content="Start Data Extraction" Height="42" Margin="0,16,0,0"
+                            Background="{StaticResource ExAccentLime}" Foreground="{StaticResource ExDarkObsidian}" 
+                            FontWeight="Bold" FontSize="13" BorderThickness="0" Cursor="Hand" Click="BtnExtractData_Click"/>
+
+                    <ProgressBar x:Name="PbExtracting" IsIndeterminate="True" Height="4" Margin="0,10,0,0" Visibility="Collapsed"/>
+                    <TextBlock x:Name="TxtExtractStatus" Text="Extracting data from map..." FontSize="11" Foreground="{StaticResource ExTextSecondary}" Margin="0,6,0,0" HorizontalAlignment="Center" Visibility="Collapsed"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Right Panel (Map + DataGrid) -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="240" MinHeight="140"/>
+            </Grid.RowDefinitions>
+
+            <!-- Map View -->
+            <Border Grid.Row="0" Margin="10" CornerRadius="10" ClipToBounds="True" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                <wv2:WebView2 x:Name="MapWebView"/>
+            </Border>
+
+            <!-- Grid Splitter -->
+            <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeNS"/>
+
+            <!-- DataGrid for Results -->
+            <Border Grid.Row="2" Background="{StaticResource ExCanvasBg}" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <DockPanel Grid.Row="0" Margin="15,10">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtLblExtractedLeads" Text="Extracted Leads" FontWeight="Bold" Foreground="{StaticResource ExTextPrimary}" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtResultsCount" Text="(0)" Foreground="{StaticResource ExTextSecondary}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtSelectedCount" Text="• Selected: 0" Foreground="{StaticResource ExTextMuted}" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"/>
+
+                            <!-- Selection Options -->
+                            <Button x:Name="BtnSelectAllLeads" Content="Select All" Height="26" Padding="10,0" Margin="12,0,4,0" Style="{StaticResource ExBtnGhostPill}" FontSize="11" Click="BtnSelectAllLeads_Click"/>
+                            <Button x:Name="BtnDeselectAllLeads" Content="Deselect All" Height="26" Padding="10,0" Margin="4,0,8,0" Style="{StaticResource ExBtnGhostPill}" FontSize="11" Click="BtnDeselectAllLeads_Click"/>
+
+                            <!-- Deletion Options -->
+                            <Button x:Name="BtnDeleteSelected" Content="🗑️ Delete Selected" Height="26" Padding="10,0" Margin="4,0,4,0" Style="{StaticResource ExBtnDangerPill}" FontSize="11" Click="BtnDeleteSelected_Click"/>
+                            <Button x:Name="BtnClearAllLeads" Content="Clear List" Height="26" Padding="10,0" Margin="4,0,0,0" Style="{StaticResource ExBtnGhostPill}" FontSize="11" Click="BtnClearAllLeads_Click"/>
+                        </StackPanel>
+                        
+                        <Button x:Name="BtnImportToCRM" DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                Content="Import Selected to CRM" Height="32" Padding="14,0"
+                                Background="{StaticResource ExAccentLime}" Foreground="{StaticResource ExDarkObsidian}" 
+                                FontWeight="Bold" BorderThickness="0" Cursor="Hand"
+                                Click="BtnImportToCRM_Click"/>
+                    </DockPanel>
+
+                    <DataGrid x:Name="DgResults" Grid.Row="1" AutoGenerateColumns="False" Background="Transparent" 
+                              RowBackground="Transparent" AlternatingRowBackground="#05ffffff"
+                              Foreground="{StaticResource ExTextPrimary}" HeadersVisibility="Column"
+                              BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource ExBorderSubtle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="45">
+                                <DataGridTemplateColumn.Header>
+                                    <CheckBox x:Name="ChkHeaderAll" HorizontalAlignment="Center" VerticalAlignment="Center" Click="ChkHeaderAll_Click" ToolTip="Toggle All"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Click="RowCheckBox_Click" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn x:Name="ColName" Binding="{Binding Name}" Header="Business Name" Width="2*"/>
+                            <DataGridTextColumn x:Name="ColPhone" Binding="{Binding Phone}" Header="Phone" Width="130"/>
+                            <DataGridTextColumn x:Name="ColWebsite" Binding="{Binding Website}" Header="Website" Width="160"/>
+                            <DataGridTextColumn x:Name="ColRating" Binding="{Binding Rating}" Header="Rating" Width="70"/>
+                            <DataGridTextColumn x:Name="ColAddress" Binding="{Binding Address}" Header="Address" Width="3*"/>
+                            <DataGridTextColumn x:Name="ColCoords" Binding="{Binding CoordinatesDisplay}" Header="Coordinates (Y, X)" Width="130"/>
+                            
+                            <DataGridTemplateColumn Width="50" Header="">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑️" ToolTip="Delete this lead" Style="{StaticResource ExBtnDangerPill}" Height="22" Padding="4,0" FontSize="10" Click="BtnDeleteRow_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</Page>

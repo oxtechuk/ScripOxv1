@@ -47,6 +47,7 @@ public partial class DashboardView : Window
             BtnNavJobs,
             BtnNavRaw,
             BtnNavMap,
+            BtnNavDataExtract,
             BtnNavExports,
             BtnNavExtension,
             BtnNavSettings
@@ -94,6 +95,7 @@ public partial class DashboardView : Window
             "raw"       => LocalizationService.Get("title.raw_records"),
             "companies" => LocalizationService.Get("title.companies"),
             "map"       => LocalizationService.Get("title.map"),
+            "extract"   => LocalizationService.Get("title.extract"),
             "exports"   => LocalizationService.Get("title.exports"),
             "extension" => LocalizationService.Get("title.extension"),
             "settings"  => LocalizationService.Get("title.settings"),
@@ -302,6 +304,9 @@ public partial class DashboardView : Window
             case "map":
                 MainFrame.Navigate(new ScripOx.Desktop.Views.Map.MapPage());
                 break;
+            case "extract":
+                MainFrame.Navigate(new ScripOx.Desktop.Views.DataExtract.DataExtractPage());
+                break;
             case "raw":
                 MainFrame.Navigate(new ScripOx.Desktop.Views.RawRecords.RawRecordsPage());
                 break;
@@ -382,6 +387,7 @@ public partial class DashboardView : Window
         UpdateButton(BtnNavJobs,       "jobs",      isExpanded);
         UpdateButton(BtnNavRaw,        "raw",       isExpanded);
         UpdateButton(BtnNavMap,        "map",       isExpanded);
+        UpdateButton(BtnNavDataExtract,"extract",   isExpanded);
         UpdateButton(BtnNavExports,    "exports",   isExpanded);
         UpdateButton(BtnNavExtension,  "extension", isExpanded);
         UpdateButton(BtnNavSettings,   "settings",  isExpanded);
@@ -411,6 +417,7 @@ public partial class DashboardView : Window
             "jobs"      => LocalizationService.Get("nav.jobs"),
             "raw"       => LocalizationService.Get("nav.raw_records"),
             "map"       => LocalizationService.Get("nav.map"),
+            "extract"   => LocalizationService.Get("nav.extract"),
             "exports"   => LocalizationService.Get("nav.exports"),
             "extension" => LocalizationService.Get("nav.extension"),
             "settings"  => LocalizationService.Get("nav.settings"),
@@ -471,8 +478,9 @@ public partial class DashboardView : Window
         BtnNavSources.Content   = LocalizationService.Get("nav.sources");
         BtnNavJobs.Content      = LocalizationService.Get("nav.jobs");
         BtnNavRaw.Content       = LocalizationService.Get("nav.raw_records");
-        BtnNavMap.Content       = LocalizationService.Get("nav.map");
-        BtnNavExports.Content   = LocalizationService.Get("nav.exports");
+        BtnNavMap.Content         = LocalizationService.Get("nav.map");
+        BtnNavDataExtract.Content = LocalizationService.Get("nav.extract");
+        BtnNavExports.Content     = LocalizationService.Get("nav.exports");
         BtnNavExtension.Content = LocalizationService.Get("nav.extension");
         BtnNavSettings.Content  = LocalizationService.Get("nav.settings");
         

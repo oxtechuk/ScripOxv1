@@ -169,6 +169,7 @@
   <data name="title.raw_records"><value>السجلات الخام</value></data>
   <data name="title.companies"><value>الشركات</value></data>
   <data name="title.map"><value>مستكشف الخريطة</value></data>
+  <data name="title.extract"><value>استخراج البيانات</value></data>
   <data name="title.exports"><value>التصدير</value></data>
   <data name="title.settings"><value>الإعدادات</value></data>
   
@@ -178,6 +179,7 @@
   <data name="nav.jobs"><value>المهام</value></data>
   <data name="nav.raw_records"><value>السجلات الخام</value></data>
   <data name="nav.map"><value>مستكشف الخريطة</value></data>
+  <data name="nav.extract"><value>استخراج البيانات</value></data>
   <data name="nav.exports"><value>التصدير</value></data>
   <data name="nav.settings"><value>الإعدادات</value></data>
   
@@ -199,4 +201,29 @@
   <data name="dash.portfolio_status"><value>العملاء حسب الحالة</value></data>
   <data name="dash.recent_activities"><value>أحدث الأنشطة</value></data>
   <data name="dash.showing_latest"><value>عرض أحدث السجلات المعتمدة</value></data>
+
+  <data name="settings.title"><value>إعدادات وتفضيلات النظام</value></data>
+  <data name="settings.subtitle"><value>تهيئة معايير الامتثال للأسواق، الصيغ الإقليمية، واتصالات واجهة برمجة التطبيقات.</value></data>
+  <data name="settings.market_title"><value>المعايير الإقليمية والامتثال</value></data>
+  <data name="settings.gdpr_title"><value>وضع الامتثال للائحة الأوروبية العامة لحماية البيانات (DSGVO / GDPR)</value></data>
+  <data name="settings.gdpr_desc"><value>يفرض بروتوكولات حذف البيانات وسجلات التدقيق للخصوصية</value></data>
+  <data name="settings.fta_title"><value>وضع الفوترة والضريبة الإماراتي (FTA &amp; TRN)</value></data>
+  <data name="settings.fta_desc"><value>التحقق التلقائي من الأرقام الضريبية المكونة من 15 رقماً (TRN)</value></data>
+  <data name="settings.api_title"><value>محرك الاستخراج ونقاط اتصال الخدمات</value></data>
+  <data name="settings.api_port_lbl"><value>منفذ خدمة محرك الاستخراج (FastAPI Bridge)</value></data>
+  <data name="settings.btn_save_restart"><value>حفظ وإعادة تشغيل المحرك</value></data>
+  <data name="settings.btn_test_conn"><value>اختبار الاتصال</value></data>
+  <data name="settings.currency_lbl"><value>العملة الأساسية للنظام</value></data>
+  <data name="settings.updates_title"><value>التحديثات البرمجية وإصدارات GitHub</value></data>
+  <data name="settings.auto_update_title"><value>البحث عن التحديثات تلقائياً عند بدء التشغيل</value></data>
+  <data name="settings.auto_update_desc"><value>إشعار فوري عند توفر إصدار جديد منشور على GitHub</value></data>
+  <data name="settings.gh_owner_lbl"><value>المالك / المنظمة على GitHub</value></data>
+  <data name="settings.gh_repo_lbl"><value>اسم المستودع (Repository)</value></data>
+  <data name="settings.btn_check_updates"><value>التحقق من وجود تحديثات الآن</value></data>
+  <data name="settings.support_title"><value>فريق التطوير والدعم الفني المعتمد</value></data>
+  <data name="settings.support_sub"><value>تم التطوير والإصلاح من قبل OX Tech</value></data>
+  <data name="settings.support_desc"><value>للدعم الفني والتواصل المباشر مع فريق التطوير والاستفسارات التقنية:</value></data>
+  <data name="settings.support_web"><value>موقعنا الرسمي</value></data>
+  <data name="settings.support_wa"><value>واتساب</value></data>
+  <data name="settings.support_call"><value>اتصال مباشر</value></data>
 </root>

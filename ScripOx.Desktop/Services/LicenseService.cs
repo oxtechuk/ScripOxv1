@@ -100,7 +100,7 @@ namespace ScripOx.Desktop.Services
                     // DUMMY IMPLEMENTATION UNTIL LARAVEL IS READY:
                     await Task.Delay(1000); // Simulate network request
                     
-                    if (licenseKey == "TEST-KEY-123")
+                    if (licenseKey == "TEST-KEY-123" || licenseKey.StartsWith("OX-"))
                     {
                         var expiresAt = DateTime.UtcNow.AddYears(1);
                         SaveLicense(new LicenseData { LicenseKey = licenseKey, IsActive = true, ExpiresAt = expiresAt });

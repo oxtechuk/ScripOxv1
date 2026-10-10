@@ -42,9 +42,9 @@ namespace ScripOx.Desktop.Views.Auth
             if (result.Success)
             {
                 MessageBox.Show(result.Message, "Activation Successful", MessageBoxButton.OK, MessageBoxImage.Information);
-                // On success, go to login view or main view
-                var loginView = new LoginView();
-                loginView.Show();
+                // On success, go to main dashboard view
+                var dashboardView = new Views.Dashboard.DashboardView();
+                dashboardView.Show();
                 this.Close();
             }
             else

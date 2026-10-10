@@ -70,9 +70,9 @@ public partial class App : Application
         }
         else
         {
-            Log.Information("App is activated. Showing LoginView.");
-            var loginView = new Views.Auth.LoginView();
-            loginView.Show();
+            Log.Information("App is activated. Showing DashboardView.");
+            var dashboardView = new Views.Dashboard.DashboardView();
+            dashboardView.Show();
         }
     }
 

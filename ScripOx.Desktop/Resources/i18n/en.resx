@@ -169,6 +169,7 @@
   <data name="title.raw_records"><value>Raw Records</value></data>
   <data name="title.companies"><value>Companies</value></data>
   <data name="title.map"><value>Map Explorer</value></data>
+  <data name="title.extract"><value>Data Extract</value></data>
   <data name="title.exports"><value>Exports</value></data>
   <data name="title.settings"><value>Settings</value></data>
   
@@ -178,6 +179,7 @@
   <data name="nav.jobs"><value>Jobs</value></data>
   <data name="nav.raw_records"><value>Raw Records</value></data>
   <data name="nav.map"><value>Map Explorer</value></data>
+  <data name="nav.extract"><value>Data Extract</value></data>
   <data name="nav.exports"><value>Exports</value></data>
   <data name="nav.settings"><value>Settings</value></data>
   
@@ -199,4 +201,29 @@
   <data name="dash.portfolio_status"><value>Portfolio by Status</value></data>
   <data name="dash.recent_activities"><value>Recent Company Activities</value></data>
   <data name="dash.showing_latest"><value>Showing latest verified entities</value></data>
+
+  <data name="settings.title"><value>System Settings &amp; Preferences</value></data>
+  <data name="settings.subtitle"><value>Configure market compliance standards, regional formats, and API connections.</value></data>
+  <data name="settings.market_title"><value>Market Localization</value></data>
+  <data name="settings.gdpr_title"><value>German DSGVO / GDPR Compliance Mode</value></data>
+  <data name="settings.gdpr_desc"><value>Enforces data erasure and privacy audit trail protocols</value></data>
+  <data name="settings.fta_title"><value>UAE FTA &amp; TRN Invoicing Mode</value></data>
+  <data name="settings.fta_desc"><value>Auto-validates 15-digit TRN tax identification numbers</value></data>
+  <data name="settings.api_title"><value>Engine &amp; Service Endpoints</value></data>
+  <data name="settings.api_port_lbl"><value>FastAPI Bridge Service Port</value></data>
+  <data name="settings.btn_save_restart"><value>Save &amp; Restart Server</value></data>
+  <data name="settings.btn_test_conn"><value>Test Connection</value></data>
+  <data name="settings.currency_lbl"><value>Primary Currency Schema</value></data>
+  <data name="settings.updates_title"><value>Software Updates &amp; GitHub Releases</value></data>
+  <data name="settings.auto_update_title"><value>Check for updates automatically on startup</value></data>
+  <data name="settings.auto_update_desc"><value>Notifies you whenever a new release is published to GitHub</value></data>
+  <data name="settings.gh_owner_lbl"><value>GitHub Owner / Organization</value></data>
+  <data name="settings.gh_repo_lbl"><value>Repository Name</value></data>
+  <data name="settings.btn_check_updates"><value>Check for Updates Now</value></data>
+  <data name="settings.support_title"><value>Engineering &amp; Technical Support</value></data>
+  <data name="settings.support_sub"><value>Developed &amp; Maintained by OX Tech</value></data>
+  <data name="settings.support_desc"><value>For technical support and direct communication with the engineering team:</value></data>
+  <data name="settings.support_web"><value>Website</value></data>
+  <data name="settings.support_wa"><value>WhatsApp</value></data>
+  <data name="settings.support_call"><value>Call</value></data>
 </root>

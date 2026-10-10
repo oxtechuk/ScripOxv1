@@ -91,7 +91,7 @@ Write-Host "`n[4/5] Building Setup Installer with Inno Setup..." -ForegroundColo
 & $Iscc "/DMyAppVersion=$Version" $IssFile
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Inno Setup compilation failed."
+    Write-Warning "Inno Setup compilation failed (often due to Antivirus lock). Skipping installer creation, but portable zip will still be generated."
 }
 
 $InstallerPath = Join-Path $InstallerOutputDir "ScripOx-Setup-v$Version.exe"

@@ -25,14 +25,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="Transparent"
-                                CornerRadius="8" Margin="3,2" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="8" Margin="4,2" Padding="6,4">
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                         VerticalAlignment="Center">
-                                <!-- VS Code Rounded Square Pill Capsule -->
-                                <Border x:Name="IconCapsule" Width="38" Height="36" CornerRadius="8"
-                                        Background="{TemplateBinding Background}"
+                                <!-- Clean Vector Icon Holder -->
+                                <Border x:Name="IconCapsule" Width="34" Height="32" CornerRadius="6"
+                                        Background="Transparent"
                                         VerticalAlignment="Center" HorizontalAlignment="Center">
                                     <Path x:Name="IconPath"
                                           Data="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:NavHelper.Icon)}"
@@ -43,7 +43,7 @@
                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <ContentPresenter x:Name="TxtContent"
-                                                  Margin="10,0,0,0"
+                                                  Margin="8,0,0,0"
                                                   VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
@@ -56,7 +56,7 @@
                                     <Condition Property="IsMouseOver" Value="True"/>
                                     <Condition Property="Background" Value="Transparent"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="IconCapsule" Property="Background" Value="#F1F5F9"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#F1F5F9"/>
                                 <Setter Property="Foreground" Value="{StaticResource ExTextPrimary}"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
@@ -82,20 +82,21 @@
                 <DockPanel>
 
                     <!-- Top Branding -->
-                    <StackPanel DockPanel.Dock="Top" x:Name="PanelLogo" Margin="20,16,20,16">
+                    <StackPanel DockPanel.Dock="Top" x:Name="PanelLogo" Margin="16,14,16,14">
                         <Image Source="pack://application:,,,/Resources/Images/main_logo.png"
-                               Height="65"
+                               Height="42"
                                HorizontalAlignment="Center"
                                RenderOptions.BitmapScalingMode="HighQuality"/>
                     </StackPanel>
 
                     <!-- Collapsed Mini Logo -->
-                    <StackPanel DockPanel.Dock="Top" x:Name="PanelMiniLogo" Margin="0,24,0,24" HorizontalAlignment="Center" Visibility="Collapsed">
-                        <Image Source="pack://application:,,,/Resources/Images/logo_vertical_black.png"
-                               Width="40"
+                    <StackPanel DockPanel.Dock="Top" x:Name="PanelMiniLogo" Margin="0,18,0,18" HorizontalAlignment="Center" Visibility="Collapsed">
+                        <Image Source="pack://application:,,,/Resources/Images/fivcon.png"
+                               Width="30" Height="30"
                                HorizontalAlignment="Center"
                                RenderOptions.BitmapScalingMode="HighQuality"/>
                     </StackPanel>
+
 
                     <!-- Bottom: User Card -->
                     <StackPanel DockPanel.Dock="Bottom">
@@ -143,6 +144,7 @@
                             <Button Content="مهام الاستخراج"    Style="{StaticResource ExNavButton}" x:Name="BtnNavJobs"       Click="Nav_Click" Tag="jobs"       local:NavHelper.Icon="{StaticResource IconJobsGeom}"/>
                             <Button Content="السجلات الخام"    Style="{StaticResource ExNavButton}" x:Name="BtnNavRaw"        Click="Nav_Click" Tag="raw"        local:NavHelper.Icon="{StaticResource IconDatabaseGeom}"/>
                             <Button Content="مستكشف الخريطة"   Style="{StaticResource ExNavButton}" x:Name="BtnNavMap"        Click="Nav_Click" Tag="map"        local:NavHelper.Icon="{StaticResource IconMapGeom}"/>
+                            <Button Content="Data Extract"      Style="{StaticResource ExNavButton}" x:Name="BtnNavDataExtract" Click="Nav_Click" Tag="extract"    local:NavHelper.Icon="{StaticResource IconExtractGeom}"/>
                             <Button Content="مركز التصدير"     Style="{StaticResource ExNavButton}" x:Name="BtnNavExports"    Click="Nav_Click" Tag="exports"    local:NavHelper.Icon="{StaticResource IconExportGeom}"/>
                             <Button Content="إضافة المتصفح"    Style="{StaticResource ExNavButton}" x:Name="BtnNavExtension" Click="Nav_Click" Tag="extension"  local:NavHelper.Icon="{StaticResource IconExtensionGeom}"/>
                             <Separator x:Name="SepNav" Background="{StaticResource ExBorderSubtle}" Margin="12,10"/>
@@ -195,25 +197,34 @@
                 <Border Grid.Row="1" Background="{StaticResource ExHeaderBg}"
                         BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="0,0,0,1"
                         MouseLeftButtonDown="Window_MouseLeftButtonDown">
-                    <Grid Margin="20,0">
+                    <Grid Margin="16,0">
+                        <Grid.ColumnDefinitions>
+                            <!-- Col 0: Hamburger & Page Title -->
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- Col 1: Centered Search Input -->
+                            <ColumnDefinition Width="*"/>
+                            <!-- Col 2: Action Button, Lang Flags, Window Controls -->
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
                         <!-- Left: Sidebar Toggle + Title -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button x:Name="BtnToggleSidebar" Content="☰" FontSize="16" FontWeight="SemiBold"
-                                    Width="36" Height="36" Cursor="Hand" Background="{StaticResource ExCanvasBg}"
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="BtnToggleSidebar" Content="☰" FontSize="15" FontWeight="SemiBold"
+                                    Width="34" Height="34" Cursor="Hand" Background="{StaticResource ExCanvasBg}"
                                     BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
-                                    Foreground="{StaticResource ExTextSecondary}" Click="BtnToggleSidebar_Click" Margin="0,0,16,0"
+                                    Foreground="{StaticResource ExTextSecondary}" Click="BtnToggleSidebar_Click" Margin="0,0,14,0"
                                     Style="{StaticResource ExBtnGhostPill}"/>
                             <TextBlock x:Name="TxtPageTitle"
-                                       Text="إدارة الشركات" FontSize="18" FontWeight="Bold"
+                                       Text="Dashboard" FontSize="16" FontWeight="Bold"
                                        Foreground="{StaticResource ExTextPrimary}" VerticalAlignment="Center"
                                        FontFamily="{StaticResource ExPrimaryFont}"/>
                         </StackPanel>
 
-                        <!-- Middle: Wide Autocomplete Search Input (Flat Modern Tech Style) -->
-                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Border x:Name="SearchPillBorder" Width="480" Height="36"
+                        <!-- Middle: Wide Autocomplete Search Input (Centered with Safe Bounds) -->
+                        <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="14,0">
+                            <Border x:Name="SearchPillBorder" Width="360" MaxWidth="400" Height="34"
                                     Background="{StaticResource ExCanvasBg}" CornerRadius="4"
-                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="12,0">
+                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="10,0">
                                 <Grid VerticalAlignment="Center">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -222,7 +233,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Path Grid.Column="0" Data="{StaticResource IconSearchGeom}"
                                           Stroke="{StaticResource ExTextMuted}" StrokeThickness="1.5"
-                                          Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                          Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <TextBox x:Name="TxtGlobalSearch" Grid.Column="1" Text="بحث في الشركات، السجلات، أو الصفقات..."
                                              Background="Transparent" BorderThickness="0" Foreground="{StaticResource ExTextSecondary}"
                                              FontSize="12" VerticalAlignment="Center"
@@ -230,13 +241,13 @@
                                              TextChanged="TxtGlobalSearch_TextChanged"
                                              KeyDown="TxtGlobalSearch_KeyDown"/>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Button x:Name="BtnClearSearch" Content="✕" Width="20" Height="20"
+                                        <Button x:Name="BtnClearSearch" Content="✕" Width="18" Height="18"
                                                 Background="Transparent" BorderThickness="0"
                                                 Foreground="{StaticResource ExTextMuted}" Cursor="Hand"
-                                                Visibility="Collapsed" Click="BtnClearSearch_Click" Margin="0,0,6,0"
+                                                Visibility="Collapsed" Click="BtnClearSearch_Click" Margin="0,0,4,0"
                                                 ToolTip="مسح البحث"/>
-                                        <Border Background="{StaticResource ExBorderLight}" CornerRadius="3" Padding="6,2" VerticalAlignment="Center">
-                                            <TextBlock Text="↵ Enter" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}"/>
+                                        <Border Background="{StaticResource ExBorderLight}" CornerRadius="3" Padding="5,1" VerticalAlignment="Center">
+                                            <TextBlock Text="↵ Enter" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}"/>
                                         </Border>
                                     </StackPanel>
                                 </Grid>
@@ -246,7 +257,7 @@
                             <Popup x:Name="PopupSuggestions" PlacementTarget="{Binding ElementName=SearchPillBorder}"
                                    Placement="Bottom" VerticalOffset="6" IsOpen="False" StaysOpen="False"
                                    AllowsTransparency="True" PopupAnimation="Fade">
-                                <Border Width="480" MaxHeight="380" Background="#FFFFFF"
+                                <Border Width="380" MaxHeight="380" Background="#FFFFFF"
                                         BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
                                         CornerRadius="6" Padding="0" Margin="0,0,0,10">
                                     <Border.Effect>
@@ -315,7 +326,7 @@
                                                                 </StackPanel>
 
                                                                 <!-- Arrow / Open hint -->
-                                                                <TextBlock Grid.Column="2" Text="عرض ملف العميل ➔" FontSize="11" FontWeight="SemiBold"
+                                                                <TextBlock Grid.Column="2" Text="عرض ➔" FontSize="11" FontWeight="SemiBold"
                                                                            Foreground="{StaticResource ExDarkObsidian}" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                                             </Grid>
                                                         </Border>
@@ -341,43 +352,43 @@
                         </Grid>
 
                         <!-- Right: Actions + Markets + Controls -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             
                             <!-- Action Button (Flat Sharp Style) -->
                             <Button x:Name="BtnCreateRecord" Content="+ إضافة سجل جديد" Style="{StaticResource ExBtnBlackPill}"
-                                    Height="34" Margin="0,0,12,0" Padding="14,0" FontSize="11.5" Click="BtnCreateRecord_Click"/>
+                                    Height="32" Margin="0,0,10,0" Padding="12,0" FontSize="11.5" FontWeight="SemiBold" Click="BtnCreateRecord_Click"/>
 
                             <!-- Trilingual Flag Selector (EN 🇬🇧 / DE 🇩🇪 / AR 🇸🇦) -->
                             <Border Background="{StaticResource ExCanvasBg}" CornerRadius="4"
                                     BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1"
-                                    Padding="2" Margin="0,0,8,0">
-                                <StackPanel Orientation="Horizontal">
+                                    Padding="2" Margin="0,0,8,0" Height="32">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button x:Name="BtnLangEN" Click="BtnLang_Click" Tag="en"
                                             ToolTip="English"
-                                            Style="{StaticResource ExBtnGhostPill}" Height="28" Padding="7,0" FontSize="11" FontWeight="SemiBold">
+                                            Style="{StaticResource ExBtnGhostPill}" Height="26" Padding="6,0" FontSize="11" FontWeight="SemiBold">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border CornerRadius="3" ClipToBounds="True" Margin="0,0,6,0" VerticalAlignment="Center" BorderBrush="#CBD5E1" BorderThickness="0.5">
-                                                <Image Source="/Resources/Flags/gb.webp" Width="18" Height="13" Stretch="UniformToFill"/>
+                                            <Border CornerRadius="2" ClipToBounds="True" Margin="0,0,5,0" VerticalAlignment="Center" BorderBrush="#CBD5E1" BorderThickness="0.5">
+                                                <Image Source="/Resources/Flags/gb.webp" Width="16" Height="11" Stretch="UniformToFill"/>
                                             </Border>
                                             <TextBlock Text="EN" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
                                     <Button x:Name="BtnLangDE" Click="BtnLang_Click" Tag="de"
                                             ToolTip="Deutsch"
-                                            Style="{StaticResource ExBtnGhostPill}" Height="28" Padding="7,0" FontSize="11" FontWeight="SemiBold">
+                                            Style="{StaticResource ExBtnGhostPill}" Height="26" Padding="6,0" FontSize="11" FontWeight="SemiBold">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border CornerRadius="3" ClipToBounds="True" Margin="0,0,6,0" VerticalAlignment="Center" BorderBrush="#CBD5E1" BorderThickness="0.5">
-                                                <Image Source="/Resources/Flags/de.webp" Width="18" Height="13" Stretch="UniformToFill"/>
+                                            <Border CornerRadius="2" ClipToBounds="True" Margin="0,0,5,0" VerticalAlignment="Center" BorderBrush="#CBD5E1" BorderThickness="0.5">
+                                                <Image Source="/Resources/Flags/de.webp" Width="16" Height="11" Stretch="UniformToFill"/>
                                             </Border>
                                             <TextBlock Text="DE" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
                                     <Button x:Name="BtnLangAR" Click="BtnLang_Click" Tag="ar"
                                             ToolTip="اللغة العربية"
-                                            Style="{StaticResource ExBtnGhostPill}" Height="28" Padding="7,0" FontSize="11" FontWeight="SemiBold">
+                                            Style="{StaticResource ExBtnGhostPill}" Height="26" Padding="6,0" FontSize="11" FontWeight="SemiBold">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border CornerRadius="3" ClipToBounds="True" Margin="0,0,6,0" VerticalAlignment="Center" BorderBrush="#CBD5E1" BorderThickness="0.5">
-                                                <Image Source="/Resources/Flags/sa.webp" Width="18" Height="13" Stretch="UniformToFill"/>
+                                            <Border CornerRadius="2" ClipToBounds="True" Margin="0,0,5,0" VerticalAlignment="Center" BorderBrush="#CBD5E1" BorderThickness="0.5">
+                                                <Image Source="/Resources/Flags/sa.webp" Width="16" Height="11" Stretch="UniformToFill"/>
                                             </Border>
                                             <TextBlock Text="عربي" VerticalAlignment="Center"/>
                                         </StackPanel>
@@ -386,26 +397,27 @@
                             </Border>
 
                             <!-- Window Control Buttons (Minimalist Smooth) -->
-                            <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
-                                <Button x:Name="BtnMinimize" Content="─" Width="34" Height="32" Margin="2,0"
-                                        Background="Transparent" BorderThickness="0"
-                                        Foreground="{StaticResource ExTextSecondary}" FontSize="13" Cursor="Hand"
-                                        ToolTip="تصغير / Minimize"
-                                        Click="BtnMinimize_Click"/>
-                                <Button x:Name="BtnMaximize" Content="☐" Width="34" Height="32" Margin="2,0"
-                                        Background="Transparent" BorderThickness="0"
-                                        Foreground="{StaticResource ExTextSecondary}" FontSize="13" Cursor="Hand"
-                                        ToolTip="تكبير / Maximize"
-                                        Click="BtnMaximize_Click"/>
-                                <Button x:Name="BtnClose" Content="✕" Width="34" Height="32" Margin="2,0"
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="BtnMinimize" Content="─" Width="30" Height="30" Margin="1,0"
                                         Background="Transparent" BorderThickness="0"
                                         Foreground="{StaticResource ExTextSecondary}" FontSize="12" Cursor="Hand"
+                                        ToolTip="تصغير / Minimize"
+                                        Click="BtnMinimize_Click"/>
+                                <Button x:Name="BtnMaximize" Content="☐" Width="30" Height="30" Margin="1,0"
+                                        Background="Transparent" BorderThickness="0"
+                                        Foreground="{StaticResource ExTextSecondary}" FontSize="12" Cursor="Hand"
+                                        ToolTip="تكبير / Maximize"
+                                        Click="BtnMaximize_Click"/>
+                                <Button x:Name="BtnClose" Content="✕" Width="30" Height="30" Margin="1,0"
+                                        Background="Transparent" BorderThickness="0"
+                                        Foreground="{StaticResource ExTextSecondary}" FontSize="11" Cursor="Hand"
                                         ToolTip="إغلاق / Close"
                                         Click="BtnClose_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>
+
 
                 <!-- Page Frame — Swapped by navigation -->
                 <Frame x:Name="MainFrame" Grid.Row="2"

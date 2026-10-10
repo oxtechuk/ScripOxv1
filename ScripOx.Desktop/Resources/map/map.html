@@ -132,8 +132,9 @@
     });
     const darkExecutive = L.layerGroup([esriDarkBase, esriDarkLabels]);
 
-    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+    const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_4gjm_1_ab316b2518c383041d33b218', {
+      subdomains: 'abcd',
+      attribution: '&copy; CARTO &copy; OpenStreetMap',
       maxZoom: 19,
     });
 
@@ -151,7 +152,7 @@
 
     const baseLayers = {
       "🌙 Dark Executive": darkExecutive,
-      "🗺️ OpenStreetMap": osmStandard,
+      "🗺️ CARTO Voyager": cartoVoyager,
       "🛰️ Satellite": esriSatellite
     };
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);

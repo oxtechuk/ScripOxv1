@@ -30,9 +30,9 @@
         </Style>
 
         <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="#1E2A3B"/>
+            <Setter Property="Background" Value="#121212"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#2D4A6B"/>
+            <Setter Property="BorderBrush" Value="#333333"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,10"/>
             <Setter Property="FontSize" Value="14"/>
@@ -41,7 +41,8 @@
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -49,7 +50,7 @@
         </Style>
     </Window.Resources>
 
-    <Border CornerRadius="16" Background="#0F172A" BorderBrush="#2D4A6B" BorderThickness="1">
+    <Border CornerRadius="16" Background="#050505" BorderBrush="#333333" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect BlurRadius="20" ShadowDepth="10" Opacity="0.1" Color="Black"/>
         </Border.Effect>
@@ -64,9 +65,9 @@
             <Border Grid.Column="0" CornerRadius="16,0,0,16">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#0D1B2A" Offset="0"/>
-                        <GradientStop Color="#1B3A5C" Offset="0.5"/>
-                        <GradientStop Color="#0A3550" Offset="1"/>
+                        <GradientStop Color="#151515" Offset="0"/>
+                        <GradientStop Color="#0a0a0a" Offset="0.5"/>
+                        <GradientStop Color="#000000" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -78,7 +79,7 @@
             </Border>
 
             <!-- Right Panel: Activation Form -->
-            <Border Grid.Column="1" Background="#0F172A" CornerRadius="0,16,16,0" Padding="40">
+            <Border Grid.Column="1" Background="#050505" CornerRadius="0,16,16,0" Padding="40">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Activate ScripOx" FontSize="28" FontWeight="ExtraBold" Foreground="White" Margin="0,0,0,8"/>
                     <TextBlock Text="Enter your premium license key below." FontSize="14" Foreground="#A0B2C6" Margin="0,0,0,32"/>
@@ -89,12 +90,12 @@
                     </Grid>
                     
                     <TextBox x:Name="TxtHardwareId" Style="{StaticResource InputTextBoxStyle}" IsReadOnly="True" 
-                             Background="#152033" Foreground="#7AAFCC" Margin="0,0,0,24" 
+                             Background="#111111" Foreground="#AAAAAA" Margin="0,0,0,24" 
                              Cursor="Hand" ToolTip="Click to copy your Hardware ID"
                              PreviewMouseLeftButtonUp="TxtHardwareId_PreviewMouseLeftButtonUp" />
 
                     <TextBlock Text="License Key" FontSize="12" FontWeight="SemiBold" Foreground="#A0B2C6" Margin="0,0,0,8"/>
-                    <TextBox x:Name="TxtLicenseKey" Style="{StaticResource InputTextBoxStyle}" Margin="0,0,0,8" MaxLength="50" FontSize="16" FontWeight="SemiBold" Padding="12,12"/>
+                    <TextBox x:Name="TxtLicenseKey" Foreground="White" Style="{StaticResource InputTextBoxStyle}" Margin="0,0,0,8" MaxLength="50" FontSize="16" FontWeight="SemiBold" Padding="12,12"/>
 
                     <TextBlock x:Name="TxtError" Foreground="#EF4444" FontSize="13" FontWeight="SemiBold" Visibility="Collapsed" Margin="0,0,0,16" TextWrapping="Wrap"/>
 

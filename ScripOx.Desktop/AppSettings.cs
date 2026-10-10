@@ -44,7 +44,7 @@ public static class AppSettings
 
     // ── GitHub Auto-Update ───────────────────────────────────
     public static string GitHubOwner { get; set; } = "oxtechuk";
-    public static string GitHubRepo  { get; set; } = "Scripox";
+    public static string GitHubRepo  { get; set; } = "ScripOxv1";
     public static bool AutoCheckUpdatesOnStartup { get; set; } = true;
 }
 

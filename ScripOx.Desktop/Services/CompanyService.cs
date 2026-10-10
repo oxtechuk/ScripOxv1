@@ -224,6 +224,19 @@ public class CompanyService
         await cmd.ExecuteNonQueryAsync();
     }
 
+    public async Task UpdateCoordinatesAsync(long companyId, double? x, double? y)
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqliteCommand(
+            "UPDATE companies SET x=@x, y=@y, updated_at=CURRENT_TIMESTAMP WHERE id=@id", conn);
+        cmd.Parameters.AddWithValue("@x",  (object?)x ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@y",  (object?)y ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@id", companyId);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+
     public async Task<List<CompanyStatus>> GetStatusesAsync()
     {
         var list = new List<CompanyStatus>();

@@ -166,6 +166,49 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- GPS Coordinates (X, Y) -->
+                        <TextBlock x:Name="TxtLblCoordinates" Text="GPS Coordinates (X, Y) / الإحداثيات الجغرافية" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,8"/>
+
+                        <Border Background="{StaticResource ExCanvasBg}" CornerRadius="10" Padding="12" Margin="0,0,0,14" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                        <TextBlock x:Name="TxtLblCoordY" Text="Latitude (Y / خط العرض)" FontSize="10" Foreground="{StaticResource ExTextMuted}" Margin="0,0,0,4"/>
+                                        <Border Background="{StaticResource ExSurfaceBg}" CornerRadius="6" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="8,4">
+                                            <TextBox x:Name="TxtCoordY" Background="Transparent" BorderThickness="0"
+                                                     Foreground="{StaticResource ExTextPrimary}" FontSize="12"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                        <TextBlock x:Name="TxtLblCoordX" Text="Longitude (X / خط الطول)" FontSize="10" Foreground="{StaticResource ExTextMuted}" Margin="0,0,0,4"/>
+                                        <Border Background="{StaticResource ExSurfaceBg}" CornerRadius="6" BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="8,4">
+                                            <TextBox x:Name="TxtCoordX" Background="Transparent" BorderThickness="0"
+                                                     Foreground="{StaticResource ExTextPrimary}" FontSize="12"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnSaveCoordinates" Grid.Column="0" Content="Save Coordinates / حفظ"
+                                            Style="{StaticResource ExBtnGhostPill}" Height="30" FontSize="11" FontWeight="SemiBold"
+                                            Margin="0,0,6,0" Click="BtnSaveCoordinates_Click"/>
+                                    <Button x:Name="BtnOpenInMap" Grid.Column="1" Content="🗺️ Open Map"
+                                            Style="{StaticResource ExBtnGhostPill}" Height="30" Padding="10,0" FontSize="11"
+                                            Click="BtnOpenInMap_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+
                         <!-- Compliance Status -->
                         <Border Background="{StaticResource ExStatusSuccessBg}" CornerRadius="10" Padding="12,10">
                             <StackPanel>

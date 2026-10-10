@@ -53,7 +53,7 @@
 
   <!-- Embed map HTML as content (copied to output) -->
   <ItemGroup>
-    <Content Include="Resources\map\map.html">
+    <Content Include="Resources\map\*.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Resources\Flags\*.webp" />

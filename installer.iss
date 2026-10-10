@@ -1,12 +1,16 @@
 ; =====================================================================
 ; ScripOx CRM - Inno Setup Script
 ; Author: Ox Tech (https://oxtech.uk)
+; Contact: +201008616682
 ; =====================================================================
 
 #define MyAppName "ScripOx CRM"
-#define MyAppVersion "1.0.0"
+#ifndef MyAppVersion
+#define MyAppVersion "1.0.5"
+#endif
 #define MyAppPublisher "Ox Tech"
 #define MyAppURL "https://oxtech.uk"
+#define MyAppSupportPhone "+201008616682"
 #define MyAppExeName "ScripOx.exe"
 
 [Setup]
@@ -18,15 +22,23 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={autopf}\{#MyAppName}
-DefaultGroupName={#MyAppName}
-DisableProgramGroupPage=yes
+AppSupportPhone={#MyAppSupportPhone}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription="ScripOx CRM - Lead & Market Intelligence Platform by Ox Tech"
+VersionInfoVersion={#MyAppVersion}
+VersionInfoTextVersion={#MyAppVersion}
+VersionInfoCopyright="© 2025-2026 Ox Tech (oxtech.uk)"
+DefaultDirName={autopf}\{#MyAppPublisher}\{#MyAppName}
+DefaultGroupName={#MyAppPublisher}\{#MyAppName}
+DisableProgramGroupPage=no
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog commandline
 OutputDir=dist\installer
 OutputBaseFilename=ScripOx-Setup-v{#MyAppVersion}
 SetupIconFile=ScripOx.Desktop\Resources\Icons\app.ico
+UninstallDisplayName={#MyAppName} - {#MyAppPublisher}
 UninstallDisplayIcon={app}\{#MyAppExeName}
+CreateUninstallRegKey=yes
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -37,6 +49,7 @@ CloseApplicationsFilter=ScripOx.exe
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -49,7 +62,10 @@ Source: "dist\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs crea
 Source: "scripox.db"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Check: SeedDbExists
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+; Start Menu Group (Folder) Shortcuts
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename: "{app}\{#MyAppExeName}"
+Name: "{group}\Ox Tech Website"; Filename: "{#MyAppURL}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]

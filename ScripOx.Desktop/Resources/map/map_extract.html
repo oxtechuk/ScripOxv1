@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Extract Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0F172A; color: #0F172A; height: 100vh; }
+    #map { height: 100vh; width: 100vw; }
+    .custom-popup .leaflet-popup-content-wrapper {
+      background: #0F172A;
+      color: #F8FAFC;
+      border-radius: 8px;
+      padding: 6px;
+      border: 1px solid #334155;
+    }
+    .custom-popup .leaflet-popup-tip { background: #0F172A; }
+    .poi-title { font-weight: bold; font-size: 13px; color: #CEF22C; }
+    .poi-phone { font-size: 11px; color: #94A3B8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Initial center: Düsseldorf, Germany
+    const map = L.map('map', { zoomControl: true }).setView([51.2277, 6.7735], 12);
+    
+    // CartoDB Voyager tiles with licensed API key (Zero watermarks)
+    const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_4gjm_1_ab316b2518c383041d33b218', {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
+    }).addTo(map);
+
+    const esriStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      attribution: 'Esri'
+    });
+
+    L.control.layers({
+      "Voyager Clean": cartoVoyager,
+      "Esri Streets": esriStreets
+    }, null, { position: 'topright' }).addTo(map);
+
+    let centerMarker = L.marker([51.2277, 6.7735], { draggable: true }).addTo(map);
+    centerMarker.bindTooltip("Center Search Point", { permanent: false, direction: 'top' });
+
+    let radiusCircle = L.circle([51.2277, 6.7735], {
+      color: '#0F172A',
+      fillColor: '#CEF22C',
+      fillOpacity: 0.25,
+      weight: 2,
+      radius: 5000
+    }).addTo(map);
+
+    centerMarker.on('drag', function(e) {
+      const pos = e.target.getLatLng();
+      radiusCircle.setLatLng(pos);
+      if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.postMessage({ type: 'marker_moved', lat: pos.lat, lng: pos.lng });
+      }
+    });
+
+    let leadsGroup = L.layerGroup().addTo(map);
+
+    // Called from C# WPF
+    window.updateArea = function(lat, lng, radius_km) {
+      const radius_m = radius_km * 1000;
+      const latlng = [lat, lng];
+      
+      centerMarker.setLatLng(latlng);
+      radiusCircle.setLatLng(latlng);
+      radiusCircle.setRadius(radius_m);
+      
+      map.fitBounds(radiusCircle.getBounds(), { padding: [20, 20] });
+    };
+
+    // Called from C# WPF when leads are extracted
+    window.setLeads = function(leadsJson) {
+      leadsGroup.clearLayers();
+      try {
+        const leads = typeof leadsJson === 'string' ? JSON.parse(leadsJson) : leadsJson;
+        leads.forEach(lead => {
+          if (lead.lat && lead.lng) {
+            const m = L.circleMarker([lead.lat, lead.lng], {
+              radius: 6,
+              fillColor: '#CEF22C',
+              color: '#0F172A',
+              weight: 2,
+              fillOpacity: 0.9
+            });
+            m.bindPopup(`<div class="custom-popup"><div class="poi-title">${lead.name}</div><div class="poi-phone">${lead.phone || ''}</div><div>${lead.address || ''}</div></div>`);
+            leadsGroup.addLayer(m);
+          }
+        });
+      } catch(err) {
+        console.error("Failed to render leads:", err);
+      }
+    };
+  </script>
+</body>
+</html>

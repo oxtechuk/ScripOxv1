@@ -146,6 +146,7 @@
   <data name="title.raw_records"><value>Rohdaten</value></data>
   <data name="title.companies"><value>Unternehmen</value></data>
   <data name="title.map"><value>Karten-Explorer</value></data>
+  <data name="title.extract"><value>Datenextraktion</value></data>
   <data name="title.exports"><value>Exporte</value></data>
   <data name="title.settings"><value>Einstellungen</value></data>
   
@@ -155,6 +156,7 @@
   <data name="nav.jobs"><value>Jobs</value></data>
   <data name="nav.raw_records"><value>Rohdaten</value></data>
   <data name="nav.map"><value>Karten-Explorer</value></data>
+  <data name="nav.extract"><value>Datenextraktion</value></data>
   <data name="nav.exports"><value>Exporte</value></data>
   <data name="nav.settings"><value>Einstellungen</value></data>
   
@@ -176,4 +178,29 @@
   <data name="dash.portfolio_status"><value>Portfolio nach Status</value></data>
   <data name="dash.recent_activities"><value>Aktuelle Unternehmensaktivitäten</value></data>
   <data name="dash.showing_latest"><value>Zeige neueste verifizierte Einträge</value></data>
+
+  <data name="settings.title"><value>Systemeinstellungen &amp; Präferenzen</value></data>
+  <data name="settings.subtitle"><value>Konfigurieren Sie Markt-Compliance-Standards, regionale Formate und API-Verbindungen.</value></data>
+  <data name="settings.market_title"><value>Marktlokalisierung &amp; Compliance</value></data>
+  <data name="settings.gdpr_title"><value>Deutscher DSGVO / GDPR-Konformitätsmodus</value></data>
+  <data name="settings.gdpr_desc"><value>Erzwingt Protokolle zur Datenlöschung und zum Datenschutz-Audit-Trail</value></data>
+  <data name="settings.fta_title"><value>VAE FTA &amp; TRN-Rechnungsstellungsmodus</value></data>
+  <data name="settings.fta_desc"><value>Automatische Validierung von 15-stelligen TRN-Steuernummern</value></data>
+  <data name="settings.api_title"><value>Engine- &amp; Dienst-Endpunkte</value></data>
+  <data name="settings.api_port_lbl"><value>FastAPI Bridge-Dienst-Port</value></data>
+  <data name="settings.btn_save_restart"><value>Speichern &amp; Server neu starten</value></data>
+  <data name="settings.btn_test_conn"><value>Verbindung testen</value></data>
+  <data name="settings.currency_lbl"><value>Primäres Währungsschema</value></data>
+  <data name="settings.updates_title"><value>Software-Updates &amp; GitHub-Releases</value></data>
+  <data name="settings.auto_update_title"><value>Beim Start automatisch nach Updates suchen</value></data>
+  <data name="settings.auto_update_desc"><value>Benachrichtigt Sie, sobald eine neue Version auf GitHub veröffentlicht wird</value></data>
+  <data name="settings.gh_owner_lbl"><value>GitHub-Inhaber / Organisation</value></data>
+  <data name="settings.gh_repo_lbl"><value>Repository-Name</value></data>
+  <data name="settings.btn_check_updates"><value>Jetzt nach Updates suchen</value></data>
+  <data name="settings.support_title"><value>Technischer Support &amp; Entwicklung</value></data>
+  <data name="settings.support_sub"><value>Entwickelt &amp; Gewartet von OX Tech</value></data>
+  <data name="settings.support_desc"><value>Für technischen Support und direkten Kontakt mit dem Entwicklerteam:</value></data>
+  <data name="settings.support_web"><value>Webseite</value></data>
+  <data name="settings.support_wa"><value>WhatsApp</value></data>
+  <data name="settings.support_call"><value>Anrufen</value></data>
 </root>

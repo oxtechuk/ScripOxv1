@@ -7,15 +7,15 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="28" MaxWidth="760" HorizontalAlignment="Left">
             <StackPanel>
-                <TextBlock Text="System Settings &amp; Preferences" FontSize="24" FontWeight="Bold"
+                <TextBlock x:Name="TxtSettingsTitle" Text="System Settings &amp; Preferences" FontSize="24" FontWeight="Bold"
                            Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,6"/>
-                <TextBlock Text="Configure market compliance standards, regional formats, and API connections."
+                <TextBlock x:Name="TxtSettingsSubtitle" Text="Configure market compliance standards, regional formats, and API connections."
                            FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,24"/>
 
                 <!-- Market & Compliance Card -->
                 <Border Style="{StaticResource ExCard}" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="Market Localization" FontSize="16" FontWeight="Bold"
+                        <TextBlock x:Name="TxtMarketTitle" Text="Market Localization" FontSize="16" FontWeight="Bold"
                                    Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
 
                         <Grid Margin="0,0,0,14">
@@ -24,8 +24,8 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="German DSGVO / GDPR Compliance Mode" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ExTextPrimary}"/>
-                                <TextBlock Text="Enforces data erasure and privacy audit trail protocols" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
+                                <TextBlock x:Name="TxtGdprTitle" Text="German DSGVO / GDPR Compliance Mode" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ExTextPrimary}"/>
+                                <TextBlock x:Name="TxtGdprDesc" Text="Enforces data erasure and privacy audit trail protocols" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
                             </StackPanel>
                             <CheckBox Grid.Column="1" IsChecked="True" VerticalAlignment="Center"/>
                         </Grid>
@@ -38,8 +38,8 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="UAE FTA &amp; TRN Invoicing Mode" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ExTextPrimary}"/>
-                                <TextBlock Text="Auto-validates 15-digit TRN tax identification numbers" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
+                                <TextBlock x:Name="TxtFtaTitle" Text="UAE FTA &amp; TRN Invoicing Mode" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ExTextPrimary}"/>
+                                <TextBlock x:Name="TxtFtaDesc" Text="Auto-validates 15-digit TRN tax identification numbers" FontSize="11" Foreground="{StaticResource ExTextSecondary}"/>
                             </StackPanel>
                             <CheckBox Grid.Column="1" IsChecked="True" VerticalAlignment="Center"/>
                         </Grid>
@@ -49,10 +49,10 @@
                 <!-- API Connectivity Card -->
                 <Border Style="{StaticResource ExCard}">
                     <StackPanel>
-                        <TextBlock Text="Engine &amp; Service Endpoints" FontSize="16" FontWeight="Bold"
+                        <TextBlock x:Name="TxtApiTitle" Text="Engine &amp; Service Endpoints" FontSize="16" FontWeight="Bold"
                                    Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
 
-                        <TextBlock Text="FastAPI Bridge Service Port" FontSize="11" FontWeight="Medium"
+                        <TextBlock x:Name="TxtApiPortLbl" Text="FastAPI Bridge Service Port" FontSize="11" FontWeight="Medium"
                                    Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                             <TextBox x:Name="TxtApiPort" Text="8765" Width="140" HorizontalAlignment="Left" Style="{StaticResource ExSearchBox}"
@@ -66,9 +66,9 @@
                         </StackPanel>
                         <TextBlock x:Name="TxtApiStatus" Text="Status: Unknown" FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,16"/>
 
-                        <TextBlock Text="Primary Currency Schema" FontSize="11" FontWeight="Medium"
+                        <TextBlock x:Name="TxtCurrencyLbl" Text="Primary Currency Schema" FontSize="11" FontWeight="Medium"
                                    Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                        <ComboBox Width="200" HorizontalAlignment="Left" Height="36" SelectedIndex="0"
+                        <ComboBox x:Name="CmbCurrency" Width="200" HorizontalAlignment="Left" Height="36" SelectedIndex="0"
                                   Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
                                   BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center">
                             <ComboBoxItem Content="AED (UAE Dirham)"/>
@@ -81,7 +81,7 @@
                 <!-- Software Updates & GitHub Card -->
                 <Border Style="{StaticResource ExCard}" Margin="0,20,0,0">
                     <StackPanel>
-                        <TextBlock Text="Software Updates &amp; GitHub Releases" FontSize="16" FontWeight="Bold"
+                        <TextBlock x:Name="TxtUpdatesTitle" Text="Software Updates &amp; GitHub Releases" FontSize="16" FontWeight="Bold"
                                    Foreground="{StaticResource ExTextPrimary}" Margin="0,0,0,16"/>
 
                         <Grid Margin="0,0,0,14">
@@ -90,9 +90,9 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Check for updates automatically on startup" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock x:Name="TxtAutoUpdateTitle" Text="Check for updates automatically on startup" FontSize="13" FontWeight="SemiBold"
                                            Foreground="{StaticResource ExTextPrimary}"/>
-                                <TextBlock Text="Notifies you whenever a new release is published to GitHub" FontSize="11"
+                                <TextBlock x:Name="TxtAutoUpdateDesc" Text="Notifies you whenever a new release is published to GitHub" FontSize="11"
                                            Foreground="{StaticResource ExTextSecondary}"/>
                             </StackPanel>
                             <CheckBox x:Name="ChkAutoUpdate" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
@@ -107,16 +107,16 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                <TextBlock Text="GitHub Owner / Organization" FontSize="11" FontWeight="Medium"
+                                <TextBlock x:Name="TxtGhOwnerLbl" Text="GitHub Owner / Organization" FontSize="11" FontWeight="Medium"
                                            Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
                                 <TextBox x:Name="TxtGithubOwner" Text="oxtechuk" Style="{StaticResource ExSearchBox}"
                                          Height="36" LostFocus="TxtGithubRepo_LostFocus"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                <TextBlock Text="Repository Name" FontSize="11" FontWeight="Medium"
+                                <TextBlock x:Name="TxtGhRepoLbl" Text="Repository Name" FontSize="11" FontWeight="Medium"
                                            Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
-                                <TextBox x:Name="TxtGithubRepo" Text="Scripox" Style="{StaticResource ExSearchBox}"
+                                <TextBox x:Name="TxtGithubRepo" Text="ScripOxv1" Style="{StaticResource ExSearchBox}"
                                          Height="36" LostFocus="TxtGithubRepo_LostFocus"/>
                             </StackPanel>
                         </Grid>
@@ -129,6 +129,64 @@
                                        FontSize="12" Foreground="{StaticResource ExTextSecondary}"
                                        VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Development, Engineering & Support Card (OX Tech) -->
+                <Border Style="{StaticResource ExCard}" Margin="0,20,0,24">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock x:Name="TxtSupportTitle" Text="فريق التطوير والدعم الفني / Engineering &amp; Support" FontSize="15" FontWeight="Bold"
+                                           Foreground="{StaticResource ExTextPrimary}"/>
+                                <TextBlock x:Name="TxtSupportSub" Text="تم التطوير والإصلاح من قبل OX Tech" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource ExAccentLimeHover}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="10,4" VerticalAlignment="Top"
+                                    BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1">
+                                <TextBlock Text="OX TECH" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ExDarkObsidian}"/>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock x:Name="TxtSupportDesc" Text="للدعم الفني والتواصل المباشر مع فريق التطوير والاستفسارات التقنية:"
+                                   FontSize="12" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,14"/>
+
+                        <Separator Background="{StaticResource ExBorderSubtle}" Margin="0,0,0,14"/>
+
+                        <!-- Action / Contact Buttons -->
+                        <WrapPanel Orientation="Horizontal">
+                            <!-- Website Link Button -->
+                            <Button x:Name="BtnOxTechWebsite" Style="{StaticResource ExBtnSecondary}" Height="34" Padding="14,0" Margin="0,0,10,10"
+                                    Cursor="Hand" Click="BtnOxTechWebsite_Click" ToolTip="زيارة موقعنا الرسمي">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🌐 " FontSize="12"/>
+                                    <TextBlock x:Name="TxtWebBtnText" Text="oxtech.uk" FontWeight="SemiBold" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- WhatsApp Direct Contact Button -->
+                            <Button x:Name="BtnOxTechWhatsApp" Style="{StaticResource ExBtnSecondary}" Height="34" Padding="14,0" Margin="0,0,10,10"
+                                    Cursor="Hand" Click="BtnOxTechWhatsApp_Click" ToolTip="محادثة فورية عبر واتساب">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="💬 " FontSize="12"/>
+                                    <TextBlock x:Name="TxtWaBtnText" Text="WhatsApp: +201008616682" FontWeight="SemiBold" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Direct Call Button -->
+                            <Button x:Name="BtnOxTechCall" Style="{StaticResource ExBtnSecondary}" Height="34" Padding="14,0" Margin="0,0,10,10"
+                                    Cursor="Hand" Click="BtnOxTechCall_Click" ToolTip="اتصال هاتفي مباشر">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="📞 " FontSize="12"/>
+                                    <TextBlock x:Name="TxtCallBtnText" Text="+201008616682" FontWeight="SemiBold" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>

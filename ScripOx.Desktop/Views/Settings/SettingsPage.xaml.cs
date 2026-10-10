@@ -12,19 +12,71 @@ public partial class SettingsPage : Page
     {
         InitializeComponent();
         Loaded += SettingsPage_Loaded;
+        Unloaded += SettingsPage_Unloaded;
     }
 
     private void SettingsPage_Loaded(object sender, RoutedEventArgs e)
     {
+        LocalizationService.LanguageChanged += OnLanguageChanged;
+        ApplyLocalization();
+
         ChkAutoUpdate.IsChecked = AppSettings.AutoCheckUpdatesOnStartup;
         TxtGithubOwner.Text = AppSettings.GitHubOwner;
         TxtGithubRepo.Text = AppSettings.GitHubRepo;
         TxtApiPort.Text = AppSettings.ApiPort.ToString();
+    }
+
+    private void SettingsPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        LocalizationService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, string lang)
+    {
+        Dispatcher.Invoke(ApplyLocalization);
+    }
+
+    private void ApplyLocalization()
+    {
+        FlowDirection = LocalizationService.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+
+        TxtSettingsTitle.Text    = LocalizationService.Get("settings.title");
+        TxtSettingsSubtitle.Text = LocalizationService.Get("settings.subtitle");
+
+        TxtMarketTitle.Text      = LocalizationService.Get("settings.market_title");
+        TxtGdprTitle.Text        = LocalizationService.Get("settings.gdpr_title");
+        TxtGdprDesc.Text         = LocalizationService.Get("settings.gdpr_desc");
+        TxtFtaTitle.Text         = LocalizationService.Get("settings.fta_title");
+        TxtFtaDesc.Text          = LocalizationService.Get("settings.fta_desc");
+
+        TxtApiTitle.Text         = LocalizationService.Get("settings.api_title");
+        TxtApiPortLbl.Text       = LocalizationService.Get("settings.api_port_lbl");
+        BtnRestartServer.Content = LocalizationService.Get("settings.btn_save_restart");
+        BtnTestConnection.Content = LocalizationService.Get("settings.btn_test_conn");
+        TxtCurrencyLbl.Text      = LocalizationService.Get("settings.currency_lbl");
+
+        TxtUpdatesTitle.Text     = LocalizationService.Get("settings.updates_title");
+        TxtAutoUpdateTitle.Text  = LocalizationService.Get("settings.auto_update_title");
+        TxtAutoUpdateDesc.Text   = LocalizationService.Get("settings.auto_update_desc");
+        TxtGhOwnerLbl.Text       = LocalizationService.Get("settings.gh_owner_lbl");
+        TxtGhRepoLbl.Text        = LocalizationService.Get("settings.gh_repo_lbl");
+        BtnCheckUpdates.Content  = LocalizationService.Get("settings.btn_check_updates");
+
+        TxtSupportTitle.Text     = LocalizationService.Get("settings.support_title");
+        TxtSupportSub.Text       = LocalizationService.Get("settings.support_sub");
+        TxtSupportDesc.Text      = LocalizationService.Get("settings.support_desc");
+        TxtWebBtnText.Text       = $"{LocalizationService.Get("settings.support_web")}: oxtech.uk";
+        TxtWaBtnText.Text        = $"{LocalizationService.Get("settings.support_wa")}: +201008616682";
+        TxtCallBtnText.Text      = $"{LocalizationService.Get("settings.support_call")}: +201008616682";
 
         var curVer = UpdateService.GetCurrentVersion();
-        TxtUpdateStatus.Text = LocalizationService.CurrentLanguage == "ar"
-            ? $"الإصدار الحالي: v{curVer.Major}.{curVer.Minor}.{curVer.Build}"
-            : $"Current Version: v{curVer.Major}.{curVer.Minor}.{curVer.Build}";
+        var lang = LocalizationService.CurrentLanguage;
+        TxtUpdateStatus.Text = lang switch
+        {
+            "ar" => $"الإصدار الحالي: v{curVer.Major}.{curVer.Minor}.{curVer.Build}",
+            "de" => $"Aktuelle Version: v{curVer.Major}.{curVer.Minor}.{curVer.Build}",
+            _    => $"Current Version: v{curVer.Major}.{curVer.Minor}.{curVer.Build}"
+        };
     }
 
     private void ChkAutoUpdate_Changed(object sender, RoutedEventArgs e)
@@ -116,6 +168,58 @@ public partial class SettingsPage : Page
         finally
         {
             BtnTestConnection.IsEnabled = true;
+        }
+    }
+
+    private void BtnOxTechWebsite_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://oxtech.uk")
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not open website: {ex.Message}", "OX Tech", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnOxTechWhatsApp_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://wa.me/201008616682")
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not open WhatsApp: {ex.Message}", "OX Tech", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnOxTechCall_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Clipboard.SetText("+201008616682");
+            var isAr = LocalizationService.CurrentLanguage == "ar";
+            var msg = isAr
+                ? "تم نسخ الرقم إلى الحافظة (+201008616682)\nيمكنك الاتصال مباشرة أو إرسال رسالة."
+                : "Phone number copied to clipboard (+201008616682)\nYou can call or message directly.";
+            MessageBox.Show(msg, "OX Tech Support", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("tel:+201008616682")
+            {
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // tel protocol might not have a default handler on Windows, clipboard is already copied
         }
     }
 }
