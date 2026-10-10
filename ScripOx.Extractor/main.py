@@ -1,15 +1,28 @@
-"""
-ScripOx Extractor Service — main.py
-FastAPI application entry point
-Ox Tech — oxtech.uk
-"""
+import sys
+import os
+import io
+
+# ── Safe Windows / GUI stream wrapper ───────────────────────
+class NullStream:
+    def write(self, s):
+        pass
+    def flush(self):
+        pass
+    def isatty(self):
+        return False
+
+if sys.stdout is None:
+    sys.stdout = NullStream()
+if sys.stderr is None:
+    sys.stderr = NullStream()
+if sys.stdin is None:
+    sys.stdin = io.StringIO()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from loguru import logger
 import uvicorn
-import sys
 
 from api.jobs import router as jobs_router
 from api.health import router as health_router
@@ -20,12 +33,15 @@ from core.config import settings
 
 # ── Logging setup ───────────────────────────────────────────
 logger.remove()
-if sys.stdout is not None:
-    logger.add(
-        sys.stdout,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
-        level="INFO",
-    )
+try:
+    if sys.stdout is not None and not isinstance(sys.stdout, NullStream):
+        logger.add(
+            sys.stdout,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
+            level="INFO",
+        )
+except Exception:
+    pass
 
 import os
 local_app_data = os.environ.get("LOCALAPPDATA")
@@ -90,4 +106,5 @@ if __name__ == "__main__":
         host=args.host,
         port=args.port,
         reload=False,
+        log_config=None,
     )
