@@ -30,15 +30,29 @@ public partial class MapPage : Page
     {
         try
         {
-            var env = await CoreWebView2Environment.CreateAsync(null, AppDomain.CurrentDomain.BaseDirectory);
+            var env = await WebView2Helper.GetSharedEnvironmentAsync();
             await MapWebView.EnsureCoreWebView2Async(env);
             
             MapWebView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
 
-            string mapPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "map", "map.html");
+            string mapFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "map");
+            string mapPath = Path.Combine(mapFolder, "map.html");
+
             if (File.Exists(mapPath))
             {
-                MapWebView.CoreWebView2.Navigate(new Uri(mapPath).AbsoluteUri);
+                try
+                {
+                    MapWebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                        "appassets.scripox",
+                        mapFolder,
+                        CoreWebView2HostResourceAccessKind.Allow
+                    );
+                    MapWebView.CoreWebView2.Navigate("https://appassets.scripox/map.html");
+                }
+                catch
+                {
+                    MapWebView.CoreWebView2.Navigate(new Uri(mapPath).AbsoluteUri);
+                }
             }
             else
             {
@@ -47,7 +61,7 @@ public partial class MapPage : Page
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to initialize WebView2");
+            Log.Error(ex, "Failed to initialize WebView2 in MapPage");
         }
     }
 

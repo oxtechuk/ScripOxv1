@@ -12,10 +12,14 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         // Configure Serilog
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var logFolder = Path.Combine(localAppData, "ScripOx", "logs");
+        Directory.CreateDirectory(logFolder);
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.File(
-                path: "logs/scripox_.log",
+                path: Path.Combine(logFolder, "desktop_.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 30,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}"

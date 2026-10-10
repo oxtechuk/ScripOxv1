@@ -120,15 +120,52 @@ public partial class DataExtractPage : Page
     {
         try
         {
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var webViewUserData = Path.Combine(localAppData, "ScripOx", "WebView2");
-            Directory.CreateDirectory(webViewUserData);
-            var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, webViewUserData);
+            var env = await WebView2Helper.GetSharedEnvironmentAsync();
             await MapWebView.EnsureCoreWebView2Async(env);
-            string mapPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "map", "map_extract.html");
+
+            MapWebView.CoreWebView2.WebMessageReceived += (s, args) =>
+            {
+                try
+                {
+                    var raw = args.TryGetWebMessageAsString();
+                    if (string.IsNullOrEmpty(raw)) return;
+                    using var doc = JsonDocument.Parse(raw);
+                    if (doc.RootElement.TryGetProperty("type", out var typeEl) && typeEl.GetString() == "marker_moved")
+                    {
+                        var lat = doc.RootElement.GetProperty("lat").GetDouble();
+                        var lng = doc.RootElement.GetProperty("lng").GetDouble();
+                        Dispatcher.Invoke(() =>
+                        {
+                            TxtLatitude.Text = lat.ToString("F4", CultureInfo.InvariantCulture);
+                            TxtLongitude.Text = lng.ToString("F4", CultureInfo.InvariantCulture);
+                        });
+                    }
+                }
+                catch { }
+            };
+
+            string mapFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "map");
+            string mapPath = Path.Combine(mapFolder, "map_extract.html");
+
             if (File.Exists(mapPath))
             {
-                MapWebView.CoreWebView2.Navigate(mapPath);
+                try
+                {
+                    MapWebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                        "appassets.scripox",
+                        mapFolder,
+                        Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow
+                    );
+                    MapWebView.CoreWebView2.Navigate("https://appassets.scripox/map_extract.html");
+                }
+                catch
+                {
+                    MapWebView.CoreWebView2.Navigate(new Uri(mapPath).AbsoluteUri);
+                }
+            }
+            else
+            {
+                Serilog.Log.Warning("DataExtract map HTML file not found at {MapPath}", mapPath);
             }
         }
         catch (Exception ex)
