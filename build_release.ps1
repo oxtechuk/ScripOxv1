@@ -61,8 +61,10 @@ if (-not (Test-Path $InstallerOutputDir)) {
 Write-Host "`n[3/5] Publishing ScripOx Desktop (Self-Contained win-x64)..." -ForegroundColor Yellow
 $Csproj = Join-Path $DesktopDir "ScripOx.Desktop.csproj"
 
-# Ensure NuGet cache uses H:\ to avoid filling system drive C:
-$env:NUGET_PACKAGES = "H:\.nuget\packages"
+# Set custom NuGet cache if H:\ drive exists
+if (Test-Path "H:\") {
+    $env:NUGET_PACKAGES = "H:\.nuget\packages"
+}
 
 & dotnet publish $Csproj `
     -c Release `

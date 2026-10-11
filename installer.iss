@@ -6,7 +6,7 @@
 
 #define MyAppName "ScripOx"
 #ifndef MyAppVersion
-#define MyAppVersion "1.1.1"
+#define MyAppVersion "1.1.2"
 #endif
 #define MyAppPublisher "Ox Tech"
 #define MyAppURL "https://oxtech.uk"
@@ -69,10 +69,24 @@ Name: "{group}\Ox Tech Website"; Filename: "{#MyAppURL}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -Command ""Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile '$env:TEMP\MicrosoftEdgeWebview2Setup.exe'; Start-Process '$env:TEMP\MicrosoftEdgeWebview2Setup.exe' -ArgumentList '/silent /install' -Wait"""; StatusMsg: "Installing Microsoft Edge WebView2 Runtime..."; Flags: runhidden; Check: WebView2NotInstalled
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+function WebView2NotInstalled: Boolean;
+var
+  Version: String;
+begin
+  Result := not (
+    RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-F55F-4EBE-9E02-9F642301A334}', 'pv', Version) or
+    RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-F55F-4EBE-9E02-9F642301A334}', 'pv', Version) or
+    RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+    RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-F55F-4EBE-9E02-9F642301A334}', 'pv', Version)
+  );
+end;
+
 function SeedDbExists: Boolean;
 begin
   Result := FileExists(ExpandConstant('{src}\scripox.db'));
 end;
+

@@ -336,9 +336,18 @@ public partial class DashboardView : Window
         Close();
     }
 
-    private void BtnClose_Click(object sender, RoutedEventArgs e)    => Close();
+    private void BtnClose_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
     private void BtnMinimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
     private void BtnMaximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        if (Application.Current.Windows.Count == 0)
+        {
+            Application.Current.Shutdown();
+        }
+    }
 
     private bool _sidebarCollapsed = false;
     private bool _isHovered = false;

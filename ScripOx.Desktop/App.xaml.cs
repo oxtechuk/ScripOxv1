@@ -61,6 +61,12 @@ public partial class App : Application
         // Load user language preference
         Services.LocalizationService.Initialize(Services.AuthService.CurrentUser!.Language);
 
+        // Hook process exit to kill Python backend unconditionally
+        AppDomain.CurrentDomain.ProcessExit += (s, args) => KillAllBackendProcesses();
+
+        // Auto-ensure WebView2 runtime internally
+        _ = Task.Run(async () => await Services.WebView2Helper.EnsureWebView2RuntimeInstalledAsync());
+
         // Auto-start Python Backend
         StartPythonBackend();
 
@@ -83,10 +89,7 @@ public partial class App : Application
     public void RestartPythonBackend()
     {
         Log.Information("Restarting Python backend...");
-        if (_pythonProcess is not null && !_pythonProcess.HasExited)
-        {
-            try { _pythonProcess.Kill(); } catch { }
-        }
+        KillAllBackendProcesses();
         StartPythonBackend();
     }
 
@@ -95,6 +98,9 @@ public partial class App : Application
         var port = AppSettings.ApiPort;
         try
         {
+            // Kill any previously hanging instance to avoid port conflict
+            KillAllBackendProcesses();
+
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
             // 1. Production check: Bundled standalone executable
@@ -117,6 +123,10 @@ public partial class App : Application
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
                 _pythonProcess = Process.Start(startInfo);
+                if (_pythonProcess != null)
+                {
+                    Services.ChildProcessTracker.AddProcess(_pythonProcess);
+                }
                 return;
             }
 
@@ -137,6 +147,10 @@ public partial class App : Application
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
                 _pythonProcess = Process.Start(startInfo);
+                if (_pythonProcess != null)
+                {
+                    Services.ChildProcessTracker.AddProcess(_pythonProcess);
+                }
                 return;
             }
 
@@ -156,6 +170,10 @@ public partial class App : Application
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
                 _pythonProcess = Process.Start(startInfo);
+                if (_pythonProcess != null)
+                {
+                    Services.ChildProcessTracker.AddProcess(_pythonProcess);
+                }
                 return;
             }
 
@@ -174,6 +192,10 @@ public partial class App : Application
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
                 _pythonProcess = Process.Start(startInfo);
+                if (_pythonProcess != null)
+                {
+                    Services.ChildProcessTracker.AddProcess(_pythonProcess);
+                }
                 return;
             }
 
@@ -198,6 +220,10 @@ public partial class App : Application
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
                 _pythonProcess = Process.Start(startInfo);
+                if (_pythonProcess != null)
+                {
+                    Services.ChildProcessTracker.AddProcess(_pythonProcess);
+                }
                 return;
             }
 
@@ -209,14 +235,30 @@ public partial class App : Application
         }
     }
 
+    public static void KillAllBackendProcesses()
+    {
+        try
+        {
+            var processes = Process.GetProcessesByName("ScripOxBackend");
+            foreach (var proc in processes)
+            {
+                try
+                {
+                    Log.Information("Terminating Python backend process {PID}...", proc.Id);
+                    proc.Kill(true);
+                    proc.WaitForExit(1000);
+                }
+                catch { }
+            }
+        }
+        catch { }
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("ScripOx Desktop shutting down.");
         
-        if (_pythonProcess is not null && !_pythonProcess.HasExited)
-        {
-            try { _pythonProcess.Kill(); } catch { }
-        }
+        KillAllBackendProcesses();
 
         Log.CloseAndFlush();
         base.OnExit(e);
