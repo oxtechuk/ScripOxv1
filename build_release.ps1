@@ -1,5 +1,5 @@
 param (
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.1.3",
     [switch]$SkipExtensionBuild
 )
 
@@ -20,6 +20,7 @@ $IssFile = Join-Path $RootDir "installer.iss"
 
 # 1. Look for Inno Setup Compiler
 $InnoCompilerPaths = @(
+    (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"),
     "C:\Users\Ox Tech\AppData\Local\Programs\Inno Setup 6\ISCC.exe",
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
     "C:\Program Files\Inno Setup 6\ISCC.exe"

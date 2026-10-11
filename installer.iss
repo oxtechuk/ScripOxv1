@@ -6,7 +6,7 @@
 
 #define MyAppName "ScripOx"
 #ifndef MyAppVersion
-#define MyAppVersion "1.1.2"
+#define MyAppVersion "1.1.3"
 #endif
 #define MyAppPublisher "Ox Tech"
 #define MyAppURL "https://oxtech.uk"

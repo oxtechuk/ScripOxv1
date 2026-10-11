@@ -32,6 +32,9 @@ HIDDEN_IMPORTS = [
     "sqlalchemy",
     "sqlalchemy.dialects.sqlite",
     "sqlalchemy.dialects.sqlite.aiosqlite",
+    "sqlalchemy.ext.asyncio",
+    "greenlet",
+    "greenlet._greenlet",
     "fastapi",
     "pydantic",
     "pydantic_settings",
@@ -50,6 +53,7 @@ def build():
         "--onefile",
         "--clean",
         "--noconsole",
+        "--collect-all", "greenlet",
         "--distpath", OUTPUT_DIR,
         "--workpath", os.path.join(ROOT_DIR, "build"),
     ]

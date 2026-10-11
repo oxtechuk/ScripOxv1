@@ -129,18 +129,6 @@
 
   <script>
     // ── Free Tile Layers (Reliable, No API Key Required) ────────
-    const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      attribution: '&copy; CARTO &copy; OpenStreetMap',
-      maxZoom: 19,
-    });
-
-    const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      attribution: '&copy; CARTO &copy; OpenStreetMap',
-      maxZoom: 19,
-    });
-
     const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
@@ -151,18 +139,30 @@
       maxZoom: 18,
     });
 
+    const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      attribution: '&copy; CARTO &copy; OpenStreetMap',
+      maxZoom: 19,
+    });
+
+    const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      attribution: '&copy; CARTO &copy; OpenStreetMap',
+      maxZoom: 19,
+    });
+
     const map = L.map('map', {
       center: [26.0, 45.0],
       zoom: 4,
       zoomControl: true,
-      layers: [cartoDark]
+      layers: [osmStandard]
     });
 
     const baseLayers = {
-      "🌙 Dark Modern": cartoDark,
-      "🗺️ CARTO Voyager": cartoVoyager,
       "🌐 OpenStreetMap": osmStandard,
-      "🛰️ Satellite": esriSatellite
+      "🛰️ Satellite": esriSatellite,
+      "🗺️ CARTO Voyager": cartoVoyager,
+      "🌙 Dark Modern": cartoDark
     };
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 

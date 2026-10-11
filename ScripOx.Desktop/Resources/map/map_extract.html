@@ -36,11 +36,21 @@
     const map = L.map('map', { zoomControl: true }).setView([51.2277, 6.7735], 12);
     
     // Free, reliable tile layers
+    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri, Maxar',
+      maxZoom: 18,
+    });
+
     const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19,
       attribution: '&copy; CARTO &copy; OpenStreetMap'
-    }).addTo(map);
+    });
 
     const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
@@ -48,15 +58,11 @@
       attribution: '&copy; CARTO &copy; OpenStreetMap'
     });
 
-    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    });
-
     L.control.layers({
+      "🌐 OpenStreetMap": osmStandard,
+      "🛰️ Satellite": esriSatellite,
       "🗺️ Voyager Clean": cartoVoyager,
-      "🌙 Dark Modern": cartoDark,
-      "🌐 OpenStreetMap": osmStandard
+      "🌙 Dark Modern": cartoDark
     }, null, { position: 'topright' }).addTo(map);
 
     let centerMarker = L.marker([51.2277, 6.7735], { draggable: true }).addTo(map);
