@@ -59,7 +59,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "dist\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Optional seed database if available
-Source: "scripox.db"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Check: SeedDbExists
+Source: "scripox.db"; DestDir: "{app}"; Flags: skipifsourcedoesntexist onlyifdoesntexist uninsneveruninstall; Check: SeedDbExists
 
 [Icons]
 ; Start Menu Group (Folder) Shortcuts

@@ -79,7 +79,13 @@ jobs:
 
       - name: Build Inno Setup Installer
         run: |
-          iscc "/DMyAppVersion=$env:APP_VERSION" installer.iss
+          if (-not (Test-Path ./dist/installer)) { New-Item -ItemType Directory -Path ./dist/installer -Force | Out-Null }
+          $iscc = @(
+            "iscc",
+            "C:\Program Files (x86)\Inno Setup 6\iscc.exe",
+            "C:\Program Files\Inno Setup 6\iscc.exe"
+          ) | Where-Object { (Get-Command $_ -ErrorAction SilentlyContinue) -or (Test-Path $_) } | Select-Object -First 1
+          & $iscc "/DMyAppVersion=$env:APP_VERSION" installer.iss
         shell: powershell
 
       - name: Create Portable ZIP & Checksums
