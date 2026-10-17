@@ -47,13 +47,14 @@ public partial class RawRecordsPage : Page
 
         FlowDirection = isAr ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
-        BtnFilter.Content = isAr ? "تصفية 🔍" : (isDe ? "Filtern 🔍" : "Filter 🔍");
-        BtnResetFilter.Content = isAr ? "مسح الفلتر ✕" : (isDe ? "Zurücksetzen ✕" : "Clear Filter ✕");
+        BtnFilter.Content = isAr ? "تصفية" : (isDe ? "Filtern" : "Filter");
+        BtnResetFilter.Content = isAr ? "مسح الفلتر" : (isDe ? "Zurücksetzen" : "Clear Filter");
         BtnToggleSelectAll.Content = _allSelected
             ? (isAr ? "إلغاء التحديد" : (isDe ? "Auswahl aufheben" : "Deselect All"))
             : (isAr ? "تحديد الكل" : (isDe ? "Alles auswählen" : "Select All"));
-        BtnDeleteSelectedRaw.Content = isAr ? "🗑️ حذف المحدد" : (isDe ? "🗑️ Auswahl löschen" : "🗑️ Delete Selected");
-        BtnClearAllRaw.Content = isAr ? "⚠️ تفريغ الجدول" : (isDe ? "⚠️ Tabelle leeren" : "⚠️ Wipe Table");
+        BtnImportJson.Content = isAr ? "استيراد JSON" : (isDe ? "JSON importieren" : "Import JSON");
+        BtnDeleteSelectedRaw.Content = isAr ? "حذف المحدد" : (isDe ? "Auswahl löschen" : "Delete Selected");
+        BtnClearAllRaw.Content = isAr ? "تفريغ الجدول" : (isDe ? "Tabelle leeren" : "Wipe Table");
 
         LblSegment.Text = isAr ? "الشريحة:" : (isDe ? "Segment:" : "Segment:");
         LblRating.Text = isAr ? "التقييم:" : (isDe ? "Bewertung:" : "Rating:");
@@ -88,7 +89,7 @@ public partial class RawRecordsPage : Page
             ((ComboBoxItem)CmbTargetStatus.Items[3]).Content = isAr ? "تعاقد (Won)" : (isDe ? "Gewonnen" : "Won / Contract");
         }
 
-        BtnClean.Content = isAr ? "نقل إلى الشركات المعتمدة CRM ➔" : (isDe ? "In verifiziertes CRM übertragen ➔" : "Transfer to Verified CRM ➔");
+        BtnClean.Content = isAr ? "نقل إلى CRM" : (isDe ? "Ins CRM übertragen" : "Transfer to CRM");
 
         // Columns
         if (DgRawRecords.Columns.Count >= 10)

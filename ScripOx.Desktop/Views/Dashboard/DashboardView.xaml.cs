@@ -386,7 +386,6 @@ public partial class DashboardView : Window
         PanelMiniLogo.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
 
         PanelUserInfo.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        BtnMiniSignOut.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
 
         SepNav.Margin = isExpanded ? new Thickness(12, 10, 12, 10) : new Thickness(4, 8, 4, 8);
 
@@ -478,7 +477,6 @@ public partial class DashboardView : Window
         FlowDirection = LocalizationService.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         UpdateSidebarLayout();
 
-        BtnSignOut.Content      = LocalizationService.Get("auth.logout");
         BtnCreateRecord.Content = LocalizationService.Get("btn.create_record");
         TxtGlobalSearch.Text    = LocalizationService.Get("search.placeholder");
         

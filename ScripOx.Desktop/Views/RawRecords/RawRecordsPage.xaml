@@ -4,6 +4,143 @@
       Title="السجلات والبيانات الخام المستخرجة"
       Background="{StaticResource ExCanvasBg}">
 
+    <Page.Resources>
+        <!-- Flat Compact Neutral Button -->
+        <Style x:Key="FlatCompactBtn" TargetType="Button">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{StaticResource ExTextPrimary}"/>
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E2E8F0"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Flat Compact Dark Button (Filter) -->
+        <Style x:Key="FlatCompactDarkBtn" TargetType="Button" BasedOn="{StaticResource FlatCompactBtn}">
+            <Setter Property="Background" Value="{StaticResource ExDarkObsidian}"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1E293B"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Flat Compact Danger Button (Delete) -->
+        <Style x:Key="FlatCompactDangerBtn" TargetType="Button" BasedOn="{StaticResource FlatCompactBtn}">
+            <Setter Property="Background" Value="#FEE2E2"/>
+            <Setter Property="Foreground" Value="#DC2626"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FCA5A5"/>
+                                <Setter Property="Foreground" Value="#991B1B"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Flat Compact Muted Danger Button (Wipe) -->
+        <Style x:Key="FlatCompactMutedDangerBtn" TargetType="Button" BasedOn="{StaticResource FlatCompactBtn}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FEF2F2"/>
+                                <Setter Property="Foreground" Value="#DC2626"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Flat Compact Primary Brand Button (Transfer to CRM) -->
+        <Style x:Key="FlatCompactLimeBtn" TargetType="Button" BasedOn="{StaticResource FlatCompactBtn}">
+            <Setter Property="Background" Value="{StaticResource ExAccentLime}"/>
+            <Setter Property="Foreground" Value="{StaticResource ExDarkObsidian}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#BDE01E"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- Search & Clean Bar -->
@@ -18,48 +155,48 @@
                 <!-- Left: Filter & Bulk Data Actions -->
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,10">
                     <!-- Search Input -->
-                    <Border Width="220" Height="34" Background="{StaticResource ExCanvasBg}" CornerRadius="4"
-                            BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="10,0" Margin="0,0,8,0">
+                    <Border Width="190" Height="28" Background="{StaticResource ExCanvasBg}" CornerRadius="4"
+                            BorderBrush="{StaticResource ExBorderSubtle}" BorderThickness="1" Padding="8,0" Margin="0,0,6,0">
                         <Grid VerticalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Path Grid.Column="0" Data="{StaticResource IconSearchGeom}" Fill="{StaticResource ExTextMuted}"
-                                  Width="13" Height="13" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                  Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox x:Name="TxtSearch" Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                     Foreground="{StaticResource ExTextPrimary}" FontSize="12" VerticalAlignment="Center"/>
+                                     Foreground="{StaticResource ExTextPrimary}" FontSize="11.5" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
 
-                    <Button x:Name="BtnFilter" Content="تصفية 🔍" Click="BtnFilter_Click" Style="{StaticResource ExBtnGhostPill}"
-                            Height="34" Padding="14,0" Margin="0,0,6,0"/>
+                    <Button x:Name="BtnFilter" Content="تصفية" Click="BtnFilter_Click" Style="{StaticResource FlatCompactDarkBtn}"
+                            Height="28" Margin="0,0,5,0"/>
 
-                    <Button x:Name="BtnResetFilter" Content="مسح الفلتر ✕" Click="BtnResetFilter_Click" Style="{StaticResource ExBtnGhostPill}"
-                            Height="34" Padding="12,0" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnResetFilter" Content="مسح الفلتر" Click="BtnResetFilter_Click" Style="{StaticResource FlatCompactBtn}"
+                            Height="28" Margin="0,0,5,0"/>
 
-                    <Button x:Name="BtnToggleSelectAll" Content="تحديد الكل" Click="BtnToggleSelectAll_Click" Style="{StaticResource ExBtnGhostPill}"
-                            Height="34" Padding="12,0" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnToggleSelectAll" Content="تحديد الكل" Click="BtnToggleSelectAll_Click" Style="{StaticResource FlatCompactBtn}"
+                            Height="28" Margin="0,0,5,0"/>
                             
                     <!-- Import JSON Button -->
-                    <Button x:Name="BtnImportJson" Content="استيراد ملف JSON 📥" Click="BtnImportJson_Click" Style="{StaticResource ExBtnGhostPill}"
-                            Height="34" Padding="12,0" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnImportJson" Content="استيراد JSON" Click="BtnImportJson_Click" Style="{StaticResource FlatCompactBtn}"
+                            Height="28" Margin="0,0,8,0"/>
 
                     <!-- Delete Selected Raw Records -->
-                    <Button x:Name="BtnDeleteSelectedRaw" Content="حذف المحدد 🗑️" Click="BtnDeleteSelectedRaw_Click" Style="{StaticResource ExBtnDangerPill}"
-                            Height="34" Padding="12,0" Margin="0,0,6,0"/>
+                    <Button x:Name="BtnDeleteSelectedRaw" Content="حذف المحدد" Click="BtnDeleteSelectedRaw_Click" Style="{StaticResource FlatCompactDangerBtn}"
+                            Height="28" Margin="0,0,5,0"/>
 
                     <!-- Wipe Entire Raw Table -->
-                    <Button x:Name="BtnClearAllRaw" Content="تفريغ الجدول ⚠️" Click="BtnClearAllRaw_Click" Style="{StaticResource ExBtnDangerPill}"
-                            Height="34" Padding="12,0"/>
+                    <Button x:Name="BtnClearAllRaw" Content="تفريغ الجدول" Click="BtnClearAllRaw_Click" Style="{StaticResource FlatCompactMutedDangerBtn}"
+                            Height="28"/>
                 </WrapPanel>
 
                 <!-- Right: Clean, Classify, Rate & Transfer to CRM -->
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
                     <!-- Segment (الشريحة) -->
-                    <TextBlock x:Name="LblSegment" Text="الشريحة:" Foreground="{StaticResource ExTextSecondary}" FontSize="11.5"
+                    <TextBlock x:Name="LblSegment" Text="الشريحة:" Foreground="{StaticResource ExTextSecondary}" FontSize="11"
                                FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <ComboBox x:Name="CmbTargetSegment" Width="135" Height="32" Margin="0,0,8,0" IsEditable="True">
+                    <ComboBox x:Name="CmbTargetSegment" Width="135" Height="28" Margin="0,0,8,0" IsEditable="True">
                         <ComboBoxItem Content="عميل مميز VIP" IsSelected="True"/>
                         <ComboBoxItem Content="مطاعم وكافيهات"/>
                         <ComboBoxItem Content="شركات تسويق ودعاية"/>
@@ -70,26 +207,26 @@
                     </ComboBox>
 
                     <!-- Rating / Priority (التقييم) -->
-                    <TextBlock x:Name="LblRating" Text="التقييم:" Foreground="{StaticResource ExTextSecondary}" FontSize="11.5"
+                    <TextBlock x:Name="LblRating" Text="التقييم:" Foreground="{StaticResource ExTextSecondary}" FontSize="11"
                                FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <ComboBox x:Name="CmbTargetPriority" Width="110" Height="32" Margin="0,0,8,0">
+                    <ComboBox x:Name="CmbTargetPriority" Width="110" Height="28" Margin="0,0,8,0">
                         <ComboBoxItem Content="★★★ أولوية عالية" Tag="high" IsSelected="True"/>
                         <ComboBoxItem Content="★★ أولوية متوسطة" Tag="medium"/>
                         <ComboBoxItem Content="★ أولوية منخفضة" Tag="low"/>
                     </ComboBox>
 
                     <!-- Status / Classification (التصنيف) -->
-                    <TextBlock x:Name="LblStatus" Text="الحالة:" Foreground="{StaticResource ExTextSecondary}" FontSize="11.5"
+                    <TextBlock x:Name="LblStatus" Text="الحالة:" Foreground="{StaticResource ExTextSecondary}" FontSize="11"
                                FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <ComboBox x:Name="CmbTargetStatus" Width="115" Height="32" Margin="0,0,10,0">
+                    <ComboBox x:Name="CmbTargetStatus" Width="115" Height="28" Margin="0,0,10,0">
                         <ComboBoxItem Content="جديد (New)" Tag="1" IsSelected="True"/>
                         <ComboBoxItem Content="مهتم (Interested)" Tag="2"/>
                         <ComboBoxItem Content="متابعة (Follow-up)" Tag="3"/>
                         <ComboBoxItem Content="تعاقد (Won)" Tag="4"/>
                     </ComboBox>
 
-                    <Button x:Name="BtnClean" Content="نقل إلى الشركات المعتمدة CRM ➔" Click="BtnClean_Click" Style="{StaticResource ExBtnBlackPill}"
-                            Height="32" Padding="14,0" FontSize="11.5"/>
+                    <Button x:Name="BtnClean" Content="نقل إلى CRM" Click="BtnClean_Click" Style="{StaticResource FlatCompactLimeBtn}"
+                            Height="28" Padding="12,0" FontSize="11.5"/>
                 </WrapPanel>
             </WrapPanel>
         </Border>

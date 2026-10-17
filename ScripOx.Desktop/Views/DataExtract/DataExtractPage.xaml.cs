@@ -58,12 +58,24 @@ public partial class DataExtractPage : Page
 
     private readonly ObservableCollection<ExtractedLeadItem> _leads = new();
     private readonly CompanyService _companyService;
+    private CancellationTokenSource? _extractCts;
+    private readonly System.Windows.Threading.DispatcherTimer _mapSyncDebounceTimer;
 
     public DataExtractPage()
     {
         InitializeComponent();
         _companyService = new CompanyService(AppSettings.ConnectionString);
         DgResults.ItemsSource = _leads;
+
+        _mapSyncDebounceTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+        _mapSyncDebounceTimer.Tick += (s, e) =>
+        {
+            _mapSyncDebounceTimer.Stop();
+            SyncMapMarkers();
+        };
 
         Loaded += DataExtractPage_Loaded;
         LocalizationService.LanguageChanged += OnLanguageChanged;
@@ -104,6 +116,7 @@ public partial class DataExtractPage : Page
         TxtLblCategory.Text      = isAr ? "النشاط أو المجال" : (isDe ? "Kategorie / Branche" : "Category / Business");
         
         BtnExtractData.Content      = isAr ? "بدء استخراج البيانات" : (isDe ? "Datenextraktion starten" : "Start Data Extraction");
+        BtnCancelExtract.Content    = isAr ? "إلغاء الاستخراج" : (isDe ? "Extraktion abbrechen" : "Cancel Extraction");
         TxtLblExtractedLeads.Text   = isAr ? "البيانات المستخرجة" : (isDe ? "Extrahierte Leads" : "Extracted Leads");
         BtnImportToCRM.Content      = isAr ? "استيراد المحدد إلى الـ CRM" : (isDe ? "Ausgewählte ins CRM importieren" : "Import Selected to CRM");
         BtnSelectAllLeads.Content   = isAr ? "تحديد الكل" : (isDe ? "Alles auswählen" : "Select All");
@@ -301,52 +314,79 @@ public partial class DataExtractPage : Page
 
         int radiusKm = GetRadiusKm();
 
+        _extractCts?.Cancel();
+        _extractCts = new CancellationTokenSource();
+        var ct = _extractCts.Token;
+
         PbExtracting.Visibility = Visibility.Visible;
         TxtExtractStatus.Visibility = Visibility.Visible;
-        BtnExtractData.IsEnabled = false;
+        BtnExtractData.Visibility = Visibility.Collapsed;
+        BtnCancelExtract.Visibility = Visibility.Visible;
 
         var isDe = LocalizationService.CurrentLanguage == "de";
         var isAr = LocalizationService.CurrentLanguage == "ar";
 
         TxtExtractStatus.Text = isDe
             ? "Verbinde mit Kartendaten und extrahiere Unternehmen..."
-            : (isAr ? "جاري الاتصال بخوادم الخرائط واستخراج الأنشطة التجارية..." : "Connecting to map servers and extracting business leads...");
+            : (isAr ? "جاري الاتصال بمحركات الخرائط واستخراج الأنشطة التجارية..." : "Connecting to map servers and extracting business leads...");
 
         _leads.Clear();
+        SyncMapMarkers();
+        UpdateSelectionCounter();
 
         try
         {
-            var extractedItems = await FetchLeadsAsync(lat, lng, radiusKm, category, TxtSearchAddress.Text.Trim());
-            foreach (var item in extractedItems)
-            {
-                _leads.Add(item);
-            }
-
-            SyncMapMarkers();
-            UpdateSelectionCounter();
+            await ExtractLeadsStreamingAsync(lat, lng, radiusKm, category, TxtSearchAddress.Text.Trim(), ct);
 
             int count = _leads.Count;
-            TxtExtractStatus.Text = isDe
-                ? $"Extraktion abgeschlossen: {count} Unternehmen gefunden."
-                : (isAr ? $"اكتمل الاستخراج بنجاح: تم العثور على {count} نشاط تجاري." : $"Extraction completed: {count} leads found.");
-
-            if (count == 0)
+            if (!ct.IsCancellationRequested)
             {
-                string emptyMsg = isAr
-                    ? "لم يتم العثور على نتائج في هذا النطاق. يرجى تجربة زيادة النطاق (Radius) أو تعديل كلمة البحث."
-                    : (isDe ? "Keine Leads im ausgewählten Bereich gefunden. Bitte vergrößern Sie den Radius." : "No leads found in this area. Please try increasing the radius or adjusting search terms.");
-                MessageBox.Show(emptyMsg, "Data Extract", MessageBoxButton.OK, MessageBoxImage.Information);
+                TxtExtractStatus.Text = isDe
+                    ? $"Extraktion abgeschlossen: {count} Unternehmen gefunden."
+                    : (isAr ? $"اكتمل الاستخراج بنجاح: تم العثور على {count} نشاط تجاري." : $"Extraction completed: {count} leads found.");
+
+                if (count == 0)
+                {
+                    string emptyMsg = isAr
+                        ? "لم يتم العثور على نتائج في هذا النطاق. يرجى تجربة زيادة النطاق (Radius) أو تعديل كلمة البحث."
+                        : (isDe ? "Keine Leads im ausgewählten Bereich gefunden. Bitte vergrößern Sie den Radius." : "No leads found in this area. Please try increasing the radius or adjusting search terms.");
+                    MessageBox.Show(emptyMsg, "Data Extract", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
+            else
+            {
+                TxtExtractStatus.Text = isAr
+                    ? $"تم إيقاف الاستخراج: تم حفظ {count} نشاط تجاري."
+                    : (isDe ? $"Extraktion abgebrochen: {count} Leads gespeichert." : $"Extraction cancelled: {count} leads saved.");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            TxtExtractStatus.Text = isAr
+                ? $"تم إيقاف الاستخراج: تم حفظ {_leads.Count} نشاط تجاري."
+                : (isDe ? $"Extraktion abgebrochen: {_leads.Count} Leads." : $"Extraction cancelled: {_leads.Count} leads.");
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to extract leads");
+            TxtExtractStatus.Text = isAr ? "حدث خطأ أثناء استخراج البيانات." : "An error occurred during extraction.";
         }
         finally
         {
             PbExtracting.Visibility = Visibility.Collapsed;
-            BtnExtractData.IsEnabled = true;
+            BtnExtractData.Visibility = Visibility.Visible;
+            BtnCancelExtract.Visibility = Visibility.Collapsed;
+            SyncMapMarkers();
+            UpdateSelectionCounter();
         }
+    }
+
+    private void BtnCancelExtract_Click(object sender, RoutedEventArgs e)
+    {
+        _extractCts?.Cancel();
+        var isAr = LocalizationService.CurrentLanguage == "ar";
+        var isDe = LocalizationService.CurrentLanguage == "de";
+        TxtExtractStatus.Text = isAr ? "جاري إلغاء الاستخراج..." : (isDe ? "Extraktion wird abgebrochen..." : "Cancelling extraction...");
     }
 
     private static double CalculateDistanceKm(double lat1, double lon1, double lat2, double lon2)
@@ -374,13 +414,14 @@ public partial class DataExtractPage : Page
         return $"{rating:F1} ★";
     }
 
-    private async Task<string> ReverseGeocodeCityAsync(double lat, double lng)
+    private async Task<string> ReverseGeocodeCityAsync(double lat, double lng, CancellationToken ct)
     {
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
             string url = $"https://nominatim.openstreetmap.org/reverse?lat={lat.ToString(CultureInfo.InvariantCulture)}&lon={lng.ToString(CultureInfo.InvariantCulture)}&format=json";
-            var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, cts.Token);
+            var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, linkedCts.Token);
             var addr = doc?["address"];
             string? foundCity = addr?["city"]?.ToString() 
                 ?? addr?["town"]?.ToString() 
@@ -395,99 +436,481 @@ public partial class DataExtractPage : Page
         }
     }
 
-    private async Task<List<ExtractedLeadItem>> FetchLeadsAsync(double lat, double lng, int radiusKm, string category, string cityName)
+    /// <summary>
+    /// Thread-safe addition with strict geofencing (100% inside circle) and smart branch preservation.
+    /// </summary>
+    private bool TryAddExtractedLead(ExtractedLeadItem lead, double centerLat, double centerLng, int radiusKm)
     {
-        var list = new List<ExtractedLeadItem>();
-        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (lead == null || string.IsNullOrWhiteSpace(lead.Name)) return false;
 
-        string cat = string.IsNullOrWhiteSpace(category) ? "Business" : category.Trim();
+        // 1. STRICT GEOFENCING: Absolutely refuse anything outside the circle!
+        double dist = CalculateDistanceKm(centerLat, centerLng, lead.Latitude, lead.Longitude);
+        if (dist > radiusKm) return false;
+
+        string normName = NormalizeBusinessName(lead.Name);
+        if (string.IsNullOrWhiteSpace(normName)) return false;
+
+        lock (_leads)
+        {
+            // 2. SMART PROXIMITY DEDUPLICATION: Allow distinct branches in different locations!
+            foreach (var existing in _leads)
+            {
+                if (NormalizeBusinessName(existing.Name) == normName)
+                {
+                    double branchDist = CalculateDistanceKm(existing.Latitude, existing.Longitude, lead.Latitude, lead.Longitude);
+                    // If less than 250 meters apart, treat as identical entity and enrich contact details
+                    if (branchDist < 0.25)
+                    {
+                        if ((string.IsNullOrWhiteSpace(existing.Phone) || existing.Phone == "N/A") &&
+                            !string.IsNullOrWhiteSpace(lead.Phone) && lead.Phone != "N/A")
+                        {
+                            existing.Phone = lead.Phone;
+                        }
+                        if ((string.IsNullOrWhiteSpace(existing.Website) || existing.Website == "N/A") &&
+                            !string.IsNullOrWhiteSpace(lead.Website) && lead.Website != "N/A")
+                        {
+                            existing.Website = lead.Website;
+                        }
+                        if ((string.IsNullOrWhiteSpace(existing.Address) || existing.Address == "Local Area") &&
+                            !string.IsNullOrWhiteSpace(lead.Address) && lead.Address != "Local Area")
+                        {
+                            existing.Address = lead.Address;
+                        }
+                        return false;
+                    }
+                }
+            }
+
+            // Dispatch to UI collection immediately for smooth streaming
+            Dispatcher.Invoke(() =>
+            {
+                _leads.Add(lead);
+                UpdateSelectionCounter();
+                _mapSyncDebounceTimer.Stop();
+                _mapSyncDebounceTimer.Start();
+            });
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Builds intelligent multi-tag Overpass filters and search aliases for Arabic, English, and German terms.
+    /// </summary>
+    private static (string OverpassFilter, List<string> SearchQueries) BuildSmartTaxonomy(string category, int radiusM, double lat, double lng, string city)
+    {
+        string latStr = lat.ToString(CultureInfo.InvariantCulture);
+        string lngStr = lng.ToString(CultureInfo.InvariantCulture);
+        string lower = (category ?? "").Trim().ToLowerInvariant();
+
+        var searchQueries = new List<string>();
+        if (!string.IsNullOrWhiteSpace(category)) searchQueries.Add(category);
+        if (!string.IsNullOrWhiteSpace(city) && !string.IsNullOrWhiteSpace(category))
+        {
+            searchQueries.Add($"{category} {city}");
+        }
+
+        // 1. CAR FINANCING & LEASING & BANKS (تمويل سيارات / تقسيط / بنوك)
+        if (lower.Contains("تمويل") || lower.Contains("تقسيط") || lower.Contains("قرض") || lower.Contains("قروض") ||
+            lower.Contains("finance") || lower.Contains("loan") || lower.Contains("leasing") || lower.Contains("finanzierung") || lower.Contains("kredit"))
+        {
+            if (lower.Contains("سيار") || lower.Contains("car") || lower.Contains("auto") || lower.Contains("مركب") || lower.Contains("kfz"))
+            {
+                searchQueries.Add("تمويل سيارات");
+                searchQueries.Add("تقسيط سيارات");
+                searchQueries.Add("شركة تمويل");
+                searchQueries.Add("معرض سيارات");
+                searchQueries.Add("car finance");
+
+                string filter =
+                    $"node[\"office\"=\"financial\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"office\"=\"financial\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"node[\"office\"=\"loan\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"office\"=\"loan\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"node[\"amenity\"=\"bank\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"amenity\"=\"bank\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"node[\"shop\"=\"car\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"shop\"=\"car\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"node[\"name\"~\"تمويل|تقسيط|تيسير|يسر|إيجارة|الراجحي|أصول|عبداللطيف|سيارات|auto|finance|leasing\",i](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"name\"~\"تمويل|تقسيط|تيسير|يسر|إيجارة|الراجحي|أصول|عبداللطيف|سيارات|auto|finance|leasing\",i](around:{radiusM},{latStr},{lngStr});";
+                return (filter, searchQueries.Distinct().ToList());
+            }
+            else
+            {
+                searchQueries.Add("بنك");
+                searchQueries.Add("شركة تمويل");
+                searchQueries.Add("bank");
+
+                string filter =
+                    $"node[\"office\"=\"financial\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"office\"=\"financial\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"node[\"amenity\"=\"bank\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"amenity\"=\"bank\"](around:{radiusM},{latStr},{lngStr});" +
+                    $"node[\"name\"~\"تمويل|تقسيط|بنك|مصرف|finance|bank|loan\",i](around:{radiusM},{latStr},{lngStr});" +
+                    $"way[\"name\"~\"تمويل|تقسيط|بنك|مصرف|finance|bank|loan\",i](around:{radiusM},{latStr},{lngStr});";
+                return (filter, searchQueries.Distinct().ToList());
+            }
+        }
+
+        // 2. CARS & AUTO REPAIR & DEALERSHIPS (سيارات / معارض / ورش / قطع غيار)
+        if (lower.Contains("سيار") || lower.Contains("معرض") || lower.Contains("ورش") || lower.Contains("صيان") ||
+            lower.Contains("car") || lower.Contains("auto") || lower.Contains("dealership") || lower.Contains("kfz") || lower.Contains("werkstatt"))
+        {
+            searchQueries.Add("معرض سيارات");
+            searchQueries.Add("صيانة سيارات");
+            searchQueries.Add("car dealer");
+
+            string filter =
+                $"node[\"shop\"=\"car\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"car\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"shop\"=\"car_repair\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"car_repair\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"shop\"=\"car_parts\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"car_parts\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"car_wash\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"car_wash\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"name\"~\"سيارات|معرض|وكالة|صيانة|ورشة|auto|motors|cars\",i](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"name\"~\"سيارات|معرض|وكالة|صيانة|ورشة|auto|motors|cars\",i](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 3. REAL ESTATE & CONTRACTING (عقارات / مقاولات / هندسة / بناء)
+        if (lower.Contains("عقار") || lower.Contains("مقاول") || lower.Contains("هندس") || lower.Contains("بناء") ||
+            lower.Contains("تشطيب") || lower.Contains("estate") || lower.Contains("property") || lower.Contains("builder") || lower.Contains("immobilien"))
+        {
+            searchQueries.Add("مكتب عقارات");
+            searchQueries.Add("شركة مقاولات");
+            searchQueries.Add("real estate");
+
+            string filter =
+                $"node[\"office\"=\"estate_agent\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"estate_agent\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"office\"=\"property_management\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"property_management\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"craft\"=\"builder\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"craft\"=\"builder\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"office\"=\"architect\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"architect\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"name\"~\"عقارات|مقاولات|تطوير|بناء|real estate|properties|immobilien\",i](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"name\"~\"عقارات|مقاولات|تطوير|بناء|real estate|properties|immobilien\",i](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 4. RESTAURANTS & CAFES (مطاعم / كافيهات / مقاهي / مخابز)
+        if (lower.Contains("مطعم") || lower.Contains("كافيه") || lower.Contains("مقه") || lower.Contains("أكل") ||
+            lower.Contains("وجبات") || lower.Contains("مخبز") || lower.Contains("حلويات") || lower.Contains("restaur") || lower.Contains("cafe") || lower.Contains("coffee"))
+        {
+            searchQueries.Add("Restaurant");
+            searchQueries.Add("Cafe");
+
+            string filter =
+                $"node[\"amenity\"=\"restaurant\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"restaurant\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"cafe\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"cafe\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"fast_food\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"fast_food\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"bakery\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"bakery\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"name\"~\"مطعم|كافيه|مقهى|شاورما|برجر|مشويات|restaurant|cafe|coffee|grill\",i](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"name\"~\"مطعم|كافيه|مقهى|شاورما|برجر|مشويات|restaurant|cafe|coffee|grill\",i](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 5. MEDICAL & CLINICS & HOSPITALS & PHARMACIES (طبي / عيادات / مستشفيات / صيدليات)
+        if (lower.Contains("طبيب") || lower.Contains("عياد") || lower.Contains("دكتور") || lower.Contains("مستشف") ||
+            lower.Contains("صيدل") || lower.Contains("أسنان") || lower.Contains("doctor") || lower.Contains("clinic") || lower.Contains("hospital") || lower.Contains("pharmacy") || lower.Contains("arzt") || lower.Contains("praxis"))
+        {
+            searchQueries.Add("مستشفى");
+            searchQueries.Add("عيادة");
+            searchQueries.Add("Clinic");
+
+            string filter =
+                $"node[\"amenity\"=\"clinic\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"clinic\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"doctors\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"doctors\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"hospital\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"hospital\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"pharmacy\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"pharmacy\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"amenity\"=\"dentist\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"dentist\"](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 6. HOTELS & HOSPITALITY (فنادق / شقق مفروشة / سياحة)
+        if (lower.Contains("فندق") || lower.Contains("شقق") || lower.Contains("أجنحة") || lower.Contains("سياح") ||
+            lower.Contains("سفر") || lower.Contains("hotel") || lower.Contains("motel") || lower.Contains("hostel") || lower.Contains("apartment"))
+        {
+            searchQueries.Add("Hotel");
+            searchQueries.Add("فندق");
+
+            string filter =
+                $"node[\"tourism\"=\"hotel\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"tourism\"=\"hotel\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"tourism\"=\"guest_house\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"tourism\"=\"guest_house\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"tourism\"=\"motel\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"tourism\"=\"motel\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"tourism\"=\"apartment\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"tourism\"=\"apartment\"](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 7. CLEANING & SERVICES (تنظيف / نظافة / غسيل)
+        if (lower.Contains("تنظيف") || lower.Contains("نظاف") || lower.Contains("غسيل") || lower.Contains("clean") || lower.Contains("reinigung"))
+        {
+            searchQueries.Add("Reinigung");
+            searchQueries.Add("شركة تنظيف");
+
+            string filter =
+                $"node[\"craft\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"craft\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"craft\"=\"cleaner\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"craft\"=\"cleaner\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"office\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"name\"~\"تنظيف|نظافة|غسيل|cleaning|clean|reinigung\",i](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"name\"~\"تنظيف|نظافة|غسيل|cleaning|clean|reinigung\",i](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 8. RETAIL & SUPERMARKETS (سوبرماركت / تموينات / بقالة / مول)
+        if (lower.Contains("سوبر") || lower.Contains("ماركت") || lower.Contains("بقالة") || lower.Contains("تموينات") ||
+            lower.Contains("تسوق") || lower.Contains("مول") || lower.Contains("supermarket") || lower.Contains("mall") || lower.Contains("store"))
+        {
+            searchQueries.Add("Supermarket");
+            searchQueries.Add("سوبرماركت");
+
+            string filter =
+                $"node[\"shop\"=\"supermarket\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"supermarket\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"shop\"=\"convenience\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"convenience\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"shop\"=\"mall\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"mall\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"shop\"=\"department_store\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"shop\"=\"department_store\"](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 9. COWORKING & WORKSPACES (مساحات عمل / ورك سبيس)
+        if (lower.Contains("ورك") || lower.Contains("سبيس") || lower.Contains("مساح") || lower.Contains("cowork") || lower.Contains("workspace"))
+        {
+            searchQueries.Add("Coworking Space");
+
+            string filter =
+                $"node[\"amenity\"=\"coworking_space\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"amenity\"=\"coworking_space\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"office\"=\"coworking\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"coworking\"](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 10. GENERAL COMPANIES / LAW / ACCOUNTING (شركات / مكاتب / محاماة / محاسبة)
+        if (lower.Contains("شرك") || lower.Contains("مكتب") || lower.Contains("محام") || lower.Contains("محاسب") ||
+            lower.Contains("company") || lower.Contains("office") || lower.Contains("lawyer") || lower.Contains("accountant"))
+        {
+            searchQueries.Add("Company");
+
+            string filter =
+                $"node[\"office\"=\"company\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"company\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"office\"=\"lawyer\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"lawyer\"](around:{radiusM},{latStr},{lngStr});" +
+                $"node[\"office\"=\"accountant\"](around:{radiusM},{latStr},{lngStr});" +
+                $"way[\"office\"=\"accountant\"](around:{radiusM},{latStr},{lngStr});";
+            return (filter, searchQueries.Distinct().ToList());
+        }
+
+        // 11. GENERAL RESILIENT FALLBACK (Search by clean keyword across shops, offices, and amenities)
+        string cleanKeyword = System.Text.RegularExpressions.Regex.Replace(category ?? "", @"[^\w\s\u0600-\u06FF]", "").Trim();
+        string fallbackFilter =
+            $"node[\"office\"](around:{radiusM},{latStr},{lngStr});" +
+            $"way[\"office\"](around:{radiusM},{latStr},{lngStr});" +
+            $"node[\"shop\"](around:{radiusM},{latStr},{lngStr});" +
+            $"way[\"shop\"](around:{radiusM},{latStr},{lngStr});" +
+            $"node[\"amenity\"](around:{radiusM},{latStr},{lngStr});" +
+            $"way[\"amenity\"](around:{radiusM},{latStr},{lngStr});" +
+            (!string.IsNullOrWhiteSpace(cleanKeyword)
+                ? $"node[\"name\"~\"{cleanKeyword}\",i](around:{radiusM},{latStr},{lngStr});" +
+                  $"way[\"name\"~\"{cleanKeyword}\",i](around:{radiusM},{latStr},{lngStr});"
+                : "");
+
+        return (fallbackFilter, searchQueries.Distinct().ToList());
+    }
+
+    private async Task ExtractLeadsStreamingAsync(double lat, double lng, int radiusKm, string category, string cityName, CancellationToken ct)
+    {
+        int radiusM = Math.Min(radiusKm, 50) * 1000;
         string city = cityName?.Trim() ?? "";
 
         // Auto-detect real city if empty
         if (string.IsNullOrWhiteSpace(city))
         {
-            city = await ReverseGeocodeCityAsync(lat, lng);
+            city = await ReverseGeocodeCityAsync(lat, lng, ct);
         }
 
-        // TIER 1: Ultra-fast Photon POI Engine (Indexed OpenStreetMap data via Elasticsearch)
-        var osmNodesToEnrich = new List<(long Id, ExtractedLeadItem Item)>();
-        var osmWaysToEnrich = new List<(long Id, ExtractedLeadItem Item)>();
-        await FetchPhotonLeadsAsync(lat, lng, radiusKm, cat, city, list, seenNames, osmNodesToEnrich, osmWaysToEnrich);
+        var (overpassFilter, searchQueries) = BuildSmartTaxonomy(category, radiusM, lat, lng, city);
 
-        // TIER 2: Fast Direct OSM Batch Tag Lookup (Phones, Websites, Contact details)
-        await EnrichOsmBatchDetailsAsync(osmNodesToEnrich, osmWaysToEnrich);
+        var osmNodesToEnrich = new System.Collections.Concurrent.ConcurrentBag<(long Id, ExtractedLeadItem Item)>();
+        var osmWaysToEnrich = new System.Collections.Concurrent.ConcurrentBag<(long Id, ExtractedLeadItem Item)>();
 
-        // TIER 3: Nominatim Bounded POI Search (Supplementary local entities)
-        await FetchNominatimLeadsAsync(lat, lng, radiusKm, cat, city, list, seenNames);
+        // Run multi-tier engines concurrently with low-latency budgets
+        var tasks = new List<Task>
+        {
+            FetchOverpassLeadsStreamingAsync(lat, lng, radiusKm, overpassFilter, ct),
+            FetchPhotonLeadsStreamingAsync(lat, lng, radiusKm, searchQueries, city, osmNodesToEnrich, osmWaysToEnrich, ct),
+            FetchNominatimLeadsStreamingAsync(lat, lng, radiusKm, searchQueries, city, ct)
+        };
 
-        // TIER 4: Resilient Overpass API with Per-Mirror Fast 4s Failover
-        await FetchOverpassLeadsAsync(lat, lng, radiusKm, cat, list, seenNames);
+        await Task.WhenAll(tasks);
 
-        // TIER 5: Verified Hubs (Regional coworkings if applicable)
-        AugmentVerifiedHubs(list, seenNames, cat, city, lat, lng);
+        // Perform fast parallel contact enrichment on up to 40 nodes/ways if phone is missing
+        if (!ct.IsCancellationRequested && (osmNodesToEnrich.Count > 0 || osmWaysToEnrich.Count > 0))
+        {
+            await EnrichOsmBatchDetailsAsync(osmNodesToEnrich.Take(40).ToList(), osmWaysToEnrich.Take(40).ToList(), ct);
+        }
 
         // Sort leads by proximity to search coordinates (closest first)
-        list.Sort((a, b) =>
+        lock (_leads)
         {
-            double distA = CalculateDistanceKm(lat, lng, a.Latitude, a.Longitude);
-            double distB = CalculateDistanceKm(lat, lng, b.Latitude, b.Longitude);
-            return distA.CompareTo(distB);
-        });
-
-        return list;
+            var sorted = _leads.OrderBy(l => CalculateDistanceKm(lat, lng, l.Latitude, l.Longitude)).ToList();
+            _leads.Clear();
+            foreach (var item in sorted)
+            {
+                _leads.Add(item);
+            }
+        }
     }
 
-    private async Task FetchPhotonLeadsAsync(
-        double lat, double lng, int radiusKm, string category, string city,
-        List<ExtractedLeadItem> list, HashSet<string> seenNames,
-        List<(long Id, ExtractedLeadItem Item)> osmNodesToEnrich,
-        List<(long Id, ExtractedLeadItem Item)> osmWaysToEnrich)
+    private async Task FetchOverpassLeadsStreamingAsync(double lat, double lng, int radiusKm, string tagFilters, CancellationToken ct)
     {
-        var queries = new List<string>();
-        if (!string.IsNullOrWhiteSpace(city))
-        {
-            queries.Add($"{category} {city}");
-        }
-        queries.Add(category);
+        string overpassQuery = $"[out:json][timeout:8][maxsize:2000000];({tagFilters});out center 150;";
+        string encodedQuery = Uri.EscapeDataString(overpassQuery);
 
-        string lowerCat = category.ToLowerInvariant();
-        if (lowerCat.Contains("reinigung") || lowerCat.Contains("clean") || lowerCat.Contains("تنظيف"))
+        string[] overpassMirrors =
         {
-            queries.Add("Reinigung");
-            queries.Add("Gebäudereinigung");
-        }
-        else if (lowerCat.Contains("restaur") || lowerCat.Contains("مطعم") || lowerCat.Contains("أكل"))
-        {
-            queries.Add("Restaurant");
-        }
-        else if (lowerCat.Contains("cafe") || lowerCat.Contains("مقه") || lowerCat.Contains("كافيه"))
-        {
-            queries.Add("Cafe");
-        }
-        else if (lowerCat.Contains("arzt") || lowerCat.Contains("doctor") || lowerCat.Contains("طبيب") || lowerCat.Contains("عياد"))
-        {
-            queries.Add("Arzt");
-            queries.Add("Praxis");
-        }
-        else if (lowerCat.Contains("hotel") || lowerCat.Contains("فندق"))
-        {
-            queries.Add("Hotel");
-        }
+            "https://overpass-api.de/api/interpreter?data=",
+            "https://lz4.overpass-api.de/api/interpreter?data=",
+            "https://overpass.kumi.systems/api/interpreter?data=",
+            "https://overpass.private.coffee/api/interpreter?data="
+        };
 
-        double maxDistKm = Math.Max(radiusKm * 1.35, radiusKm + 2.0);
-
-        foreach (var q in queries.Distinct(StringComparer.OrdinalIgnoreCase))
+        foreach (var mirror in overpassMirrors)
         {
+            if (ct.IsCancellationRequested) break;
+
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+                var doc = await _httpClient.GetFromJsonAsync<JsonNode>(mirror + encodedQuery, linkedCts.Token);
+                var elements = doc?["elements"]?.AsArray();
+                if (elements != null && elements.Count > 0)
+                {
+                    int addedFromMirror = 0;
+                    foreach (var elem in elements)
+                    {
+                        if (ct.IsCancellationRequested) break;
+
+                        var tags = elem?["tags"];
+                        string? name = tags?["name"]?.ToString();
+                        if (string.IsNullOrWhiteSpace(name)) continue;
+
+                        double eLat = elem?["lat"]?.GetValue<double>()
+                            ?? elem?["center"]?["lat"]?.GetValue<double>()
+                            ?? lat;
+                        double eLon = elem?["lon"]?.GetValue<double>()
+                            ?? elem?["center"]?["lon"]?.GetValue<double>()
+                            ?? lng;
+
+                        string phone = tags?["phone"]?.ToString()
+                            ?? tags?["contact:phone"]?.ToString()
+                            ?? tags?["mobile"]?.ToString()
+                            ?? tags?["contact:mobile"]?.ToString()
+                            ?? tags?["contact:whatsapp"]?.ToString()
+                            ?? tags?["telephone"]?.ToString()
+                            ?? "N/A";
+
+                        string website = tags?["website"]?.ToString()
+                            ?? tags?["contact:website"]?.ToString()
+                            ?? tags?["contact:facebook"]?.ToString()
+                            ?? tags?["facebook"]?.ToString()
+                            ?? "N/A";
+
+                        string street = tags?["addr:street"]?.ToString() ?? "";
+                        string house = tags?["addr:housenumber"]?.ToString() ?? "";
+                        string district = tags?["addr:district"]?.ToString() ?? tags?["addr:suburb"]?.ToString() ?? "";
+                        string itemCity = tags?["addr:city"]?.ToString() ?? "";
+                        string postcode = tags?["addr:postcode"]?.ToString() ?? "";
+
+                        var addrParts = new List<string>();
+                        string streetLine = $"{street} {house}".Trim();
+                        if (!string.IsNullOrWhiteSpace(streetLine)) addrParts.Add(streetLine);
+                        if (!string.IsNullOrWhiteSpace(district)) addrParts.Add(district);
+                        string cityLine = $"{postcode} {itemCity}".Trim();
+                        if (!string.IsNullOrWhiteSpace(cityLine)) addrParts.Add(cityLine);
+
+                        string address = addrParts.Count > 0 ? string.Join(", ", addrParts) : "Local Area";
+
+                        var lead = new ExtractedLeadItem
+                        {
+                            IsSelected = true,
+                            Name = name.Trim(),
+                            Phone = phone,
+                            Website = website,
+                            Rating = GenerateRating(name),
+                            Address = address,
+                            Latitude = eLat,
+                            Longitude = eLon
+                        };
+
+                        if (TryAddExtractedLead(lead, lat, lng, radiusKm))
+                        {
+                            addedFromMirror++;
+                        }
+                    }
+
+                    if (addedFromMirror > 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning("Overpass mirror query failover: {Message}", ex.Message);
+            }
+        }
+    }
+
+    private async Task FetchPhotonLeadsStreamingAsync(
+        double lat, double lng, int radiusKm, List<string> queries, string city,
+        System.Collections.Concurrent.ConcurrentBag<(long Id, ExtractedLeadItem Item)> osmNodesToEnrich,
+        System.Collections.Concurrent.ConcurrentBag<(long Id, ExtractedLeadItem Item)> osmWaysToEnrich,
+        CancellationToken ct)
+    {
+        foreach (var q in queries.Take(3))
+        {
+            if (ct.IsCancellationRequested) break;
+
+            try
+            {
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
                 string url = $"https://photon.komoot.io/api/?q={Uri.EscapeDataString(q)}&lat={lat.ToString(CultureInfo.InvariantCulture)}&lon={lng.ToString(CultureInfo.InvariantCulture)}&limit=100";
-                var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, cts.Token);
+                var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, linkedCts.Token);
                 var features = doc?["features"]?.AsArray();
                 if (features == null) continue;
 
                 foreach (var f in features)
                 {
+                    if (ct.IsCancellationRequested) break;
+
                     var props = f?["properties"];
                     var coords = f?["geometry"]?["coordinates"]?.AsArray();
                     if (props == null || coords == null || coords.Count < 2) continue;
@@ -496,15 +919,8 @@ public partial class DataExtractPage : Page
                     double pLat = coords[1]?.GetValue<double>() ?? 0;
                     if (pLat == 0 && pLon == 0) continue;
 
-                    double dist = CalculateDistanceKm(lat, lng, pLat, pLon);
-                    if (dist > maxDistKm) continue;
-
                     string? name = props["name"]?.ToString();
                     if (string.IsNullOrWhiteSpace(name)) continue;
-
-                    string normName = NormalizeBusinessName(name);
-                    if (seenNames.Contains(normName)) continue;
-                    seenNames.Add(normName);
 
                     string street = props["street"]?.ToString() ?? "";
                     string house = props["housenumber"]?.ToString() ?? "";
@@ -533,77 +949,97 @@ public partial class DataExtractPage : Page
                         Longitude = pLon
                     };
 
-                    list.Add(lead);
-
-                    long osmId = props["osm_id"]?.GetValue<long>() ?? 0;
-                    string osmType = props["osm_type"]?.ToString() ?? "";
-                    if (osmId > 0)
+                    if (TryAddExtractedLead(lead, lat, lng, radiusKm))
                     {
-                        if (osmType == "N") osmNodesToEnrich.Add((osmId, lead));
-                        else if (osmType == "W") osmWaysToEnrich.Add((osmId, lead));
+                        long osmId = props["osm_id"]?.GetValue<long>() ?? 0;
+                        string osmType = props["osm_type"]?.ToString() ?? "";
+                        if (osmId > 0)
+                        {
+                            if (osmType == "N") osmNodesToEnrich.Add((osmId, lead));
+                            else if (osmType == "W") osmWaysToEnrich.Add((osmId, lead));
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Serilog.Log.Warning(ex, "Photon query '{Query}' encountered issue", q);
+                Serilog.Log.Warning("Photon query '{Query}' encountered issue: {Message}", q, ex.Message);
             }
         }
     }
 
     private async Task EnrichOsmBatchDetailsAsync(
         List<(long Id, ExtractedLeadItem Item)> osmNodes,
-        List<(long Id, ExtractedLeadItem Item)> osmWays)
+        List<(long Id, ExtractedLeadItem Item)> osmWays,
+        CancellationToken ct)
     {
-        foreach (var chunk in osmNodes.Chunk(40))
+        var tasks = new List<Task>();
+
+        if (osmNodes.Count > 0)
         {
-            try
+            tasks.Add(Task.Run(async () =>
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-                string ids = string.Join(",", chunk.Select(c => c.Id));
-                string url = $"https://api.openstreetmap.org/api/0.6/nodes.json?nodes={ids}";
-                var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, cts.Token);
-                var elements = doc?["elements"]?.AsArray();
-                if (elements != null)
+                try
                 {
-                    var map = chunk.ToDictionary(c => c.Id, c => c.Item);
-                    foreach (var elem in elements)
+                    using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+                    string ids = string.Join(",", osmNodes.Select(c => c.Id));
+                    string url = $"https://api.openstreetmap.org/api/0.6/nodes.json?nodes={ids}";
+                    var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, linkedCts.Token);
+                    var elements = doc?["elements"]?.AsArray();
+                    if (elements != null)
                     {
-                        long id = elem?["id"]?.GetValue<long>() ?? 0;
-                        if (id > 0 && map.TryGetValue(id, out var lead))
+                        var map = osmNodes.ToDictionary(c => c.Id, c => c.Item);
+                        foreach (var elem in elements)
                         {
-                            ApplyOsmTags(elem?["tags"], lead);
+                            long id = elem?["id"]?.GetValue<long>() ?? 0;
+                            if (id > 0 && map.TryGetValue(id, out var lead))
+                            {
+                                ApplyOsmTags(elem?["tags"], lead);
+                            }
                         }
                     }
                 }
-            }
-            catch { }
+                catch { }
+            }, ct));
         }
 
-        foreach (var chunk in osmWays.Chunk(40))
+        if (osmWays.Count > 0)
         {
-            try
+            tasks.Add(Task.Run(async () =>
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-                string ids = string.Join(",", chunk.Select(c => c.Id));
-                string url = $"https://api.openstreetmap.org/api/0.6/ways.json?ways={ids}";
-                var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, cts.Token);
-                var elements = doc?["elements"]?.AsArray();
-                if (elements != null)
+                try
                 {
-                    var map = chunk.ToDictionary(c => c.Id, c => c.Item);
-                    foreach (var elem in elements)
+                    using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+                    string ids = string.Join(",", osmWays.Select(c => c.Id));
+                    string url = $"https://api.openstreetmap.org/api/0.6/ways.json?ways={ids}";
+                    var doc = await _httpClient.GetFromJsonAsync<JsonObject>(url, linkedCts.Token);
+                    var elements = doc?["elements"]?.AsArray();
+                    if (elements != null)
                     {
-                        long id = elem?["id"]?.GetValue<long>() ?? 0;
-                        if (id > 0 && map.TryGetValue(id, out var lead))
+                        var map = osmWays.ToDictionary(c => c.Id, c => c.Item);
+                        foreach (var elem in elements)
                         {
-                            ApplyOsmTags(elem?["tags"], lead);
+                            long id = elem?["id"]?.GetValue<long>() ?? 0;
+                            if (id > 0 && map.TryGetValue(id, out var lead))
+                            {
+                                ApplyOsmTags(elem?["tags"], lead);
+                            }
                         }
                     }
                 }
-            }
-            catch { }
+                catch { }
+            }, ct));
         }
+
+        try
+        {
+            await Task.WhenAll(tasks);
+        }
+        catch { }
     }
 
     private static void ApplyOsmTags(JsonNode? tags, ExtractedLeadItem lead)
@@ -613,11 +1049,12 @@ public partial class DataExtractPage : Page
         string phone = tags["phone"]?.ToString()
             ?? tags["contact:phone"]?.ToString()
             ?? tags["mobile"]?.ToString()
-            ?? tags["telephone"]?.ToString()
             ?? tags["contact:mobile"]?.ToString()
+            ?? tags["contact:whatsapp"]?.ToString()
+            ?? tags["telephone"]?.ToString()
             ?? "";
 
-        if (!string.IsNullOrWhiteSpace(phone) && lead.Phone == "N/A")
+        if (!string.IsNullOrWhiteSpace(phone) && (lead.Phone == "N/A" || string.IsNullOrWhiteSpace(lead.Phone)))
         {
             lead.Phone = phone.Trim();
         }
@@ -629,15 +1066,14 @@ public partial class DataExtractPage : Page
             ?? tags["url"]?.ToString()
             ?? "";
 
-        if (!string.IsNullOrWhiteSpace(website) && lead.Website == "N/A")
+        if (!string.IsNullOrWhiteSpace(website) && (lead.Website == "N/A" || string.IsNullOrWhiteSpace(lead.Website)))
         {
             lead.Website = website.Trim();
         }
     }
 
-    private async Task FetchNominatimLeadsAsync(
-        double lat, double lng, int radiusKm, string category, string city,
-        List<ExtractedLeadItem> list, HashSet<string> seenNames)
+    private async Task FetchNominatimLeadsStreamingAsync(
+        double lat, double lng, int radiusKm, List<string> queries, string city, CancellationToken ct)
     {
         double dLat = (radiusKm / 111.0);
         double dLon = (radiusKm / (111.0 * Math.Cos(lat * Math.PI / 180.0)));
@@ -646,26 +1082,24 @@ public partial class DataExtractPage : Page
         double minLat = lat - dLat;
         double maxLat = lat + dLat;
 
-        var searchUrls = new List<string>
+        foreach (var q in queries.Take(2))
         {
-            $"https://nominatim.openstreetmap.org/search?q={Uri.EscapeDataString(category)}&viewbox={minLon.ToString(CultureInfo.InvariantCulture)},{maxLat.ToString(CultureInfo.InvariantCulture)},{maxLon.ToString(CultureInfo.InvariantCulture)},{minLat.ToString(CultureInfo.InvariantCulture)}&bounded=0&format=json&addressdetails=1&extratags=1&limit=50"
-        };
+            if (ct.IsCancellationRequested) break;
 
-        if (!string.IsNullOrWhiteSpace(city))
-        {
-            searchUrls.Add($"https://nominatim.openstreetmap.org/search?q={Uri.EscapeDataString(category + " " + city)}&format=json&addressdetails=1&extratags=1&limit=50");
-        }
-
-        foreach (var url in searchUrls)
-        {
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                var nomResp = await _httpClient.GetFromJsonAsync<JsonArray>(url, cts.Token);
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+                string url = $"https://nominatim.openstreetmap.org/search?q={Uri.EscapeDataString(q)}&viewbox={minLon.ToString(CultureInfo.InvariantCulture)},{maxLat.ToString(CultureInfo.InvariantCulture)},{maxLon.ToString(CultureInfo.InvariantCulture)},{minLat.ToString(CultureInfo.InvariantCulture)}&bounded=1&format=json&addressdetails=1&extratags=1&limit=50";
+
+                var nomResp = await _httpClient.GetFromJsonAsync<JsonArray>(url, linkedCts.Token);
                 if (nomResp == null) continue;
 
                 foreach (var item in nomResp)
                 {
+                    if (ct.IsCancellationRequested) break;
+
                     string? name = item?["name"]?.ToString();
                     if (string.IsNullOrWhiteSpace(name))
                     {
@@ -673,9 +1107,6 @@ public partial class DataExtractPage : Page
                         name = disp?.Split(',').FirstOrDefault()?.Trim();
                     }
                     if (string.IsNullOrWhiteSpace(name)) continue;
-
-                    string norm = NormalizeBusinessName(name);
-                    if (seenNames.Contains(norm)) continue;
 
                     string? latStr = item?["lat"]?.ToString();
                     string? lonStr = item?["lon"]?.ToString();
@@ -685,20 +1116,16 @@ public partial class DataExtractPage : Page
                         continue;
                     }
 
-                    double dist = CalculateDistanceKm(lat, lng, eLat, eLon);
-                    if (dist > radiusKm * 1.35) continue;
-
-                    seenNames.Add(norm);
-
                     var tags = item?["extratags"];
-                    string phone = tags?["phone"]?.ToString() 
-                        ?? tags?["contact:phone"]?.ToString() 
-                        ?? tags?["mobile"]?.ToString() 
+                    string phone = tags?["phone"]?.ToString()
+                        ?? tags?["contact:phone"]?.ToString()
+                        ?? tags?["mobile"]?.ToString()
+                        ?? tags?["contact:whatsapp"]?.ToString()
                         ?? "N/A";
 
-                    string website = tags?["website"]?.ToString() 
-                        ?? tags?["contact:website"]?.ToString() 
-                        ?? tags?["facebook"]?.ToString() 
+                    string website = tags?["website"]?.ToString()
+                        ?? tags?["contact:website"]?.ToString()
+                        ?? tags?["facebook"]?.ToString()
                         ?? "N/A";
 
                     var addr = item?["address"];
@@ -717,7 +1144,7 @@ public partial class DataExtractPage : Page
 
                     string address = parts.Count > 0 ? string.Join(", ", parts) : city;
 
-                    list.Add(new ExtractedLeadItem
+                    var lead = new ExtractedLeadItem
                     {
                         IsSelected = true,
                         Name = name.Trim(),
@@ -727,244 +1154,41 @@ public partial class DataExtractPage : Page
                         Address = address,
                         Latitude = eLat,
                         Longitude = eLon
-                    });
+                    };
+
+                    TryAddExtractedLead(lead, lat, lng, radiusKm);
                 }
             }
             catch (Exception ex)
             {
-                Serilog.Log.Warning(ex, "Nominatim query encountered an issue");
+                Serilog.Log.Warning("Nominatim bounded query encountered issue: {Message}", ex.Message);
             }
         }
     }
-
-    private async Task FetchOverpassLeadsAsync(
-        double lat, double lng, int radiusKm, string category,
-        List<ExtractedLeadItem> list, HashSet<string> seenNames)
-    {
-        int radiusM = Math.Min(radiusKm, 30) * 1000;
-        string tagFilters = GetOsmTagFilters(category, radiusM, lat, lng);
-        string overpassQuery = $"[out:json][timeout:10];({tagFilters});out center 150;";
-        string encodedQuery = Uri.EscapeDataString(overpassQuery);
-
-        string[] overpassMirrors = 
-        {
-            "https://overpass.kumi.systems/api/interpreter?data=",
-            "https://lz4.overpass-api.de/api/interpreter?data=",
-            "https://overpass.private.coffee/api/interpreter?data=",
-            "https://overpass-api.de/api/interpreter?data="
-        };
-
-        foreach (var mirror in overpassMirrors)
-        {
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-                var doc = await _httpClient.GetFromJsonAsync<JsonNode>(mirror + encodedQuery, cts.Token);
-                var elements = doc?["elements"]?.AsArray();
-                if (elements != null && elements.Count > 0)
-                {
-                    int addedFromMirror = 0;
-                    foreach (var elem in elements)
-                    {
-                        var tags = elem?["tags"];
-                        string? name = tags?["name"]?.ToString();
-                        if (string.IsNullOrWhiteSpace(name)) continue;
-
-                        string norm = NormalizeBusinessName(name);
-                        if (seenNames.Contains(norm)) continue;
-
-                        double eLat = elem?["lat"]?.GetValue<double>() 
-                            ?? elem?["center"]?["lat"]?.GetValue<double>() 
-                            ?? lat;
-                        double eLon = elem?["lon"]?.GetValue<double>() 
-                            ?? elem?["center"]?["lon"]?.GetValue<double>() 
-                            ?? lng;
-
-                        double dist = CalculateDistanceKm(lat, lng, eLat, eLon);
-                        if (dist > radiusKm * 1.35) continue;
-
-                        seenNames.Add(norm);
-
-                        string phone = tags?["phone"]?.ToString() 
-                            ?? tags?["contact:phone"]?.ToString() 
-                            ?? tags?["mobile"]?.ToString() 
-                            ?? tags?["telephone"]?.ToString() 
-                            ?? "N/A";
-
-                        string website = tags?["website"]?.ToString() 
-                            ?? tags?["contact:website"]?.ToString() 
-                            ?? tags?["facebook"]?.ToString() 
-                            ?? "N/A";
-
-                        string street = tags?["addr:street"]?.ToString() ?? "";
-                        string house = tags?["addr:housenumber"]?.ToString() ?? "";
-                        string district = tags?["addr:district"]?.ToString() ?? "";
-                        string itemCity = tags?["addr:city"]?.ToString() ?? "";
-                        string postcode = tags?["addr:postcode"]?.ToString() ?? "";
-
-                        var addrParts = new List<string>();
-                        string streetLine = $"{street} {house}".Trim();
-                        if (!string.IsNullOrWhiteSpace(streetLine)) addrParts.Add(streetLine);
-                        if (!string.IsNullOrWhiteSpace(district)) addrParts.Add(district);
-                        string cityLine = $"{postcode} {itemCity}".Trim();
-                        if (!string.IsNullOrWhiteSpace(cityLine)) addrParts.Add(cityLine);
-
-                        string address = addrParts.Count > 0 ? string.Join(", ", addrParts) : "Local Area";
-
-                        list.Add(new ExtractedLeadItem
-                        {
-                            IsSelected = true,
-                            Name = name.Trim(),
-                            Phone = phone,
-                            Website = website,
-                            Rating = GenerateRating(name),
-                            Address = address,
-                            Latitude = eLat,
-                            Longitude = eLon
-                        });
-
-                        addedFromMirror++;
-                    }
-
-                    if (addedFromMirror > 0) break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Serilog.Log.Warning(ex, "Overpass mirror {Mirror} query timed out or failed", mirror);
-            }
-        }
-    }
-
-    private void AugmentVerifiedHubs(List<ExtractedLeadItem> list, HashSet<string> seenNames, string category, string city, double lat, double lng)
-    {
-        string catLower = category.ToLowerInvariant();
-        string cityLower = city.ToLowerInvariant();
-
-        bool isWorkspace = catLower.Contains("ورك") || catLower.Contains("سبيس") || catLower.Contains("cowork") || catLower.Contains("work") || catLower.Contains("مساح");
-        bool isAlexandria = cityLower.Contains("اسكندر") || cityLower.Contains("alex") || (lat >= 31.0 && lat <= 31.4 && lng >= 29.7 && lng <= 30.1);
-
-        if (isWorkspace && isAlexandria)
-        {
-            var alexHubs = new (string Name, string Phone, string Web, string Address, double Lat, double Lng)[]
-            {
-                ("Frame Coworking", "+20 10 9944 8832", "https://www.facebook.com/Framecoworking", "شارع خالد بن الوليد, ميامي, الإسكندرية", 31.2575, 29.9810),
-                ("Wave Coworking Space", "+20 12 8820 1199", "https://wavecoworking.com", "طريق الحرية (أبو قير), لوران, الإسكندرية", 31.2480, 29.9710),
-                ("Gramophone Co-Working Space", "+20 3 5422890", "https://www.facebook.com/gramophone.space", "شارع المشير أحمد إسماعيل, سيدي جابر, الإسكندرية", 31.2412, 29.9622),
-                ("Icealex Coworking Space", "+20 3 5439120", "https://www.icealex.com", "شارع سوريا, رشدي, الإسكندرية", 31.2315, 29.9482),
-                ("The Spot Coworking Space", "+20 10 2233 4455", "https://thespotspace.com", "شارع فوزي معاذ, سموحة, الإسكندرية", 31.2150, 29.9405),
-                ("Creativa Innovation Hub", "+20 3 5928811", "https://creativa.gov.eg", "مجمع الكليات, الشاطبي, الإسكندرية", 31.2055, 29.9160),
-                ("Work Zone Coworking", "+20 11 4455 6677", "https://workzone-eg.com", "شارع بورسعيد, الإبراهيمية, الإسكندرية", 31.2140, 29.9275),
-                ("Ideas Gym Coworking", "+20 10 0011 2233", "https://ideasgym.com", "شارع الإقبال, لوران, الإسكندرية", 31.2455, 29.9690),
-                ("Pulse Coworking Space", "+20 12 1122 3344", "https://pulsespace.net", "شارع المشير, سيدي جابر, الإسكندرية", 31.2380, 29.9570),
-                ("B-Hive Workspace", "+20 15 5566 7788", "https://bhive-alex.com", "شارع بهاء الدين الغتوري, سموحة, الإسكندرية", 31.2185, 29.9430),
-                ("Regus Alexandria San Stefano", "+20 3 4690000", "https://www.regus.com", "سان ستيفانو جراند بلازا, الإسكندرية", 31.2440, 29.9670),
-                ("Cospace Alexandria", "+20 10 6677 8899", "https://cospace-eg.com", "شارع أحمد يحيى, كفر عبده, الإسكندرية", 31.2290, 29.9520),
-                ("Focus Coworking Space", "+20 12 3344 5566", "https://focuscoworking.com", "شارع خالد بن الوليد, سيدي بشر, الإسكندرية", 31.2590, 29.9850),
-                ("MQR Alexandria", "+20 11 1234 5678", "https://almaqarr.com", "شارع سوريا, رشدي, الإسكندرية", 31.2330, 29.9500)
-            };
-
-            foreach (var hub in alexHubs)
-            {
-                string norm = NormalizeBusinessName(hub.Name);
-                if (!seenNames.Contains(norm))
-                {
-                    seenNames.Add(norm);
-                    list.Add(new ExtractedLeadItem
-                    {
-                        IsSelected = true,
-                        Name = hub.Name,
-                        Phone = hub.Phone,
-                        Website = hub.Web,
-                        Rating = "4.7 ★",
-                        Address = hub.Address,
-                        Latitude = hub.Lat,
-                        Longitude = hub.Lng
-                    });
-                }
-            }
-        }
-    }
-
-    private string GetOsmTagFilters(string category, int radiusM, double lat, double lng)
-    {
-        string latStr = lat.ToString(CultureInfo.InvariantCulture);
-        string lngStr = lng.ToString(CultureInfo.InvariantCulture);
-        string lower = (category ?? "").ToLowerInvariant();
-
-        if (lower.Contains("ورك") || lower.Contains("سبيس") || lower.Contains("cowork") || lower.Contains("work") || lower.Contains("مساح"))
-        {
-            return $"node[\"amenity\"=\"coworking_space\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"coworking_space\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"office\"=\"coworking\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"office\"=\"coworking\"](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("مطعم") || lower.Contains("restaur") || lower.Contains("أكل"))
-        {
-            return $"node[\"amenity\"=\"restaurant\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"restaurant\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"amenity\"=\"fast_food\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"fast_food\"](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("كافيه") || lower.Contains("مقه") || lower.Contains("cafe") || lower.Contains("coffee"))
-        {
-            return $"node[\"amenity\"=\"cafe\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"cafe\"](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("طبيب") || lower.Contains("عياد") || lower.Contains("دكتور") || lower.Contains("clinic") || lower.Contains("doctor") || lower.Contains("مستشف") || lower.Contains("hospital"))
-        {
-            return $"node[\"amenity\"=\"clinic\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"clinic\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"amenity\"=\"doctors\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"doctors\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"amenity\"=\"hospital\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"hospital\"](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("صيدل") || lower.Contains("pharm") || lower.Contains("apothek"))
-        {
-            return $"node[\"amenity\"=\"pharmacy\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"amenity\"=\"pharmacy\"](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("فندق") || lower.Contains("hotel"))
-        {
-            return $"node[\"tourism\"=\"hotel\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"tourism\"=\"hotel\"](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("تنظيف") || lower.Contains("clean") || lower.Contains("reinigung"))
-        {
-            return $"node[\"craft\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"craft\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"craft\"=\"cleaner\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"craft\"=\"cleaner\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"office\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"office\"=\"cleaning\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"node[\"name\"~\"reinigung|cleaning\",i](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"name\"~\"reinigung|cleaning\",i](around:{radiusM},{latStr},{lngStr});";
-        }
-        if (lower.Contains("شرك") || lower.Contains("مكتب") || lower.Contains("office") || lower.Contains("company"))
-        {
-            return $"node[\"office\"=\"company\"](around:{radiusM},{latStr},{lngStr});" +
-                   $"way[\"office\"=\"company\"](around:{radiusM},{latStr},{lngStr});";
-        }
-
-        string safeWord = (category ?? "").Replace("\"", "").Trim();
-        return $"node[\"name\"~\"{safeWord}\",i](around:{radiusM},{latStr},{lngStr});" +
-               $"way[\"name\"~\"{safeWord}\",i](around:{radiusM},{latStr},{lngStr});";
-    }
-
 
     private void SyncMapMarkers()
     {
-        var mapPoints = _leads.Select(l => new {
-            name = l.Name,
-            phone = l.Phone,
-            address = l.Address,
-            lat = l.Latitude,
-            lng = l.Longitude
-        }).ToList();
+        try
+        {
+            List<object> mapPoints;
+            lock (_leads)
+            {
+                mapPoints = _leads.Select(l => new {
+                    name = l.Name,
+                    phone = l.Phone,
+                    address = l.Address,
+                    lat = l.Latitude,
+                    lng = l.Longitude
+                }).Cast<object>().ToList();
+            }
 
-        string json = JsonSerializer.Serialize(mapPoints);
-        MapWebView.CoreWebView2?.ExecuteScriptAsync($"if (window.setLeads) {{ window.setLeads({json}); }}");
+            string json = JsonSerializer.Serialize(new { action = "setLeads", leads = mapPoints });
+            MapWebView.CoreWebView2?.PostWebMessageAsJson(json);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning("Failed to sync map markers: {Message}", ex.Message);
+        }
     }
 
     private void UpdateSelectionCounter()

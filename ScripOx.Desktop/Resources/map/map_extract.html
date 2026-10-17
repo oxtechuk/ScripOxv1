@@ -98,24 +98,49 @@
       map.fitBounds(radiusCircle.getBounds(), { padding: [20, 20] });
     };
 
+    // Native WebView2 message handler for rock-solid JSON transfer without JS injection errors
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.addEventListener('message', function(e) {
+        try {
+          const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+          if (!data) return;
+          if (data.action === 'setLeads' && Array.isArray(data.leads)) {
+            renderLeads(data.leads);
+          } else if (data.action === 'updateArea') {
+            window.updateArea(data.lat, data.lng, data.radius_km);
+          }
+        } catch(err) {
+          console.error("Error processing webview message:", err);
+        }
+      });
+    }
+
+    function renderLeads(leads) {
+      leadsGroup.clearLayers();
+      if (!Array.isArray(leads)) return;
+      leads.forEach(lead => {
+        if (lead && lead.lat && lead.lng) {
+          const m = L.circleMarker([lead.lat, lead.lng], {
+            radius: 6,
+            fillColor: '#CEF22C',
+            color: '#0F172A',
+            weight: 2,
+            fillOpacity: 0.95
+          });
+          const safeName = (lead.name || 'Unknown Business').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safePhone = (lead.phone && lead.phone !== 'N/A' ? `<div class="poi-phone">📞 ${lead.phone.replace(/</g, '&lt;')}</div>` : '');
+          const safeAddr = (lead.address ? `<div style="font-size:11px; color:#CBD5E1; margin-top:2px;">📍 ${lead.address.replace(/</g, '&lt;')}</div>` : '');
+          m.bindPopup(`<div class="custom-popup"><div class="poi-title">${safeName}</div>${safePhone}${safeAddr}</div>`);
+          leadsGroup.addLayer(m);
+        }
+      });
+    }
+
     // Called from C# WPF when leads are extracted
     window.setLeads = function(leadsJson) {
-      leadsGroup.clearLayers();
       try {
         const leads = typeof leadsJson === 'string' ? JSON.parse(leadsJson) : leadsJson;
-        leads.forEach(lead => {
-          if (lead.lat && lead.lng) {
-            const m = L.circleMarker([lead.lat, lead.lng], {
-              radius: 6,
-              fillColor: '#CEF22C',
-              color: '#0F172A',
-              weight: 2,
-              fillOpacity: 0.9
-            });
-            m.bindPopup(`<div class="custom-popup"><div class="poi-title">${lead.name}</div><div class="poi-phone">${lead.phone || ''}</div><div>${lead.address || ''}</div></div>`);
-            leadsGroup.addLayer(m);
-          }
-        });
+        renderLeads(leads);
       } catch(err) {
         console.error("Failed to render leads:", err);
       }

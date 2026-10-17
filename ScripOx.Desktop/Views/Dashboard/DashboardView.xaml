@@ -108,7 +108,6 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 
                                 <Border Width="34" Height="34" CornerRadius="17" Background="#E2E8F0" Margin="0,0,10,0">
@@ -122,17 +121,8 @@
                                     <TextBlock x:Name="TxtUserRole" Text="مدير النظام (Admin)" FontSize="10"
                                                Foreground="{StaticResource ExTextSecondary}"/>
                                 </StackPanel>
-
-                                <Button x:Name="BtnSignOut" Grid.Column="2" Content="خروج" Height="26"
-                                        Style="{StaticResource ExBtnGhostPill}" FontSize="10" Padding="8,2"
-                                        Click="BtnSignOut_Click"/>
                             </Grid>
                         </Border>
-
-                        <!-- Mini Sign Out when sidebar collapsed -->
-                        <Button x:Name="BtnMiniSignOut" Content="خروج" Style="{StaticResource ExBtnGhostPill}"
-                                Height="34" Width="34" HorizontalAlignment="Center" Margin="0,0,0,16"
-                                Visibility="Collapsed" Click="BtnSignOut_Click" ToolTip="تسجيل الخروج"/>
                     </StackPanel>
 
                     <!-- Navigation Items List (Zero Emoji - Executive Vector Icons) -->
