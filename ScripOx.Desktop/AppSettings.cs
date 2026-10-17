@@ -24,11 +24,14 @@ public static class AppSettings
         }
         var dbPath = System.IO.Path.Combine(appFolder, "scripox.db");
 
-        // If local dev db exists in BaseDirectory and none exists in LocalAppData, copy it over
+        // If local dev db exists in BaseDirectory and none exists in LocalAppData (or localappdata db is empty), copy it over
         var devDb = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scripox.db");
-        if (!System.IO.File.Exists(dbPath) && System.IO.File.Exists(devDb))
+        if (System.IO.File.Exists(devDb))
         {
-            try { System.IO.File.Copy(devDb, dbPath, true); } catch { }
+            if (!System.IO.File.Exists(dbPath) || new System.IO.FileInfo(dbPath).Length < 2000)
+            {
+                try { System.IO.File.Copy(devDb, dbPath, true); } catch { }
+            }
         }
 
         return $"Data Source={dbPath};";

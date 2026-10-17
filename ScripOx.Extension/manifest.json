@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "ScripOx ",
+  "default_locale": "en",
+  "name": "__MSG_appName__",
   "version": "1.0.0",
-  "description": "Visually pick any HTML element or table and send extraction config to ScripOx Desktop",
+  "description": "__MSG_appDesc__",
   "browser_specific_settings": {
     "gecko": {
       "id": "scripox-extractor@oxtech.uk",
@@ -25,8 +26,8 @@
     "default_title": "ScripOx"
   },
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "scripts": ["background.js"],
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

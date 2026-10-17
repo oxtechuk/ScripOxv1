@@ -143,25 +143,25 @@ async def _do_run_job(job_id: int, db: AsyncSession) -> None:
         unique, duplicates = run_deduplication(cleaned)
 
         # ── 9. Save companies ────────────────────────────────
+        # ── 9. Save companies ────────────────────────────────
         saved = 0
         for rec in unique:
             try:
                 x = rec.get("x")
                 y = rec.get("y")
-                # Use 0,0 if no coordinates (POINT column is NOT NULL)
-                point_sql = f"ST_GeomFromText('POINT({x or 0} {y or 0})', 4326)"
+                
                 await db.execute(
-                    text(f"""
+                    text("""
                         INSERT INTO companies
                           (name, category, phone, phone2, email, website,
                            address, city, country, postal_code,
-                           x, y, location,
+                           x, y,
                            source_id, source_name, source_url,
                            status_id, priority, created_at)
                         VALUES
                           (:name, :category, :phone, :phone2, :email, :website,
                            :address, :city, :country, :postal_code,
-                           :x, :y, {point_sql},
+                           :x, :y,
                            :source_id, :source_name, :source_url,
                            1, 'medium', CURRENT_TIMESTAMP)
                     """),
@@ -176,8 +176,8 @@ async def _do_run_job(job_id: int, db: AsyncSession) -> None:
                         "city":        rec.get("city"),
                         "country":     rec.get("country", "UK"),
                         "postal_code": rec.get("postal_code"),
-                        "x":           x,
-                        "y":           y,
+                        "x":           float(x) if x is not None else None,
+                        "y":           float(y) if y is not None else None,
                         "source_id":   job["source_id"],
                         "source_name": rec.get("source_name"),
                         "source_url":  rec.get("source_url"),

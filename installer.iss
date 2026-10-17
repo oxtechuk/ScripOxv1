@@ -6,7 +6,7 @@
 
 #define MyAppName "ScripOx"
 #ifndef MyAppVersion
-#define MyAppVersion "1.1.3"
+#define MyAppVersion "1.1.4"
 #endif
 #define MyAppPublisher "Ox Tech"
 #define MyAppURL "https://oxtech.uk"
@@ -25,6 +25,8 @@ AppUpdatesURL={#MyAppURL}
 AppSupportPhone={#MyAppSupportPhone}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription="ScripOx CRM - Lead & Market Intelligence Platform by Ox Tech"
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
 VersionInfoVersion={#MyAppVersion}
 VersionInfoTextVersion={#MyAppVersion}
 VersionInfoCopyright="© 2025-2026 Ox Tech (oxtech.uk)"
@@ -68,22 +70,23 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename
 Name: "{group}\Ox Tech Website"; Filename: "{#MyAppURL}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
+[Registry]
+; Google Chrome Extension Registration (IDM-style native integration)
+Root: HKCU; Subkey: "Software\Google\Chrome\Extensions\dnglecedpknmjiapmdoohaciobcnpokj"; ValueType: string; ValueName: "path"; ValueData: "{app}\Extension\scripox.crx"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Google\Chrome\Extensions\dnglecedpknmjiapmdoohaciobcnpokj"; ValueType: string; ValueName: "version"; ValueData: "1.0.0"; Flags: uninsdeletekey
+
+; Microsoft Edge Extension Registration
+Root: HKCU; Subkey: "Software\Microsoft\Edge\Extensions\dnglecedpknmjiapmdoohaciobcnpokj"; ValueType: string; ValueName: "path"; ValueData: "{app}\Extension\scripox.crx"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Edge\Extensions\dnglecedpknmjiapmdoohaciobcnpokj"; ValueType: string; ValueName: "version"; ValueData: "1.0.0"; Flags: uninsdeletekey
+
+; Brave Browser Extension Registration
+Root: HKCU; Subkey: "Software\BraveSoftware\Brave-Browser\Extensions\dnglecedpknmjiapmdoohaciobcnpokj"; ValueType: string; ValueName: "path"; ValueData: "{app}\Extension\scripox.crx"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\BraveSoftware\Brave-Browser\Extensions\dnglecedpknmjiapmdoohaciobcnpokj"; ValueType: string; ValueName: "version"; ValueData: "1.0.0"; Flags: uninsdeletekey
+
 [Run]
-Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -Command ""Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile '$env:TEMP\MicrosoftEdgeWebview2Setup.exe'; Start-Process '$env:TEMP\MicrosoftEdgeWebview2Setup.exe' -ArgumentList '/silent /install' -Wait"""; StatusMsg: "Installing Microsoft Edge WebView2 Runtime..."; Flags: runhidden; Check: WebView2NotInstalled
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-function WebView2NotInstalled: Boolean;
-var
-  Version: String;
-begin
-  Result := not (
-    RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-F55F-4EBE-9E02-9F642301A334}', 'pv', Version) or
-    RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-F55F-4EBE-9E02-9F642301A334}', 'pv', Version) or
-    RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
-    RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-F55F-4EBE-9E02-9F642301A334}', 'pv', Version)
-  );
-end;
 
 function SeedDbExists: Boolean;
 begin

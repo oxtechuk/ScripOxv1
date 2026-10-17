@@ -180,14 +180,34 @@ public partial class JobsPage : Page
     {
         try
         {
-            string? categoryFilter = null;
-            if (CmbSourceType.SelectedIndex == 1 && CmbTargetCategory.SelectedItem is string selectedCat &&
-                selectedCat != "الكل (جميع التصنيفات)" && selectedCat != "All (All Categories)" && selectedCat != "Alle Kategorien")
+            if (CmbSourceType.SelectedIndex == 2)
             {
-                categoryFilter = selectedCat;
+                var urls = (TxtCustomUrls?.Text ?? "")
+                    .Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(u => u.Trim())
+                    .Where(u => !string.IsNullOrWhiteSpace(u))
+                    .Distinct()
+                    .ToList();
+
+                _cachedTargets = urls.Select((u, idx) => new Company
+                {
+                    Id = 0,
+                    Name = Uri.TryCreate(u, UriKind.Absolute, out var p) ? p.Host : $"Target #{idx + 1}",
+                    Website = u
+                }).ToList();
+            }
+            else
+            {
+                string? categoryFilter = null;
+                if (CmbSourceType.SelectedIndex == 1 && CmbTargetCategory.SelectedItem is string selectedCat &&
+                    selectedCat != "الكل (جميع التصنيفات)" && selectedCat != "All (All Categories)" && selectedCat != "Alle Kategorien")
+                {
+                    categoryFilter = selectedCat;
+                }
+
+                _cachedTargets = await _companyService.GetCompaniesWithWebsitesAsync(categoryFilter);
             }
 
-            _cachedTargets = await _companyService.GetCompaniesWithWebsitesAsync(categoryFilter);
             var isAr = LocalizationService.CurrentLanguage == "ar";
             var isDe = LocalizationService.CurrentLanguage == "de";
 
@@ -220,12 +240,19 @@ public partial class JobsPage : Page
 
     private async void CmbSourceType_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (PnlCategory == null) return;
+        if (PnlCategory == null || PnlCustomUrls == null) return;
         PnlCategory.Visibility = CmbSourceType.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        PnlCustomUrls.Visibility = CmbSourceType.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
         await RefreshTargetCountAsync();
     }
 
     private async void CmbTargetCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        await RefreshTargetCountAsync();
+    }
+
+    private async void TxtCustomUrls_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (!IsLoaded) return;
         await RefreshTargetCountAsync();

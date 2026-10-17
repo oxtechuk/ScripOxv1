@@ -38,7 +38,7 @@ function mountSidebar() {
 
   const container = document.createElement('div');
   container.id    = 'scripox-root';
-  container.style.cssText = 'pointer-events:auto;';
+  container.style.cssText = 'pointer-events:none;';
   shadow.appendChild(container);
 
   const root = createRoot(container);

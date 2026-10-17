@@ -18,7 +18,7 @@ type SidebarTab = 'selector' | 'fields' | 'data' | 'table' | 'pagination' | 'tem
 
 export function Sidebar() {
   const {
-    sidebarOpen, toggleSidebar, setApiStatus, selectors, tableInfo,
+    sidebarOpen, toggleSidebar, setSidebarOpen, setApiStatus, selectors, tableInfo,
     dockPosition, setDockPosition, panelPosition, setPanelPosition,
     theme, toggleTheme, records,
   } = useStore();
@@ -41,6 +41,17 @@ export function Sidebar() {
     const id = setInterval(check, 15_000);
     return () => clearInterval(id);
   }, []);
+
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [sidebarOpen, setSidebarOpen]);
 
   // Auto-switch tabs only when a table is explicitly picked
   useEffect(() => {
@@ -122,17 +133,39 @@ export function Sidebar() {
     textAlign: 'left',
   };
   let panelClasses = isDark
-    ? 'bg-[#0F172A]/98 backdrop-blur-2xl shadow-2xl flex flex-col text-slate-100 font-sans z-[2147483646] transition-all '
-    : 'bg-[#FFFFFF]/98 backdrop-blur-2xl shadow-2xl flex flex-col text-slate-800 font-sans z-[2147483646] transition-all ';
+    ? 'bg-[#0F172A]/98 backdrop-blur-2xl shadow-2xl flex flex-col text-slate-100 font-sans z-[2147483646] '
+    : 'bg-[#FFFFFF]/98 backdrop-blur-2xl shadow-2xl flex flex-col text-slate-800 font-sans z-[2147483646] ';
 
   if (dockPosition === 'left') {
-    panelClasses += `fixed left-0 top-0 h-screen w-[440px] border-r ${
-      isDark ? 'border-slate-800' : 'border-slate-200'
-    } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`;
+    panelStyle = {
+      ...panelStyle,
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      height: '100vh',
+      width: '440px',
+      transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+      opacity: sidebarOpen ? 1 : 0,
+      pointerEvents: sidebarOpen ? 'auto' : 'none',
+      visibility: sidebarOpen ? 'visible' : 'hidden',
+      transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, visibility 0.25s ease',
+    };
+    panelClasses += `border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`;
   } else if (dockPosition === 'right') {
-    panelClasses += `fixed right-0 top-0 h-screen w-[440px] border-l ${
-      isDark ? 'border-slate-800' : 'border-slate-200'
-    } ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`;
+    panelStyle = {
+      ...panelStyle,
+      position: 'fixed',
+      right: 0,
+      top: 0,
+      height: '100vh',
+      width: '440px',
+      transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
+      opacity: sidebarOpen ? 1 : 0,
+      pointerEvents: sidebarOpen ? 'auto' : 'none',
+      visibility: sidebarOpen ? 'visible' : 'hidden',
+      transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, visibility 0.25s ease',
+    };
+    panelClasses += `border-l ${isDark ? 'border-slate-800' : 'border-slate-200'}`;
   } else {
     // Floating draggable mode
     panelStyle = {
@@ -143,30 +176,44 @@ export function Sidebar() {
       width: '450px',
       maxHeight: '92vh',
       height: '86vh',
+      transform: sidebarOpen ? 'scale(1)' : 'scale(0.95)',
+      opacity: sidebarOpen ? 1 : 0,
+      pointerEvents: sidebarOpen ? 'auto' : 'none',
+      visibility: sidebarOpen ? 'visible' : 'hidden',
+      transition: 'transform 0.2s ease, opacity 0.2s ease, visibility 0.2s ease',
     };
     panelClasses += `rounded-2xl border ${
       isDark
         ? 'border-slate-700/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]'
         : 'border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.12)]'
-    } overflow-hidden ${
-      sidebarOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-    }`;
+    } overflow-hidden`;
   }
 
   return (
     <>
       {/* Collapsed Float Pill Button (Left or Right Edge) */}
       <button
-        onClick={toggleSidebar}
-        className={`fixed top-1/2 -translate-y-1/2 z-[2147483646]
-                   px-3 py-3.5 shadow-2xl flex items-center gap-2
-                   cursor-pointer transition-all duration-300 transform ${
-                     isDark
-                       ? 'bg-[#0F172A] hover:bg-slate-800 text-white border-slate-700'
-                       : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-200'
-                   }
-                   ${dockPosition === 'left' ? 'left-0 rounded-r-2xl border-r border-y' : 'right-0 rounded-l-2xl border-l border-y'}
-                   ${sidebarOpen ? (dockPosition === 'left' ? '-translate-x-full opacity-0 pointer-events-none' : 'translate-x-full opacity-0 pointer-events-none') : 'translate-x-0 opacity-100'}`}
+        type="button"
+        onClick={() => toggleSidebar()}
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: dockPosition === 'left' ? '0px' : 'auto',
+          right: dockPosition === 'right' ? '0px' : 'auto',
+          zIndex: 2147483646,
+          transform: sidebarOpen
+            ? (dockPosition === 'left' ? 'translateX(-100%) translateY(-50%)' : 'translateX(100%) translateY(-50%)')
+            : 'translateX(0) translateY(-50%)',
+          opacity: sidebarOpen ? 0 : 1,
+          pointerEvents: sidebarOpen ? 'none' : 'auto',
+          visibility: sidebarOpen ? 'hidden' : 'visible',
+          transition: 'transform 0.25s ease, opacity 0.2s ease, visibility 0.25s ease',
+        }}
+        className={`px-3 py-3.5 shadow-2xl flex items-center gap-2 cursor-pointer ${
+          isDark
+            ? 'bg-[#0F172A] hover:bg-slate-800 text-white border-slate-700'
+            : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-200'
+        } ${dockPosition === 'left' ? 'rounded-r-2xl border-r border-y' : 'rounded-l-2xl border-l border-y'}`}
         title="Open ScripOx Hub"
       >
         {dockPosition === 'left' && <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
@@ -200,9 +247,13 @@ export function Sidebar() {
           </div>
 
           {/* Controls: Theme Switcher + Quick Dock + Close */}
-          <div className="flex items-center gap-0.5">
+          <div
+            className="flex items-center gap-0.5"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             {/* Theme Toggle (Light / Dark) */}
             <button
+              type="button"
               onClick={toggleTheme}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isDark
@@ -216,6 +267,7 @@ export function Sidebar() {
 
             {/* Dock Left Button */}
             <button
+              type="button"
               onClick={() => setDockPosition('left')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 dockPosition === 'left'
@@ -229,6 +281,7 @@ export function Sidebar() {
 
             {/* Float / Drag Button */}
             <button
+              type="button"
               onClick={() => {
                 if (dockPosition !== 'float') {
                   setDockPosition('float');
@@ -247,6 +300,7 @@ export function Sidebar() {
 
             {/* Dock Right Button */}
             <button
+              type="button"
               onClick={() => setDockPosition('right')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 dockPosition === 'right'
@@ -260,11 +314,16 @@ export function Sidebar() {
 
             {/* Close Button */}
             <button
-              onClick={toggleSidebar}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSidebarOpen(false);
+              }}
               className={`transition-colors p-1.5 rounded-lg cursor-pointer ml-1 ${
                 isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
               }`}
-              title="Minimize sidebar"
+              title="Close sidebar"
             >
               <X className="w-4 h-4" />
             </button>

@@ -134,6 +134,8 @@ export class ElementPicker {
     if (!target || target.id === TOOLTIP_ID || !target.classList) return;
 
     // Ignore element picker hovering on sidebar elements
+    const path = (e as any).composedPath ? (e as any).composedPath() : [];
+    if (path.some((el: any) => el?.id === 'scripox-extension-host' || el?.id === 'scripox-root')) return;
     if (target.closest && target.closest('#scripox-extension-host')) return;
 
     this.clearHighlight();
@@ -152,6 +154,9 @@ export class ElementPicker {
   private onClick = (e: Event) => {
     const target = e.target as Element;
     if (!target || target.id === TOOLTIP_ID || !target.classList) return;
+
+    const path = (e as any).composedPath ? (e as any).composedPath() : [];
+    if (path.some((el: any) => el?.id === 'scripox-extension-host' || el?.id === 'scripox-root')) return;
     if (target.closest && target.closest('#scripox-extension-host')) return;
 
     e.preventDefault();

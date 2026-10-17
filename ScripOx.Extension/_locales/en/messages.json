@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "ScripOx",
+    "description": "The name of the extension"
+  },
+  "appDesc": {
+    "message": "Visually pick any HTML element or table and send extraction config to ScripOx Desktop",
+    "description": "The description of the extension"
+  }
+}

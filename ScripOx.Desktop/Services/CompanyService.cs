@@ -534,10 +534,16 @@ public class CompanyService
             await using var conn = new SqliteConnection(_connectionString);
             await conn.OpenAsync();
 
-            var conditions = new List<string> { "website IS NOT NULL", "TRIM(website) != ''" };
+            var conditions = new List<string> { 
+                "website IS NOT NULL", 
+                "TRIM(website) != ''",
+                "TRIM(website) != 'N/A'",
+                "TRIM(website) != '-'",
+                "(website LIKE 'http://%' OR website LIKE 'https://%' OR website LIKE 'www.%' OR website LIKE '%.%')"
+            };
             var prms = new Dictionary<string, object>();
 
-            if (!string.IsNullOrWhiteSpace(category) && category != "الكل" && category != "All")
+            if (!string.IsNullOrWhiteSpace(category) && category != "الكل" && category != "All" && !category.Contains("جميع التصنيفات") && !category.Contains("All Categories"))
             {
                 conditions.Add("category = @cat");
                 prms["@cat"] = category.Trim();
@@ -604,11 +610,18 @@ public class CompanyService
                 }
             }
 
-            var finalEmail  = !string.IsNullOrWhiteSpace(email) ? email.Trim() : currentEmail;
-            var finalPhone  = currentPhone;
+            // Treat "N/A" and placeholder text as null/empty
+            if (currentEmail == "N/A" || currentEmail == "-") currentEmail = null;
+            if (currentPhone == "N/A" || currentPhone == "-") currentPhone = null;
+            if (currentPhone2 == "N/A" || currentPhone2 == "-") currentPhone2 = null;
+
+            var finalEmail = !string.IsNullOrWhiteSpace(email) && email != "N/A" && email != "-" 
+                ? email.Trim() 
+                : currentEmail;
+            var finalPhone = currentPhone;
             var finalPhone2 = currentPhone2;
 
-            if (!string.IsNullOrWhiteSpace(phone))
+            if (!string.IsNullOrWhiteSpace(phone) && phone != "N/A" && phone != "-")
             {
                 var cleanNewPhone = phone.Trim();
                 if (string.IsNullOrWhiteSpace(currentPhone))
@@ -621,7 +634,7 @@ public class CompanyService
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(phone2) && string.IsNullOrWhiteSpace(finalPhone2))
+            if (!string.IsNullOrWhiteSpace(phone2) && phone2 != "N/A" && phone2 != "-" && string.IsNullOrWhiteSpace(finalPhone2))
             {
                 finalPhone2 = phone2.Trim();
             }

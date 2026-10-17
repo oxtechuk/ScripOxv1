@@ -189,14 +189,38 @@ public class ContactCrawlerService
                         }
 
                         // 3. Save directly to database if contacts discovered
-                        if (result.IsSuccess && company.Id > 0)
+                        if (result.IsSuccess)
                         {
                             var firstEmail  = result.Emails.FirstOrDefault();
                             var firstPhone  = result.Phones.FirstOrDefault();
                             var secondPhone = result.Phones.Skip(1).FirstOrDefault();
 
-                            await _companyService.UpdateContactInfoAsync(company.Id, firstEmail, firstPhone, secondPhone);
-                            LogMsg("💾", $"تم حفظ وتحديث [{company.Name}] (✉️: {firstEmail ?? "-"} | 📞: {firstPhone ?? "-"})");
+                            if (company.Id > 0)
+                            {
+                                await _companyService.UpdateContactInfoAsync(company.Id, firstEmail, firstPhone, secondPhone);
+                                LogMsg("💾", $"تم حفظ وتحديث [{company.Name}] في قاعدة البيانات (✉️: {firstEmail ?? "-"} | 📞: {firstPhone ?? "-"})");
+                            }
+                            else
+                            {
+                                string hostName = company.Name;
+                                if (string.IsNullOrWhiteSpace(hostName) && Uri.TryCreate(result.Url, UriKind.Absolute, out var parsedUri))
+                                {
+                                    hostName = parsedUri.Host;
+                                }
+                                var newCompany = new Company
+                                {
+                                    Name = !string.IsNullOrWhiteSpace(hostName) ? hostName : "Web Lead",
+                                    Website = result.Url,
+                                    Email = firstEmail,
+                                    Phone = firstPhone,
+                                    Phone2 = secondPhone,
+                                    Category = "Web Crawl",
+                                    Priority = "medium"
+                                };
+                                long newId = await _companyService.CreateAsync(newCompany, 1);
+                                result.CompanyId = newId;
+                                LogMsg("💾", $"تم إدراج شركة جديدة برقم #{newId} وحفظ جهات الاتصال (✉️: {firstEmail ?? "-"} | 📞: {firstPhone ?? "-"})");
+                            }
                         }
 
                         OnItemExtracted?.Invoke(result);

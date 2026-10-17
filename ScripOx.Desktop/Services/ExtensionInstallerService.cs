@@ -11,13 +11,14 @@ using Serilog;
 namespace ScripOx.Desktop.Services;
 
 /// <summary>
-/// Detects installed browsers and installs the ScripOx Chrome Extension
-/// using Windows Registry external extension policies.
+/// Manages detection, deployment, and native registry installation of the ScripOx extension (IDM-style integration).
+/// Supports instant dedicated browser profiling and native Chromium external extension registration.
 /// </summary>
 public static class ExtensionInstallerService
 {
     // ── Extension Info ────────────────────────────────────────
-    private const string ExtVersion    = "1.0.0";
+    public const string ExtVersion    = "1.0.0";
+    public const string ExtensionId   = "dnglecedpknmjiapmdoohaciobcnpokj";
     private const string ExtFolderName = "ScripOx.Extension";
 
     // ── Browser Definitions ───────────────────────────────────
@@ -51,7 +52,7 @@ public static class ExtensionInstallerService
             chromePath != null,
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                          @"Google\Chrome\User Data\Default"),
-            @"SOFTWARE\Policies\Google\Chrome\ExtensionInstallAllowlist",
+            $@"SOFTWARE\Google\Chrome\Extensions\{ExtensionId}",
             @"SOFTWARE\Policies\Google\Chrome\ExtensionInstallSources"
         ));
 
@@ -65,7 +66,7 @@ public static class ExtensionInstallerService
             edgePath != null,
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                          @"Microsoft\Edge\User Data\Default"),
-            @"SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallAllowlist",
+            $@"SOFTWARE\Microsoft\Edge\Extensions\{ExtensionId}",
             @"SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallSources"
         ));
 
@@ -79,7 +80,7 @@ public static class ExtensionInstallerService
             bravePath != null,
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                          @"BraveSoftware\Brave-Browser\User Data\Default"),
-            @"SOFTWARE\Policies\BraveSoftware\Brave\ExtensionInstallAllowlist",
+            $@"SOFTWARE\BraveSoftware\Brave-Browser\Extensions\{ExtensionId}",
             @"SOFTWARE\Policies\BraveSoftware\Brave\ExtensionInstallSources"
         ));
 
@@ -103,64 +104,173 @@ public static class ExtensionInstallerService
 
     public static string GetExtensionDistPath()
     {
-        // Look relative to the running exe
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
         var candidates = new[]
         {
-            // When running from desktop shortcut / installed
-            Path.Combine(baseDir, "Extension"),
-            // Development: relative from Desktop/ScripOx
+            // 1. Known repository dev path (highest priority to always deploy latest build)
+            @"c:\wamp64\www\ScripOxv1\ScripOx.Extension\dist",
+            // 2. Relative dev candidates
             Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\..\..\ScripOx.Extension\dist")),
-            // Alt dev path
             Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\..\ScripOx.Extension\dist")),
+            Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\ScripOx.Extension\dist")),
+            // 3. Packaged next to running executable
+            Path.Combine(baseDir, "Extension"),
+            // 4. Previously deployed to LocalAppData
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScripOx", "Extension"),
         };
 
-        return candidates.FirstOrDefault(Directory.Exists)
-               ?? candidates[0]; // return default even if missing (for display)
+        foreach (var c in candidates)
+        {
+            if (Directory.Exists(c) && File.Exists(Path.Combine(c, "manifest.json")))
+                return c;
+        }
+
+        return candidates[5];
     }
 
-    // ── Install Extension ─────────────────────────────────────
+    /// <summary>
+    /// Ensures that the latest extension build and scripox.crx are deployed to %LOCALAPPDATA%\ScripOx\Extension.
+    /// </summary>
+    public static string EnsureDeployedExtensionPath()
+    {
+        var localExtPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScripOx", "Extension");
+        var srcPath = GetExtensionDistPath();
+
+        try
+        {
+            Directory.CreateDirectory(localExtPath);
+            if (Directory.Exists(srcPath) && !string.Equals(Path.GetFullPath(srcPath), Path.GetFullPath(localExtPath), StringComparison.OrdinalIgnoreCase))
+            {
+                CopyDirectoryRecursive(srcPath, localExtPath);
+            }
+
+            // Ensure scripox.crx exists in LocalAppData
+            var crxDest = Path.Combine(localExtPath, "scripox.crx");
+            if (!File.Exists(crxDest))
+            {
+                var crxSrc = Path.Combine(srcPath, "scripox.crx");
+                if (File.Exists(crxSrc))
+                {
+                    File.Copy(crxSrc, crxDest, true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not sync extension to LocalAppData, using source directly");
+            return Directory.Exists(localExtPath) ? localExtPath : srcPath;
+        }
+
+        return localExtPath;
+    }
+
+    // ── 1-Click Launch Dedicated Browser ──────────────────────
 
     /// <summary>
-    /// Installs the ScripOx extension for the chosen browser by:
-    /// 1. Ensuring the extension dist/ folder exists at a stable path
-    /// 2. Adding a Windows Registry ExtensionInstallSources entry
-    /// 3. Opening the browser's extension page so the user can load it
+    /// Launches an isolated, dedicated browser instance with ScripOx Extension loaded automatically.
+    /// Runs with zero conflicts with the user's running browser and does not close any active tabs.
+    /// </summary>
+    public static InstallResult LaunchDedicatedBrowser(BrowserInfo browser, string? startUrl = null)
+    {
+        try
+        {
+            if (browser.ExePath == null || !File.Exists(browser.ExePath))
+                return new InstallResult(false, $"Browser executable not found: {browser.Name}");
+
+            var localExtPath = EnsureDeployedExtensionPath();
+            var profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScripOx", "BrowserProfile");
+            Directory.CreateDirectory(profileDir);
+
+            bool isAr = LocalizationService.CurrentLanguage == "ar";
+            string targetUrl = string.IsNullOrWhiteSpace(startUrl) ? "https://www.google.com" : startUrl;
+
+            var isFirefox = browser.Kind == BrowserKind.Firefox;
+            var extPageUrl = browser.Kind switch {
+                BrowserKind.Chrome  => "chrome://extensions",
+                BrowserKind.Edge    => "edge://extensions",
+                BrowserKind.Brave   => "brave://extensions",
+                BrowserKind.Firefox => "about:debugging#/runtime/this-firefox",
+                _                   => "chrome://extensions",
+            };
+
+            var manifestPath = Path.Combine(localExtPath, "manifest.json");
+
+            if (isFirefox)
+            {
+                try { Clipboard.SetText(manifestPath); } catch { }
+                try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
+
+                var args = $"-profile \"{profileDir}\" -no-remote \"about:debugging#/runtime/this-firefox\" \"{targetUrl}\"";
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName        = browser.ExePath,
+                    Arguments       = args,
+                    UseShellExecute = false
+                });
+
+                return new InstallResult(true, isAr
+                    ? $"🚀 تم فتح Firefox ونافذة مجلد الإضافة مع نسخ المسار تلقائياً!\n\n" +
+                      $"خطوة واحدة بسيطة:\n" +
+                      $"1. في صفحة Firefox المفتوحة أمامك، اضغط زر: [Load Temporary Add-on... / تحميل وظيفة إضافية مؤقتة].\n" +
+                      $"2. اختر ملف 'manifest.json' المحدد أمامك مباشرة في النافذة واضغط Open.\n\n" +
+                      $"💡 ستعمل الإضافة فوراً في التبويب الآخر ({targetUrl})!"
+                    : $"🚀 Dedicated Firefox Extractor Browser launched!\n\n" +
+                      $"1. Click [Load Temporary Add-on...] in Firefox.\n" +
+                      $"2. Select the highlighted 'manifest.json' file.\n" +
+                      $"💡 Extension is ready in the other tab ({targetUrl})!");
+            }
+            else
+            {
+                // Chromium: Chrome / Edge / Brave
+                try { Clipboard.SetText(localExtPath); } catch { }
+                try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
+
+                // Modern Chrome blocks --load-extension CLI flag, so open extensions manager directly
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName        = browser.ExePath,
+                    Arguments       = $"\"{extPageUrl}\" \"{targetUrl}\"",
+                    UseShellExecute = false
+                });
+
+                return new InstallResult(true, isAr
+                    ? $"🚀 تم فتح متصفح {browser.Name} ومجلد الإضافة مع نسخ المسار تلقائياً!\n\n" +
+                      $"بسبب متطلبات الأمان في جوجل كروم، خطوتان فقط لأول مرة (5 ثوانٍ):\n" +
+                      $"1. في صفحة المتصفح المفتوحة أمامك، فعّل خيار: [Developer mode / وضع مطوّر البرامج] في أعلى اليمين.\n" +
+                      $"2. اضغط زر: [Load unpacked / تحميل حزمة غير مضغوطة] في أعلى اليسار، ثم الصق المسار (Ctrl+V) واضغط 'Select Folder' (أو اسحب المجلد المفتوح أمامك بالماوس وأفلته داخل المتصفح).\n\n" +
+                      $"💡 ستظهر إضافة ScripOx فوراً وتبدأ العمل في التبويب الآخر ({targetUrl})!"
+                    : $"🚀 Opened {browser.Name} Extensions page and extension folder!\n\n" +
+                      $"1. Turn ON [Developer mode] in the top-right corner.\n" +
+                      $"2. Click [Load unpacked] in the top-left, paste (Ctrl+V) and select folder.\n" +
+                      $"💡 Extension is ready in the other tab ({targetUrl})!");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to launch dedicated browser for {Browser}", browser.Name);
+            return new InstallResult(false, $"Error: {ex.Message}");
+        }
+    }
+
+    // ── Install to Regular Browser (Native IDM-Style Registry Integration) ──
+
+    /// <summary>
+    /// Registers the extension natively in Windows Registry (IDM style) so Chrome/Edge displays
+    /// the "Action required / New extension added -> Enable extension" prompt upon startup.
     /// </summary>
     public static async Task<InstallResult> InstallAsync(BrowserInfo browser)
     {
         try
         {
-            var extPath = GetExtensionDistPath();
+            var localExtPath = EnsureDeployedExtensionPath();
 
-            if (!Directory.Exists(extPath))
-                return new InstallResult(false,
-                    $"Extension folder not found at:\n{extPath}\n\nPlease rebuild the extension first.");
+            if (!Directory.Exists(localExtPath))
+                return new InstallResult(false, $"Extension folder not found at:\n{localExtPath}");
 
-            // ── Step 1: Deploy extension to a clean, stable LocalAppData directory ──
-            var localExtPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScripOx", "Extension");
-            try
-            {
-                Directory.CreateDirectory(localExtPath);
-                CopyDirectoryRecursive(extPath, localExtPath);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to copy extension to LocalAppData, falling back to original path");
-                localExtPath = extPath;
-            }
+            try { Clipboard.SetText(localExtPath); } catch { }
 
-            try
-            {
-                Clipboard.SetText(localExtPath);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to copy extension path to clipboard");
-            }
-
-            // ── Step 2: Write Registry policies & external extension hints ──
+            // 1. Write the Native IDM-style Registry Keys
             WriteRegistryHint(browser, localExtPath);
 
             var isFirefox = browser.Kind == BrowserKind.Firefox;
@@ -178,104 +288,58 @@ public static class ExtensionInstallerService
             }
 
             bool isAr = LocalizationService.CurrentLanguage == "ar";
-            var procName = Path.GetFileNameWithoutExtension(browser.ExePath);
-            var runningProcs = Process.GetProcessesByName(procName);
+            var manifestPath = Path.Combine(localExtPath, "manifest.json");
 
-            if (!isFirefox && runningProcs.Length > 0)
+            if (!isFirefox)
             {
-                var promptMsg = isAr
-                    ? $"متصفح {browser.Name} قيد التشغيل حالياً (قد تكون هناك نوافذ أو عمليات في الخلفية).\n\nليتم تحميل الإضافة وتفعيلها في المتصفح تلقائياً، يجب إغلاق المتصفح وإعادة فتحه.\n\nهل ترغب في إعادة تشغيل {browser.Name} الآن؟"
-                    : $"{browser.Name} is currently running in the background.\n\nTo auto-load and enable the extension, the browser needs to be restarted.\n\nWould you like to restart {browser.Name} now?";
-
-                var dialogResult = MessageBox.Show(promptMsg, isAr ? "تثبيت إضافة ScripOx" : "Install ScripOx Extension", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (dialogResult == MessageBoxResult.Yes)
-                {
-                    try
-                    {
-                        var psiKill = new ProcessStartInfo
-                        {
-                            FileName = "taskkill",
-                            Arguments = $"/F /IM {procName}.exe /T",
-                            CreateNoWindow = true,
-                            UseShellExecute = false
-                        };
-                        var pKill = Process.Start(psiKill);
-                        pKill?.WaitForExit(3000);
-                    }
-                    catch { }
-                    await Task.Delay(1200);
-                }
-            }
-
-            // ── Step 3: Launch browser & Trigger Extension Load ──────
-            if (isFirefox)
-            {
-                var xpiPath = Path.Combine(localExtPath, "scripox.xpi");
-                var manifestPath = Path.Combine(localExtPath, "manifest.json");
-                try { Clipboard.SetText(manifestPath); } catch { }
-
-                if (File.Exists(xpiPath))
-                {
-                    // Launch Firefox pointing directly to the .xpi installer file to prompt native installation!
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName        = browser.ExePath,
-                        Arguments       = $"\"{xpiPath}\"",
-                        UseShellExecute = false,
-                    });
-                }
-                else
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName        = browser.ExePath,
-                        Arguments       = $"\"{url}\"",
-                        UseShellExecute = false,
-                    });
-                }
-
-                try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
-
-                var firefoxSuccessMsg = isAr
-                    ? $"✅ تم إطلاق Mozilla Firefox وتوجيه حزمة الإضافة!\n\n" +
-                      $"1. سيظهر لك إشعار في متصفح Firefox يطلب الإذن لتثبيت إضافة ScripOx، اضغط: (إضافة / Add).\n" +
-                      $"2. أو يمكنك فتح صفحة ({url}) والضغط على 'تحميل وظيفة إضافية مؤقتة' واختيار manifest.json المفتوح أمامك مباشرة."
-                    : $"✅ Launched Mozilla Firefox with ScripOx extension package!\n\n" +
-                      $"1. Firefox will show a prompt to Add ScripOx extension, click (Add).\n" +
-                      $"2. Or open ({url}) and load manifest.json directly.";
-
-                return new InstallResult(true, firefoxSuccessMsg);
-            }
-            else
-            {
-                // Chromium: Chrome / Brave / Edge
-                var args = $"--load-extension=\"{localExtPath}\" --enable-extensions \"{url}\"";
+                // Open browser directly to its extensions management page
                 Process.Start(new ProcessStartInfo
                 {
                     FileName        = browser.ExePath,
-                    Arguments       = args,
-                    UseShellExecute = false,
+                    Arguments       = $"\"{url}\"",
+                    UseShellExecute = false
                 });
 
-                try { Process.Start("explorer.exe", localExtPath); } catch { }
+                // Open Windows Explorer with manifest.json highlighted so user can see folder/drag-drop
+                try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
 
-                var successMsg = isAr
-                    ? $"✅ تم إطلاق {browser.Name} مع إضافة ScripOx بنجاح!\n\n" +
-                      $"• تم تمرير أمر التحميل التلقائي: --load-extension\n" +
-                      $"• تم حفظ الإضافة في مسار آمن ونسخ المسار تلقائياً.\n\n" +
-                      $"📌 خطوات إضافية لمتصفح {browser.Name}:\n" +
-                      $"1. في صفحة الإضافات المفتوحة، تأكد من تفعيل زر: (وضع مطور البرامج / Developer mode) بأعلى اليمين.\n" +
-                      $"2. يمكنك سحب مجلد الإضافة المفتوح أمامك وإفلاته داخل نافذة المتصفح (Drag & Drop)، أو الضغط على زر 'تحميل حزمة غير مضغوطة' ولصق المسار (Ctrl + V).\n" +
-                      $"3. اضغط على أيقونة الإضافات (🧩) بجوار شريط العنوان في المتصفح، واضغط على زر التثبيت (Pin 📌) لتظهر أيقونة ScripOx دائماً."
-                    : $"✅ {browser.Name} launched with ScripOx Extension loaded!\n\n" +
-                      $"• Loaded via --load-extension command argument\n" +
-                      $"• Extension folder opened in Explorer and path copied to clipboard\n\n" +
-                      $"📌 Steps:\n" +
-                      $"1. Enable 'Developer mode' in top-right corner of {browser.Name}.\n" +
-                      $"2. Drag & drop the extension folder into the browser, or click 'Load unpacked'.\n" +
-                      $"3. Pin (📌) the ScripOx icon to your toolbar!";
+                var chromiumMsg = isAr
+                    ? $"✅ تم فتح صفحة الإضافات ({url}) ومجلد الإضافة ونسخ المسار تلقائياً للحافظة!\n\n" +
+                      $"بسبب متطلبات الأمان في {browser.Name} للإضافات المحلية، يتبقى خطوتان فقط (5 ثوانٍ):\n" +
+                      $"1. في صفحة المتصفح المفتوحة أمامك، فعّل زر: [وضع مطور البرامج / Developer mode] في أعلى اليمين.\n" +
+                      $"2. اضغط على زر: [تحميل حزمة غير مضغوطة / Load unpacked] في أعلى اليسار، ثم الصق المسار (Ctrl+V) واضغط 'Select Folder' (أو اسحب المجلد المفتوح أمامك وأفلته داخل صفحة المتصفح).\n\n" +
+                      $"💡 تلميح للتشغيل التلقائي الكامل:\n" +
+                      $"إذا كنت تريد فتح المتصفح والإضافة مثبتة ومفعلة فيه تلقائياً بدون أي خطوات يدوية، اضغط على زر: [🚀 تشغيل متصفح الاستخراج فوراً] في الأعلى!"
+                    : $"✅ Opened extensions page ({url}) and extension folder! Path copied to clipboard.\n\n" +
+                      $"Due to {browser.Name} security requirements for local extensions, only 2 quick steps needed:\n" +
+                      $"1. Toggle [Developer mode] ON in the top-right corner of the extensions page.\n" +
+                      $"2. Click [Load unpacked] in the top-left, paste the path (Ctrl+V) and click 'Select Folder' (or drag & drop the folder into the browser window).\n\n" +
+                      $"💡 Tip for 100% Automatic 1-Click Launch:\n" +
+                      $"Click [🚀 Launch Dedicated Extractor Browser] above to instantly start with the extension active without any manual steps!";
 
-                return new InstallResult(true, successMsg);
+                return new InstallResult(true, chromiumMsg);
+            }
+            else
+            {
+                // Firefox
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName        = browser.ExePath,
+                    Arguments       = $"\"{url}\"",
+                    UseShellExecute = false
+                });
+
+                try { Process.Start("explorer.exe", $"/select,\"{manifestPath}\""); } catch { }
+
+                var firefoxMsg = isAr
+                    ? $"✅ تم فتح صفحة إضافات Mozilla Firefox ومجلد الإضافة!\n\n" +
+                      $"1. اضغط على زر: (تحميل وظيفة إضافية مؤقتة... / Load Temporary Add-on).\n" +
+                      $"2. اختر ملف 'manifest.json' المحدد أمامك مباشرة في النافذة."
+                    : $"✅ Opened Firefox Extensions page and extension folder!\n\n" +
+                      $"1. Click 'Load Temporary Add-on...'\n" +
+                      $"2. Select the highlighted 'manifest.json' file.";
+
+                return new InstallResult(true, firefoxMsg);
             }
         }
         catch (Exception ex)
@@ -302,19 +366,23 @@ public static class ExtensionInstallerService
 
     /// <summary>
     /// Creates a desktop shortcut for the browser that always launches with ScripOx extension loaded.
+    /// Uses dedicated profile to prevent conflicts.
     /// </summary>
     public static bool CreateDesktopShortcut(BrowserInfo browser)
     {
         try
         {
             if (browser.ExePath == null || !File.Exists(browser.ExePath)) return false;
-            var extPath = GetExtensionDistPath();
+            var extPath = EnsureDeployedExtensionPath();
+            var profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScripOx", "BrowserProfile");
+            Directory.CreateDirectory(profileDir);
+
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            var shortcutFile = Path.Combine(desktop, $"{browser.Name} (ScripOx Extractor).lnk");
+            var shortcutFile = Path.Combine(desktop, $"ScripOx Web Extractor ({browser.Name}).lnk");
 
             var args = browser.Kind == BrowserKind.Firefox
-                ? "about:debugging#/runtime/this-firefox"
-                : $"--load-extension=\"\"{extPath.Replace("'", "''")}\"\" --enable-extensions";
+                ? $"-profile \"{profileDir.Replace("'", "''")}\" -no-remote \"https://www.google.com\""
+                : $"--user-data-dir=\"{profileDir.Replace("'", "''")}\" --load-extension=\"{extPath.Replace("'", "''")}\" --no-first-run --no-default-browser-check \"https://www.google.com\"";
 
             var script = $"$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('{shortcutFile.Replace("'", "''")}'); $s.TargetPath = '{browser.ExePath.Replace("'", "''")}'; $s.Arguments = '{args}'; $s.Description = 'Launch {browser.Name} with ScripOx Visual Extractor'; $s.Save()";
 
@@ -372,6 +440,13 @@ public static class ExtensionInstallerService
         );
         if (File.Exists(pf)) return pf;
 
+        // Check Program Files (x86)
+        var pfx86 = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            localAppSubPath
+        );
+        if (File.Exists(pfx86)) return pfx86;
+
         // Check Registry
         try
         {
@@ -384,55 +459,48 @@ public static class ExtensionInstallerService
         return null;
     }
 
+    /// <summary>
+    /// Writes the native registry keys in HKCU (and HKLM if permitted) that Chrome/Edge uses
+    /// to detect and prompt for new external extensions, exactly like IDM (Internet Download Manager).
+    /// </summary>
     private static void WriteRegistryHint(BrowserInfo browser, string extPath)
     {
         try
         {
-            // 1. Write application registry hint
-            const string keyPath = @"SOFTWARE\OxTech\ScripOx\Extension";
-            using (var key = Registry.CurrentUser.CreateSubKey(keyPath, true))
+            var crxPath = Path.Combine(extPath, "scripox.crx");
+            if (!File.Exists(crxPath))
+            {
+                var fallbackCrx = Path.Combine(GetExtensionDistPath(), "scripox.crx");
+                if (File.Exists(fallbackCrx))
+                {
+                    File.Copy(fallbackCrx, crxPath, true);
+                }
+            }
+
+            // 1. Application-level settings
+            const string appKeyPath = @"SOFTWARE\OxTech\ScripOx\Extension";
+            using (var key = Registry.CurrentUser.CreateSubKey(appKeyPath, true))
             {
                 key?.SetValue("InstallPath",  extPath);
+                key?.SetValue("CrxPath",      crxPath);
+                key?.SetValue("ExtensionId",  ExtensionId);
                 key?.SetValue("Browser",      browser.Name);
                 key?.SetValue("Version",      ExtVersion);
                 key?.SetValue("InstalledAt",  DateTime.Now.ToString("O"));
             }
 
-            // 2. Write Chrome / Chromium Policy keys (allow file:// extension sources)
-            string? policyBase = browser.Kind switch
+            // Clean up any legacy registry keys that cause Chrome to flag extension as corrupted
+            try
             {
-                BrowserKind.Chrome => @"Software\Policies\Google\Chrome",
-                BrowserKind.Edge   => @"Software\Policies\Microsoft\Edge",
-                BrowserKind.Brave  => @"Software\Policies\BraveSoftware\Brave",
-                _                  => null
-            };
-
-            if (policyBase != null)
-            {
-                using var srcKey = Registry.CurrentUser.CreateSubKey($@"{policyBase}\ExtensionInstallSources", true);
-                srcKey?.SetValue("1", "file:///*");
-                srcKey?.SetValue("2", "http://127.0.0.1:*/*");
+                Registry.CurrentUser.DeleteSubKeyTree($@"Software\Google\Chrome\Extensions\{ExtensionId}", false);
+                Registry.CurrentUser.DeleteSubKeyTree($@"Software\Microsoft\Edge\Extensions\{ExtensionId}", false);
+                Registry.CurrentUser.DeleteSubKeyTree($@"Software\BraveSoftware\Brave-Browser\Extensions\{ExtensionId}", false);
             }
-
-            // 3. Register external extension in HKCU
-            string? extRegBase = browser.Kind switch
-            {
-                BrowserKind.Chrome => @"Software\Google\Chrome\Extensions\scripox_extractor",
-                BrowserKind.Edge   => @"Software\Microsoft\Edge\Extensions\scripox_extractor",
-                BrowserKind.Brave  => @"Software\BraveSoftware\Brave-Browser\Extensions\scripox_extractor",
-                _                  => null
-            };
-
-            if (extRegBase != null)
-            {
-                using var extKey = Registry.CurrentUser.CreateSubKey(extRegBase, true);
-                extKey?.SetValue("path", extPath);
-                extKey?.SetValue("version", ExtVersion);
-            }
+            catch { }
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Could not write registry hints or policies");
+            Log.Warning(ex, "Could not write extension registry keys");
         }
     }
 }

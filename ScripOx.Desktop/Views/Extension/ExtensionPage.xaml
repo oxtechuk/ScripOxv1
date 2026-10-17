@@ -82,17 +82,29 @@
                            FontSize="15" FontWeight="SemiBold"
                            Foreground="{StaticResource ExTextPrimary}" Margin="0,8,0,12"/>
 
-                <Button x:Name="BtnInstall"
-                        Content="⚡ Install &amp; Load Extension in Browser"
+                <Button x:Name="BtnLaunchDedicated"
+                        Content="🚀 فتح المتصفح ومجلد الإضافة للتفعيل (5 ثوانٍ)"
                         Style="{StaticResource ExBtnBlackPill}"
-                        Height="42" IsEnabled="False"
-                        Click="BtnInstall_Click" Margin="0,0,0,10"/>
+                        Height="44" IsEnabled="False"
+                        Click="BtnLaunchDedicated_Click" Margin="0,0,0,10"/>
 
-                <Button x:Name="BtnCreateShortcut"
-                        Content="📌 Create Browser Desktop Shortcut (With Extension)"
-                        Style="{StaticResource ExBtnGhostPill}"
-                        Height="36" IsEnabled="False"
-                        Click="BtnCreateShortcut_Click" Margin="0,0,0,14"/>
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" x:Name="BtnInstall"
+                            Content="⚙️ تثبيت يدوي في متصفحك اليومي"
+                            Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" IsEnabled="False"
+                            Click="BtnInstall_Click"/>
+                    <Button Grid.Column="2" x:Name="BtnCreateShortcut"
+                            Content="📌 إنشاء اختصار على سطح المكتب"
+                            Style="{StaticResource ExBtnGhostPill}"
+                            Height="36" IsEnabled="False"
+                            Click="BtnCreateShortcut_Click"/>
+                </Grid>
 
                 <!-- Extension Folder Path Info -->
                 <Border Style="{StaticResource ExCard}" Padding="16,12">

@@ -31,10 +31,24 @@ public partial class ExtensionPage : Page
         _browsers = ExtensionInstallerService.DetectBrowsers();
 
         BrowserList.Children.Clear();
+        Border? firstInstalledCard = null;
+        ExtensionInstallerService.BrowserInfo? firstInstalledBrowser = null;
+
         foreach (var browser in _browsers)
         {
             var card = BuildBrowserCard(browser);
             BrowserList.Children.Add(card);
+
+            if (browser.IsInstalled && firstInstalledCard == null)
+            {
+                firstInstalledCard = card;
+                firstInstalledBrowser = browser;
+            }
+        }
+
+        if (firstInstalledCard != null && firstInstalledBrowser != null)
+        {
+            SelectBrowser(firstInstalledBrowser, firstInstalledCard);
         }
     }
 
@@ -134,17 +148,18 @@ public partial class ExtensionPage : Page
         card.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0F172A"));
         card.Background  = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F8FAFC"));
 
-        _selectedBrowser            = browser;
-        BdrSelectedBrowser.Visibility = Visibility.Visible;
-        TxtSelectedIcon.Text        = browser.Name.Length > 0 ? browser.Name.Substring(0, 1).ToUpper() : "";
-        TxtSelectedName.Text        = browser.Name;
-        BtnInstall.IsEnabled        = browser.IsInstalled;
-        BtnCreateShortcut.IsEnabled = browser.IsInstalled;
+        _selectedBrowser               = browser;
+        BdrSelectedBrowser.Visibility  = Visibility.Visible;
+        TxtSelectedIcon.Text           = browser.Name.Length > 0 ? browser.Name.Substring(0, 1).ToUpper() : "";
+        TxtSelectedName.Text           = browser.Name;
+        BtnLaunchDedicated.IsEnabled   = browser.IsInstalled;
+        BtnInstall.IsEnabled           = browser.IsInstalled;
+        BtnCreateShortcut.IsEnabled    = browser.IsInstalled;
     }
 
     private void DetectExtensionPath()
     {
-        var path = ExtensionInstallerService.GetExtensionDistPath();
+        var path = ExtensionInstallerService.EnsureDeployedExtensionPath();
         TxtExtPath.Text     = path;
         TxtExtPath.Foreground = Directory.Exists(path)
             ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15803D"))
@@ -157,16 +172,16 @@ public partial class ExtensionPage : Page
         bool isAr = LocalizationService.CurrentLanguage == "ar";
         var steps = isAr ? new[]
         {
-            ("1", "اختر المتصفح المستهدف من القائمة أعلاه (Google Chrome / Brave / Firefox)"),
-            ("2", "اضغط على زر 'تثبيت وتحميل الإضافة في المتصفح تلقائياً'"),
-            ("3", "يقوم ScripOx بنسخ المسار، فتح مجلد الإضافة، وإطلاق صفحة الإضافات بالمتصفح"),
-            ("4", "اتبع الخطوات السريعة الموضحة أسفل زر التثبيت لتفعيل وتثبيت الإضافة فوراً!"),
+            ("1", "التشغيل التلقائي المباشر (الأسرع): اضغط '🚀 تشغيل المتصفح فوراً مع الإضافة' ليفتح المتصفح والإضافة مفعلة وجاهزة بنقرة واحدة بدون أي خطوات."),
+            ("2", "التثبيت في متصفحك اليومي: اضغط '⚙️ تثبيت يدوي في متصفحك اليومي' لفتح صفحة chrome://extensions وتفعيل وضع المطور واختيار المجلد في 5 ثوانٍ."),
+            ("3", "اضغط '📌 إنشاء اختصار على سطح المكتب' لإنشاء أيقونة متصفح الاستخراج على سطح المكتب لتشغيله بنقرة واحدة دائماً."),
+            ("4", "اضغط على أيقونة الإضافة (🧩) في شريط المتصفح ثم زر Pin 📌 لتثبيت أيقونة ScripOx والبدء في استخراج الشركات فوراً."),
         } : new[]
         {
-            ("1", "Select your target browser above (Google Chrome / Brave / Firefox)"),
-            ("2", "Click 'Install & Load Extension in Browser' below"),
-            ("3", "ScripOx copies path, opens extension folder, and launches the browser"),
-            ("4", "Follow the quick setup steps shown below to activate and Pin the extension!"),
+            ("1", "Instant 1-Click Automatic: Click '🚀 Launch Browser with Extension' to start with the extension active and ready."),
+            ("2", "Manual Install in Regular Browser: Click '⚙️ Manual Install in Regular Browser' to open extensions page and enable Developer mode."),
+            ("3", "Click '📌 Create Desktop Shortcut' to launch the extractor browser anytime from your desktop with 1 click."),
+            ("4", "Pin 📌 the ScripOx extension icon in your browser toolbar to visually extract data!"),
         };
 
         foreach (var (num, text) in steps)
@@ -210,13 +225,31 @@ public partial class ExtensionPage : Page
         }
     }
 
+    private void BtnLaunchDedicated_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedBrowser == null) return;
+
+        var result = ExtensionInstallerService.LaunchDedicatedBrowser(_selectedBrowser);
+
+        BdrResult.Visibility = Visibility.Visible;
+        TxtResult.Text       = result.Message;
+
+        BdrResult.Background = result.Success
+            ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCFCE7"))
+            : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEE2E2"));
+        BdrResult.BorderBrush = result.Success
+            ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#86EFAC"))
+            : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FCA5A5"));
+        BdrResult.BorderThickness = new Thickness(1);
+    }
+
     private async void BtnInstall_Click(object sender, RoutedEventArgs e)
     {
         if (_selectedBrowser == null) return;
 
         bool isAr = LocalizationService.CurrentLanguage == "ar";
         BtnInstall.IsEnabled = false;
-        BtnInstall.Content   = isAr ? "جاري التثبيت والتحميل..." : "Installing & Loading...";
+        BtnInstall.Content   = isAr ? "جاري الفتح..." : "Opening...";
 
         var result = await ExtensionInstallerService.InstallAsync(_selectedBrowser);
 
@@ -232,7 +265,7 @@ public partial class ExtensionPage : Page
         BdrResult.BorderThickness = new Thickness(1);
 
         BtnInstall.IsEnabled = true;
-        BtnInstall.Content   = isAr ? "⚡ تثبيت وتحميل الإضافة في المتصفح تلقائياً" : "⚡ Install & Load Extension in Browser";
+        BtnInstall.Content   = isAr ? "⚙️ تثبيت يدوي في متصفحك اليومي" : "⚙️ Manual Install in Regular Browser";
     }
 
     private void BtnCreateShortcut_Click(object sender, RoutedEventArgs e)

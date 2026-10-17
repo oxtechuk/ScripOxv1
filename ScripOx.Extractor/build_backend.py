@@ -46,17 +46,25 @@ def build():
     print("Building Standalone ScripOxBackend.exe with PyInstaller...")
     print("=" * 60)
 
+    icon_path = os.path.join(ROOT_DIR, "..", "ScripOx.Desktop", "Resources", "Icons", "app.ico")
+    version_file = os.path.join(ROOT_DIR, "file_version_info.txt")
+
     cmd = [
         sys.executable,
         "-m", "PyInstaller",
         "--name", "ScripOxBackend",
-        "--onefile",
+        "--onedir",
         "--clean",
         "--noconsole",
         "--collect-all", "greenlet",
         "--distpath", OUTPUT_DIR,
         "--workpath", os.path.join(ROOT_DIR, "build"),
     ]
+
+    if os.path.exists(icon_path):
+        cmd.extend(["--icon", icon_path])
+    if os.path.exists(version_file):
+        cmd.extend(["--version-file", version_file])
 
     for imp in HIDDEN_IMPORTS:
         cmd.extend(["--hidden-import", imp])
@@ -69,7 +77,7 @@ def build():
         print("PyInstaller build failed with exit code:", res.returncode)
         sys.exit(res.returncode)
 
-    built_exe = os.path.join(OUTPUT_DIR, EXE_NAME)
+    built_exe = os.path.join(OUTPUT_DIR, "ScripOxBackend", EXE_NAME)
     if os.path.exists(built_exe):
         size_mb = os.path.getsize(built_exe) / (1024 * 1024)
         print(f"SUCCESS: Built {built_exe} ({size_mb:.2f} MB)")

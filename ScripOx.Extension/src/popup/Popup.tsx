@@ -6,25 +6,66 @@ import {
   PanelRight,
   Download,
   Settings as SettingsIcon,
-  CheckCircle2,
-  AlertCircle
+  Globe,
+  Check,
+  Sparkles
 } from 'lucide-react';
+import { translations, type Language } from '../i18n/translations';
 
 interface StatusData {
   connected: boolean;
   version?: string;
 }
 
+const LANGUAGES: { code: Language; label: string; flag: string }[] = [
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'ar', label: 'العربية', flag: '🇦🇪' },
+];
+
 function Popup() {
+  const [lang, setLang] = useState<Language>('en');
+  const [hasSelectedLanguage, setHasSelectedLanguage] = useState<boolean>(true);
   const [status, setStatus] = useState<StatusData>({ connected: false });
   const [loading, setLoading] = useState(true);
+  const [showLangMenu, setShowLangMenu] = useState(false);
 
   useEffect(() => {
+    // 1. Load saved language preference or initialize
+    chrome.storage.local.get(['userLanguage', 'hasSelectedLanguage'], (result) => {
+      if (result.userLanguage && (result.userLanguage in translations)) {
+        setLang(result.userLanguage as Language);
+      } else {
+        // Default to English as requested
+        setLang('en');
+      }
+
+      if (result.hasSelectedLanguage === false || result.hasSelectedLanguage === undefined) {
+        setHasSelectedLanguage(false);
+      } else {
+        setHasSelectedLanguage(true);
+      }
+    });
+
+    // 2. Query Desktop API status
     chrome.runtime.sendMessage({ type: 'GET_API_STATUS' }, (res) => {
       setStatus(res?.payload || { connected: false });
       setLoading(false);
     });
   }, []);
+
+  const handleSelectLanguage = (selectedLang: Language) => {
+    setLang(selectedLang);
+    setHasSelectedLanguage(true);
+    setShowLangMenu(false);
+    chrome.storage.local.set({
+      userLanguage: selectedLang,
+      hasSelectedLanguage: true,
+    });
+  };
+
+  const t = translations[lang] || translations.en;
+  const isRtl = lang === 'ar';
 
   const openSidebar = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
@@ -50,26 +91,109 @@ function Popup() {
 
   return (
     <div
-      className="w-80 bg-white text-slate-900 p-5 space-y-4 rounded-2xl shadow-xl border border-slate-100"
-      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className="w-84 bg-white text-slate-900 p-5 space-y-4 rounded-2xl shadow-xl border border-slate-100 select-none"
+      style={{
+        fontFamily: isRtl
+          ? "'Cairo', 'Segoe UI', Tahoma, sans-serif"
+          : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <img
             src={chrome.runtime.getURL('assets/main_logo.png')}
             alt="ScripOx Logo"
             className="h-8 object-contain"
           />
+          <div>
+            <h1 className="text-sm font-bold tracking-tight text-slate-900 leading-tight">
+              ScripOx
+            </h1>
+            <p className="text-[10px] text-slate-400 font-medium leading-none">
+              Visual Extractor
+            </p>
+          </div>
         </div>
 
-        {/* Market Badge */}
-        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600">
-          DE • UAE
-        </span>
+        {/* Language Switcher Badge / Button */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowLangMenu(!showLangMenu)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition-colors cursor-pointer"
+            title={t.selectLanguage}
+          >
+            <Globe className="w-3.5 h-3.5 text-blue-600" />
+            <span>{LANGUAGES.find((l) => l.code === lang)?.flag}</span>
+            <span className="uppercase text-[11px]">{lang}</span>
+          </button>
+
+          {/* Language Dropdown Menu */}
+          {showLangMenu && (
+            <div
+              className={`absolute top-full mt-1.5 ${
+                isRtl ? 'left-0' : 'right-0'
+              } w-36 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50`}
+            >
+              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                {t.selectLanguage}
+              </div>
+              {LANGUAGES.map((item) => (
+                <button
+                  key={item.code}
+                  type="button"
+                  onClick={() => handleSelectLanguage(item.code)}
+                  className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left cursor-pointer transition-colors ${
+                    lang === item.code
+                      ? 'bg-blue-50 text-blue-700 font-semibold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span>{item.flag}</span>
+                    <span>{item.label}</span>
+                  </span>
+                  {lang === item.code && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Connection Status Pill */}
+      {/* First-time Onboarding Language Card (Shown right after installation) */}
+      {!hasSelectedLanguage && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-3.5 space-y-2.5">
+          <div className="flex items-center gap-1.5 text-blue-900 font-semibold text-xs">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+            <span>{t.welcomeTitle}</span>
+          </div>
+          <p className="text-[11px] text-blue-800/80 leading-relaxed">
+            {t.welcomeDesc}
+          </p>
+          <div className="grid grid-cols-3 gap-1.5 pt-1">
+            {LANGUAGES.map((item) => (
+              <button
+                key={item.code}
+                type="button"
+                onClick={() => handleSelectLanguage(item.code)}
+                className={`flex flex-col items-center justify-center p-2 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
+                  lang === item.code
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                }`}
+              >
+                <span className="text-base">{item.flag}</span>
+                <span className="text-[11px] mt-0.5">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Connection Status Pill */}
       <div
         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border ${
           status.connected
@@ -86,10 +210,10 @@ function Popup() {
         />
         <span className="truncate">
           {loading
-            ? 'Checking Desktop Link…'
+            ? t.statusChecking
             : status.connected
-            ? `Desktop Connected ${status.version ? `(v${status.version})` : ''}`
-            : 'Desktop Standby — Open ScripOx'}
+            ? `${t.statusConnected} ${status.version ? `(v${status.version})` : ''}`
+            : t.statusDisconnected}
         </span>
       </div>
 
@@ -103,7 +227,7 @@ function Popup() {
                      shadow-sm transition-colors cursor-pointer"
         >
           <Crosshair className="w-4 h-4" />
-          <span>Start Visual Picker</span>
+          <span>{t.startPicker}</span>
         </button>
 
         <button
@@ -114,18 +238,18 @@ function Popup() {
                      shadow-sm transition-colors cursor-pointer"
         >
           <PanelRight className="w-4 h-4" />
-          <span>Open Data Sidebar</span>
+          <span>{t.openSidebar}</span>
         </button>
 
         <button
           type="button"
-          onClick={() => window.open('http://oxtech.uk/p/scripox', '_blank')}
+          onClick={() => window.open('https://oxtech.uk', '_blank')}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
                      bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-100 hover:text-slate-900
                      transition-colors cursor-pointer"
         >
           <Download className="w-4 h-4" />
-          <span>تحميل نسخة الديسكتوب</span>
+          <span>{t.downloadDesktop}</span>
         </button>
 
         <button
@@ -136,23 +260,23 @@ function Popup() {
                      hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
         >
           <SettingsIcon className="w-4 h-4" />
-          <span>Extension Settings</span>
+          <span>{t.settings}</span>
         </button>
       </div>
 
       {/* Shortcuts */}
       <div className="border-t border-slate-100 pt-3 space-y-1.5">
         <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-          Quick Shortcuts
+          {t.shortcutsTitle}
         </p>
         <div className="flex justify-between items-center text-xs text-slate-600">
-          <span>Element Picker</span>
+          <span>{t.shortcutPicker}</span>
           <kbd className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-700">
             Alt+Shift+P
           </kbd>
         </div>
         <div className="flex justify-between items-center text-xs text-slate-600">
-          <span>Toggle Sidebar</span>
+          <span>{t.shortcutSidebar}</span>
           <kbd className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-700">
             Alt+Shift+S
           </kbd>
@@ -161,7 +285,7 @@ function Popup() {
 
       {/* Footer */}
       <div className="text-center text-[10px] text-slate-400 font-medium">
-        Ox Tech UK • Engineered for German &amp; UAE Enterprises
+        {t.footerTagline}
       </div>
     </div>
   );

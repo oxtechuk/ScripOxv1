@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "ScripOx",
+    "description": "Der Name der Erweiterung"
+  },
+  "appDesc": {
+    "message": "Visuelle Auswahl beliebiger HTML-Elemente oder Tabellen und Übertragung an ScripOx Desktop",
+    "description": "Die Beschreibung der Erweiterung"
+  }
+}

@@ -85,12 +85,18 @@
                         </StackPanel>
 
                         <!-- Category Selector -->
-                        <StackPanel x:Name="PnlCategory" Grid.Column="1" Margin="0,0,14,0">
+                        <StackPanel x:Name="PnlCategory" Grid.Column="1" Margin="0,0,14,0" Visibility="Collapsed">
                             <TextBlock x:Name="LblTargetCategory" Text="المجموعة / التصنيف المستهدف" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
                             <ComboBox x:Name="CmbTargetCategory" Height="36"
                                       Background="{StaticResource ExCanvasBg}" Foreground="{StaticResource ExTextPrimary}"
                                       BorderBrush="{StaticResource ExBorderSubtle}" FontSize="12" VerticalContentAlignment="Center"
                                       SelectionChanged="CmbTargetCategory_SelectionChanged"/>
+                        </StackPanel>
+
+                        <!-- Custom URLs Input -->
+                        <StackPanel x:Name="PnlCustomUrls" Grid.Column="1" Margin="0,0,14,0" Visibility="Collapsed">
+                            <TextBlock x:Name="LblCustomUrls" Text="أدخل الروابط (مفصولة بمسافة أو سطر)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ExTextSecondary}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtCustomUrls" Height="36" Style="{StaticResource ExSearchBox}" Text="" TextChanged="TxtCustomUrls_TextChanged"/>
                         </StackPanel>
 
                         <!-- Anti-Bot Mode -->
